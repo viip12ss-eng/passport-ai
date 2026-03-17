@@ -619,6 +619,7 @@
 
 // ── State ──
 const DEFAULT_WEBHOOK = "https://mmnnm19991.app.n8n.cloud/webhook/passport-extract";
+const STORE_URL       = "https://mmnnm19991.app.n8n.cloud/webhook/passport-store"; // يحفظ البيانات للكمبيوتر
 let webhookUrl = localStorage.getItem("pai_webhook") || DEFAULT_WEBHOOK;
 let passportFile = null;
 let passportDataUrl = null;
@@ -782,6 +783,19 @@ async function handleSend() {
     showResultSuccess(json);
     addToHistory(passportFile.name, passportDataUrl, true, json);
     showToast("✅", "تم الإرسال والاستخراج بنجاح!");
+
+    // ── إرسال البيانات المستخرجة لـ n8n ليجيبها الكمبيوتر تلقائياً ──
+    try {
+      const storePayload = { ...json, _ts: Date.now(), _source: "mobile" };
+      await fetch(STORE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(storePayload)
+      });
+      setStatusMsg("📤 تم إرسال البيانات للكمبيوتر تلقائياً");
+    } catch(storeErr) {
+      console.warn("[PassportAI] Store error:", storeErr);
+    }
 
   } catch (err) {
     console.error(err);
