@@ -135,6 +135,19 @@ body { background: var(--bg); color: var(--text); font-family: 'Cairo', sans-ser
 
 <script>
 'use strict';
+
+// معرّف جلسة خاص بكل مستخدم
+function getSessionId() {
+  let id = localStorage.getItem('pai_sid');
+  if (!id) {
+    id = 'u_' + Math.random().toString(36).slice(2,10) + '_' + Date.now().toString(36);
+    localStorage.setItem('pai_sid', id);
+  }
+  return id;
+}
+const SESSION_ID = getSessionId();
+document.getElementById('urlDisplay').textContent += ' · ' + SESSION_ID.slice(0,8);
+
 const N8N_URL = 'https://mmnnm19991.app.n8n.cloud/webhook/passport-extract';
 let file = null, dataUrl = null, sending = false;
 let history = JSON.parse(localStorage.getItem('pai_hist') || '[]');
@@ -188,6 +201,7 @@ async function send() {
 
     const fd = new FormData();
     fd.append('data', blob, file.name.replace(/\.[^.]+$/, '') + '-enhanced.jpg');
+    fd.append('_sid', SESSION_ID);
 
     const res = await fetch(N8N_URL, { method: 'POST', body: fd });
     setProgress(80);
