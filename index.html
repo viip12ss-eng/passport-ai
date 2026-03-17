@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Passport AI">
+<meta name="theme-color" content="#0a0b14">
+<title>Passport AI Scanner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0b14;
+    --surface: #111320;
+    --surface2: #181a2e;
+    --border: rgba(255,255,255,0.07);
+    --accent: #45f3ff;
+    --accent2: #ff2770;
+    --accent3: #7b61ff;
+    --text: #e8eaf6;
+    --text-dim: #6b7280;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --error: #ef4444;
+    --safe-top: env(safe-area-inset-top, 44px);
+    --safe-bottom: env(safe-area-inset-bottom, 34px);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Cairo', sans-serif;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* ── Animated Background ── */
+  .bg-orbs {
+    position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  }
+  .orb {
+    position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.12;
+    animation: orb-float 12s ease-in-out infinite;
+  }
+  .orb-1 { width: 400px; height: 400px; background: var(--accent3); top: -100px; right: -100px; animation-delay: 0s; }
+  .orb-2 { width: 300px; height: 300px; background: var(--accent); bottom: 100px; left: -80px; animation-delay: -4s; }
+  .orb-3 { width: 250px; height: 250px; background: var(--accent2); top: 50%; left: 50%; animation-delay: -8s; }
+  @keyframes orb-float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -20px) scale(1.05); }
+    66% { transform: translate(-20px, 15px) scale(0.97); }
+  }
+
+  /* ── App Shell ── */
+  .app {
+    position: relative; z-index: 1;
+    max-width: 430px; margin: 0 auto;
+    min-height: 100vh;
+    padding-bottom: calc(var(--safe-bottom) + 100px);
+  }
+
+  /* ── Header ── */
+  .header {
+    padding: calc(var(--safe-top) + 12px) 20px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(to bottom, rgba(10,11,20,0.95), transparent);
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .header-logo {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent3), var(--accent));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; box-shadow: 0 0 20px rgba(69,243,255,0.25);
+    animation: logo-pulse 3s ease-in-out infinite;
+  }
+  @keyframes logo-pulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(69,243,255,0.25); }
+    50% { box-shadow: 0 0 35px rgba(69,243,255,0.45), 0 0 60px rgba(123,97,255,0.2); }
+  }
+  .logo-text { font-size: 18px; font-weight: 900; letter-spacing: -0.5px; }
+  .logo-text span { color: var(--accent); }
+  .header-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; color: var(--accent); background: rgba(69,243,255,0.1);
+    border: 1px solid rgba(69,243,255,0.25); border-radius: 20px;
+    padding: 4px 10px; letter-spacing: 1px;
+  }
+
+  /* ── Webhook Config ── */
+  .config-bar {
+    margin: 0 16px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .config-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 8px var(--success);
+    animation: dot-blink 2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes dot-blink {
+    0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
+  }
+  .config-url {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; color: var(--text-dim);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    flex: 1;
+  }
+  .config-edit {
+    background: none; border: none; color: var(--accent); cursor: pointer;
+    font-size: 16px; flex-shrink: 0; padding: 4px;
+  }
+
+  /* ── Webhook Edit Modal ── */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: none; align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--surface2); border-radius: 24px 24px 0 0;
+    border: 1px solid var(--border); border-bottom: none;
+    padding: 20px; width: 100%; max-width: 430px;
+    padding-bottom: calc(var(--safe-bottom) + 20px);
+  }
+  .modal-handle {
+    width: 40px; height: 4px; background: var(--border);
+    border-radius: 2px; margin: 0 auto 20px;
+  }
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+  .modal input {
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px; color: var(--text);
+    font-family: 'Space Mono', monospace; font-size: 11px;
+    direction: ltr; text-align: left;
+    outline: none;
+  }
+  .modal input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(69,243,255,0.1); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 14px; }
+  .btn-modal {
+    flex: 1; padding: 12px; border-radius: 12px; border: none;
+    font-family: 'Cairo', sans-serif; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-modal-cancel { background: var(--surface); color: var(--text-dim); }
+  .btn-modal-save { background: var(--accent); color: #0a0b14; }
+
+  /* ── Cards ── */
+  .card {
+    margin: 0 16px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 14px 18px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-icon {
+    width: 32px; height: 32px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .card-title { font-size: 14px; font-weight: 700; }
+  .card-subtitle { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
+  .card-body { padding: 16px 18px; }
+
+  /* ── Upload Zone ── */
+  .upload-zone {
+    border: 2px dashed rgba(69,243,255,0.2);
+    border-radius: 16px; padding: 28px 20px;
+    text-align: center; cursor: pointer;
+    transition: all 0.3s; position: relative;
+    background: rgba(69,243,255,0.02);
+  }
+  .upload-zone:active { transform: scale(0.98); border-color: var(--accent); background: rgba(69,243,255,0.06); }
+  .upload-zone.drag-over { border-color: var(--accent); background: rgba(69,243,255,0.08); }
+  .upload-icon { font-size: 40px; margin-bottom: 10px; display: block; }
+  .upload-text { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .upload-hint { font-size: 12px; color: var(--text-dim); }
+  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+
+  /* ── Action Buttons ── */
+  .action-row {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; padding: 0 16px; margin-bottom: 14px;
+  }
+  .action-btn {
+    position: relative; overflow: hidden;
+    border: none; border-radius: 18px; padding: 18px 14px;
+    cursor: pointer; font-family: 'Cairo', sans-serif;
+    transition: transform 0.15s, box-shadow 0.25s;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .action-btn:active { transform: scale(0.96); }
+  .action-btn-camera {
+    background: linear-gradient(135deg, #1a1f3a, #252a48);
+    border: 1px solid rgba(69,243,255,0.2);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+  .action-btn-camera:active { box-shadow: 0 0 20px rgba(69,243,255,0.3); }
+  .action-btn-gallery {
+    background: linear-gradient(135deg, #1f1a3a, #2a2048);
+    border: 1px solid rgba(123,97,255,0.2);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+  .action-btn-gallery:active { box-shadow: 0 0 20px rgba(123,97,255,0.3); }
+  .action-btn input {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer;
+    width: 100%; height: 100%;
+  }
+  .action-btn-icon { font-size: 32px; }
+  .action-btn-label { font-size: 13px; font-weight: 700; color: var(--text); }
+  .action-btn-sublabel { font-size: 10px; color: var(--text-dim); }
+  .action-btn-camera .action-btn-icon { filter: drop-shadow(0 0 8px rgba(69,243,255,0.6)); }
+  .action-btn-gallery .action-btn-icon { filter: drop-shadow(0 0 8px rgba(123,97,255,0.6)); }
+
+  /* ── Preview ── */
+  .preview-container {
+    position: relative; margin-bottom: 14px;
+    border-radius: 16px; overflow: hidden;
+    background: #000;
+    max-height: 240px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .preview-container img {
+    width: 100%; height: 100%; object-fit: contain;
+    max-height: 240px;
+  }
+  .preview-overlay {
+    position: absolute; top: 8px; right: 8px;
+    display: flex; gap: 6px;
+  }
+  .preview-badge {
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 20px; padding: 4px 10px;
+    font-size: 11px; font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .preview-remove {
+    background: rgba(239,68,68,0.8); border: none;
+    width: 28px; height: 28px; border-radius: 50%;
+    color: white; font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ── Attachments List ── */
+  .attachment-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .attachment-item:last-child { border-bottom: none; }
+  .attachment-thumb {
+    width: 48px; height: 48px; border-radius: 10px;
+    object-fit: cover; flex-shrink: 0;
+    border: 1px solid var(--border);
+  }
+  .attachment-thumb-icon {
+    width: 48px; height: 48px; border-radius: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .attachment-info { flex: 1; min-width: 0; }
+  .attachment-name {
+    font-size: 13px; font-weight: 600;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    direction: ltr; text-align: left;
+  }
+  .attachment-size { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .attachment-remove {
+    background: none; border: none; color: var(--error);
+    font-size: 18px; cursor: pointer; padding: 4px; flex-shrink: 0;
+  }
+
+  /* ── Send Button ── */
+  .send-area { padding: 0 16px 16px; }
+  .send-btn {
+    width: 100%; border: none; border-radius: 18px;
+    padding: 18px; font-family: 'Cairo', sans-serif;
+    font-size: 16px; font-weight: 900; cursor: pointer;
+    background: linear-gradient(135deg, var(--accent3), var(--accent));
+    color: #0a0b14; position: relative; overflow: hidden;
+    transition: all 0.25s;
+    box-shadow: 0 8px 30px rgba(69,243,255,0.25), 0 0 60px rgba(123,97,255,0.1);
+  }
+  .send-btn:disabled {
+    opacity: 0.5; cursor: not-allowed;
+    box-shadow: none;
+  }
+  .send-btn:not(:disabled):active { transform: scale(0.98); }
+  .send-btn::before {
+    content: '';
+    position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    transition: left 0.5s;
+  }
+  .send-btn:not(:disabled):active::before { left: 100%; }
+  .send-btn-inner { display: flex; align-items: center; justify-content: center; gap: 10px; }
+
+  /* ── Status Card ── */
+  .status-card {
+    margin: 0 16px 14px;
+    border-radius: 16px; overflow: hidden;
+    display: none;
+  }
+  .status-card.show { display: block; }
+  .status-inner {
+    padding: 16px; border: 1px solid var(--border); border-radius: 16px;
+  }
+  .status-inner.loading { background: rgba(69,243,255,0.04); border-color: rgba(69,243,255,0.2); }
+  .status-inner.success { background: rgba(34,197,94,0.04); border-color: rgba(34,197,94,0.2); }
+  .status-inner.error { background: rgba(239,68,68,0.04); border-color: rgba(239,68,68,0.2); }
+  .status-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .status-icon { font-size: 20px; }
+  .status-title { font-size: 14px; font-weight: 700; }
+  .status-msg { font-size: 12px; color: var(--text-dim); line-height: 1.6; white-space: pre-wrap; }
+
+  /* ── Progress Bar ── */
+  .progress-wrap {
+    background: var(--surface2); border-radius: 4px;
+    height: 4px; margin-top: 12px; overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%; border-radius: 4px;
+    background: linear-gradient(90deg, var(--accent3), var(--accent));
+    transition: width 0.4s ease;
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  /* ── Result Data ── */
+  .result-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-top: 14px;
+  }
+  .result-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 12px;
+  }
+  .result-label { font-size: 10px; color: var(--text-dim); margin-bottom: 4px; }
+  .result-value { font-size: 13px; font-weight: 600; direction: auto; }
+  .result-item.wide { grid-column: 1 / -1; }
+
+  /* ── Bottom Nav ── */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(10,11,20,0.9);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    padding: 10px 20px calc(var(--safe-bottom) + 10px);
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .nav-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim); }
+  .nav-dot.active { background: var(--accent); width: 20px; border-radius: 3px; }
+
+  /* ── Spinner ── */
+  .spinner {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 2px solid rgba(10,11,20,0.3);
+    border-top-color: #0a0b14;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Shake animation ── */
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+  .shake { animation: shake 0.35s ease; }
+
+  /* ── Slide up animation ── */
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-up { animation: slide-up 0.35s ease forwards; }
+
+  /* ── History ── */
+  .history-empty {
+    text-align: center; padding: 20px;
+    color: var(--text-dim); font-size: 13px;
+  }
+  .history-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .history-item:last-child { border-bottom: none; }
+  .history-thumb {
+    width: 44px; height: 32px; border-radius: 8px;
+    object-fit: cover; border: 1px solid var(--border);
+  }
+  .history-name { font-size: 13px; font-weight: 600; }
+  .history-date { font-size: 11px; color: var(--text-dim); }
+  .history-status {
+    margin-right: auto; font-size: 11px; font-weight: 600;
+    padding: 3px 8px; border-radius: 20px;
+  }
+  .history-status.ok { background: rgba(34,197,94,0.15); color: var(--success); }
+  .history-status.fail { background: rgba(239,68,68,0.15); color: var(--error); }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed; top: calc(var(--safe-top) + 70px); right: 16px; left: 16px;
+    z-index: 300;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 16px;
+    display: flex; align-items: center; gap: 10px;
+    transform: translateY(-20px); opacity: 0;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast-icon { font-size: 20px; flex-shrink: 0; }
+  .toast-text { font-size: 13px; font-weight: 600; flex: 1; }
+
+  /* Divider */
+  .divider { height: 1px; background: var(--border); margin: 0 16px 14px; }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center; padding: 30px 20px;
+    color: var(--text-dim);
+  }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+  .empty-text { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .empty-hint { font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div class="bg-orbs">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<div class="app">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-logo">
+      <div class="logo-icon">🛂</div>
+      <div>
+        <div class="logo-text">Passport <span>AI</span></div>
+      </div>
+    </div>
+    <div class="header-badge">OMN · ROP</div>
+  </div>
+
+  <!-- Webhook Config Bar -->
+  <div class="config-bar">
+    <div class="config-dot" id="configDot"></div>
+    <div class="config-url" id="configUrlDisplay">mmnnm19991.app.n8n.cloud/webhook/passport-extract</div>
+    <button class="config-edit" onclick="openModal()" title="تعديل">⚙️</button>
+  </div>
+
+  <!-- Camera + Gallery Actions -->
+  <div class="action-row">
+    <label class="action-btn action-btn-camera">
+      <input type="file" accept="image/*" capture="environment" id="cameraInput">
+      <span class="action-btn-icon">📷</span>
+      <span class="action-btn-label">الكاميرا</span>
+      <span class="action-btn-sublabel">مسح ضوئي مباشر</span>
+    </label>
+    <label class="action-btn action-btn-gallery">
+      <input type="file" accept="image/*" id="galleryInput">
+      <span class="action-btn-icon">🖼️</span>
+      <span class="action-btn-label">الاستوديو</span>
+      <span class="action-btn-sublabel">رفع من المكتبة</span>
+    </label>
+  </div>
+
+  <!-- Passport Image Card -->
+  <div class="card" id="passportCard">
+    <div class="card-header">
+      <div class="card-icon" style="background: rgba(69,243,255,0.1);">🛂</div>
+      <div>
+        <div class="card-title">صورة الجواز</div>
+        <div class="card-subtitle">الملف الرئيسي للمعالجة</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="passportPreviewWrap" style="display:none;">
+        <div class="preview-container" id="passportPreview"></div>
+      </div>
+      <div id="passportEmpty">
+        <div class="empty-state">
+          <div class="empty-icon">📄</div>
+          <div class="empty-text">لم يتم اختيار صورة</div>
+          <div class="empty-hint">استخدم الكاميرا أو الاستوديو أعلاه</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Attachments Card -->
+  <div class="card" id="attachmentsCard">
+    <div class="card-header">
+      <div class="card-icon" style="background: rgba(123,97,255,0.1);">📎</div>
+      <div>
+        <div class="card-title">مرفقات إضافية</div>
+        <div class="card-subtitle" id="attachCount">0 ملف</div>
+      </div>
+      <label style="margin-right: auto; cursor: pointer;">
+        <input type="file" accept="image/*,application/pdf" multiple id="attachInput" style="display:none">
+        <div style="background: rgba(123,97,255,0.15); border: 1px solid rgba(123,97,255,0.3); border-radius: 10px; padding: 6px 12px; font-size: 12px; font-weight: 700; color: #a78bfa;">+ إضافة</div>
+      </label>
+    </div>
+    <div class="card-body">
+      <div id="attachmentsList">
+        <div class="empty-state" style="padding: 16px 0;">
+          <div class="empty-icon" style="font-size: 32px;">📂</div>
+          <div class="empty-text" style="font-size: 13px;">لا توجد مرفقات</div>
+          <div class="empty-hint">اضغط "+ إضافة" لرفع ملفات</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Card -->
+  <div class="status-card" id="statusCard">
+    <div class="status-inner" id="statusInner">
+      <div class="status-header">
+        <span class="status-icon" id="statusIcon">⏳</span>
+        <span class="status-title" id="statusTitle">جاري الإرسال...</span>
+      </div>
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-bar" id="progressBar" style="width:0%"></div>
+      </div>
+      <div class="status-msg" id="statusMsg"></div>
+      <div class="result-grid" id="resultGrid" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- Send Button -->
+  <div class="send-area">
+    <button class="send-btn" id="sendBtn" disabled onclick="handleSend()">
+      <div class="send-btn-inner">
+        <span id="sendBtnIcon">📤</span>
+        <span id="sendBtnText">اختر صورة الجواز أولاً</span>
+      </div>
+    </button>
+  </div>
+
+  <!-- History Card -->
+  <div class="card" id="historyCard">
+    <div class="card-header">
+      <div class="card-icon" style="background: rgba(245,158,11,0.1);">🕐</div>
+      <div>
+        <div class="card-title">السجل</div>
+        <div class="card-subtitle" id="historyCount">0 عملية</div>
+      </div>
+      <button onclick="clearHistory()" style="margin-right:auto; background:none; border:none; color:var(--error); font-size:12px; cursor:pointer; font-family:'Cairo',sans-serif;">مسح</button>
+    </div>
+    <div class="card-body">
+      <div id="historyList">
+        <div class="history-empty">لا يوجد سجل بعد</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .app -->
+
+<!-- Bottom Nav -->
+<div class="bottom-nav">
+  <div class="nav-dot active"></div>
+  <div class="nav-dot"></div>
+  <div class="nav-dot"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toastIcon"></span>
+  <span class="toast-text" id="toastText"></span>
+</div>
+
+<!-- Config Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚙️ إعدادات الـ Webhook</div>
+    <input type="url" id="modalUrlInput" placeholder="https://..." dir="ltr">
+    <div class="modal-actions">
+      <button class="btn-modal btn-modal-cancel" onclick="closeModal()">إلغاء</button>
+      <button class="btn-modal btn-modal-save" onclick="saveModal()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ── State ──
+const DEFAULT_WEBHOOK = "https://mmnnm19991.app.n8n.cloud/webhook/passport-extract";
+let webhookUrl = localStorage.getItem("pai_webhook") || DEFAULT_WEBHOOK;
+let passportFile = null;
+let passportDataUrl = null;
+let attachments = [];
+let history = JSON.parse(localStorage.getItem("pai_history") || "[]");
+let isSending = false;
+
+// ── Init ──
+updateConfigBar();
+renderHistory();
+
+// ── Camera / Gallery inputs ──
+document.getElementById("cameraInput").addEventListener("change", e => handlePassportSelect(e.target.files[0]));
+document.getElementById("galleryInput").addEventListener("change", e => handlePassportSelect(e.target.files[0]));
+document.getElementById("attachInput").addEventListener("change", e => {
+  Array.from(e.target.files).forEach(f => addAttachment(f));
+  e.target.value = "";
+});
+
+// ── Functions ──
+function handlePassportSelect(file) {
+  if (!file) return;
+  passportFile = file;
+  const reader = new FileReader();
+  reader.onload = () => {
+    passportDataUrl = reader.result;
+    showPassportPreview(reader.result, file.name);
+    updateSendBtn();
+    showToast("✅", `تم اختيار: ${truncate(file.name, 25)}`);
+  };
+  reader.readAsDataURL(file);
+}
+
+function showPassportPreview(dataUrl, name) {
+  const wrap = document.getElementById("passportPreviewWrap");
+  const empty = document.getElementById("passportEmpty");
+  const container = document.getElementById("passportPreview");
+  container.innerHTML = `
+    <img src="${dataUrl}" alt="جواز السفر" />
+    <div class="preview-overlay">
+      <div class="preview-badge" style="color:var(--accent);">${formatSize(passportFile?.size || 0)}</div>
+      <button class="preview-remove" onclick="removePassport()">✕</button>
+    </div>
+  `;
+  wrap.style.display = "block";
+  empty.style.display = "none";
+}
+
+function removePassport() {
+  passportFile = null; passportDataUrl = null;
+  document.getElementById("passportPreviewWrap").style.display = "none";
+  document.getElementById("passportEmpty").style.display = "block";
+  document.getElementById("cameraInput").value = "";
+  document.getElementById("galleryInput").value = "";
+  updateSendBtn();
+}
+
+function addAttachment(file) {
+  if (attachments.some(a => a.file.name === file.name && a.file.size === file.size)) {
+    showToast("⚠️", "الملف موجود مسبقاً"); return;
+  }
+  const isImage = file.type.startsWith("image/");
+  const id = Date.now() + Math.random();
+  const obj = { file, id, dataUrl: null };
+  attachments.push(obj);
+  if (isImage) {
+    const reader = new FileReader();
+    reader.onload = () => { obj.dataUrl = reader.result; renderAttachments(); };
+    reader.readAsDataURL(file);
+  } else {
+    renderAttachments();
+  }
+  showToast("📎", `تمت الإضافة: ${truncate(file.name, 25)}`);
+}
+
+function removeAttachment(id) {
+  attachments = attachments.filter(a => a.id !== id);
+  renderAttachments();
+}
+
+function renderAttachments() {
+  const list = document.getElementById("attachmentsList");
+  const count = document.getElementById("attachCount");
+  count.textContent = `${attachments.length} ملف`;
+  if (!attachments.length) {
+    list.innerHTML = `<div class="empty-state" style="padding:16px 0;"><div class="empty-icon" style="font-size:32px;">📂</div><div class="empty-text" style="font-size:13px;">لا توجد مرفقات</div><div class="empty-hint">اضغط "+ إضافة" لرفع ملفات</div></div>`;
+    return;
+  }
+  list.innerHTML = attachments.map(a => {
+    const isImg = a.file.type.startsWith("image/");
+    const thumbHtml = isImg && a.dataUrl
+      ? `<img class="attachment-thumb" src="${a.dataUrl}" alt="">`
+      : `<div class="attachment-thumb-icon">${a.file.type.includes("pdf") ? "📑" : "📄"}</div>`;
+    return `
+      <div class="attachment-item">
+        ${thumbHtml}
+        <div class="attachment-info">
+          <div class="attachment-name">${escHtml(a.file.name)}</div>
+          <div class="attachment-size">${formatSize(a.file.size)} · ${a.file.type.split("/")[1]?.toUpperCase() || "ملف"}</div>
+        </div>
+        <button class="attachment-remove" onclick="removeAttachment(${a.id})">🗑️</button>
+      </div>
+    `;
+  }).join("");
+}
+
+function updateSendBtn() {
+  const btn = document.getElementById("sendBtn");
+  const txt = document.getElementById("sendBtnText");
+  const icon = document.getElementById("sendBtnIcon");
+  if (!passportFile) {
+    btn.disabled = true;
+    txt.textContent = "اختر صورة الجواز أولاً";
+    icon.textContent = "📤";
+  } else {
+    btn.disabled = isSending;
+    txt.textContent = isSending ? "جاري الإرسال..." : `إرسال الجواز${attachments.length ? ` + ${attachments.length} مرفق` : ""}`;
+    icon.textContent = isSending ? "" : "🚀";
+  }
+}
+
+async function handleSend() {
+  if (!passportFile || isSending) return;
+  isSending = true; updateSendBtn();
+  showStatus("loading", "⏳", "جاري الإرسال...", "يتم الآن رفع صورة الجواز ومعالجتها...", 10);
+
+  try {
+    // Process image (same preprocessing as the extension)
+    setProgress(20);
+    setStatusMsg("جاري تجهيز الصورة...");
+
+    const processedBlob = await preprocessImage(passportFile);
+    setProgress(45);
+    setStatusMsg("جاري الإرسال للـ Webhook...");
+
+    const fd = new FormData();
+    fd.append("data", processedBlob, (passportFile.name || "passport").replace(/\.[^.]+$/, "") + "-enhanced.jpg");
+
+    // Add extra attachments
+    attachments.forEach((a, i) => {
+      fd.append(`attachment_${i + 1}`, a.file, a.file.name);
+    });
+
+    setProgress(60);
+    const res = await fetch(webhookUrl, { method: "POST", body: fd });
+    setProgress(80);
+
+    const text = await res.text();
+    let json = null;
+    try { json = JSON.parse(text); } catch {
+      const m = text.match(/\{[\s\S]*\}/);
+      if (m) { try { json = JSON.parse(m[0]); } catch {} }
+    }
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!json || typeof json !== "object") throw new Error("لم يُرجع الـ Webhook بيانات صحيحة");
+    if (Array.isArray(json)) json = json[0] || {};
+    if (json.data && typeof json.data === "object") json = json.data;
+
+    setProgress(100);
+    showResultSuccess(json);
+    addToHistory(passportFile.name, passportDataUrl, true, json);
+    showToast("✅", "تم الإرسال والاستخراج بنجاح!");
+
+  } catch (err) {
+    console.error(err);
+    showStatus("error", "❌", "فشل الإرسال", err.message, 100);
+    addToHistory(passportFile.name, passportDataUrl, false, null);
+    showToast("❌", "فشل الإرسال: " + (err.message || "خطأ غير معروف"));
+    document.getElementById("statusCard").classList.add("shake");
+    setTimeout(() => document.getElementById("statusCard").classList.remove("shake"), 400);
+  }
+
+  isSending = false; updateSendBtn();
+}
+
+function showStatus(type, icon, title, msg, progress) {
+  const card = document.getElementById("statusCard");
+  const inner = document.getElementById("statusInner");
+  card.classList.add("show");
+  card.classList.add("animate-up");
+  inner.className = `status-inner ${type}`;
+  document.getElementById("statusIcon").textContent = icon;
+  document.getElementById("statusTitle").textContent = title;
+  document.getElementById("statusMsg").textContent = msg;
+  document.getElementById("progressWrap").style.display = type === "loading" ? "block" : "none";
+  document.getElementById("resultGrid").style.display = "none";
+  setProgress(progress || 0);
+  card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function setProgress(pct) {
+  document.getElementById("progressBar").style.width = pct + "%";
+}
+
+function setStatusMsg(msg) {
+  document.getElementById("statusMsg").textContent = msg;
+}
+
+function showResultSuccess(data) {
+  const inner = document.getElementById("statusInner");
+  inner.className = "status-inner success";
+  document.getElementById("statusIcon").textContent = "✅";
+  document.getElementById("statusTitle").textContent = "تم الاستخراج بنجاح";
+  document.getElementById("statusMsg").textContent = "";
+  document.getElementById("progressWrap").style.display = "none";
+
+  const fields = [
+    ["الاسم (EN)", data.nameEnglish],
+    ["الاسم (AR)", data.nameArabic],
+    ["رقم الجواز", data.passportNumber || data.passportNo],
+    ["الجنسية", data.nationalityArabic],
+    ["تاريخ الميلاد", data.dateOfBirth],
+    ["تاريخ الإصدار", data.dateOfIssue || data.issueDate],
+    ["تاريخ الانتهاء", data.dateOfExpiry || data.expiryDate],
+    ["مكان الإصدار", data.placeOfIssueArabic || data.placeOfIssueEnglishUpper],
+    ["الجنس", data.genderArabic],
+    ["دولة الميلاد", data.birthCountryArabic],
+  ].filter(([, v]) => v);
+
+  const grid = document.getElementById("resultGrid");
+  grid.style.display = "grid";
+  grid.innerHTML = fields.map(([label, value]) => `
+    <div class="result-item${(label.includes("الاسم") || label.includes("رقم")) ? " wide" : ""}">
+      <div class="result-label">${label}</div>
+      <div class="result-value">${escHtml(String(value))}</div>
+    </div>
+  `).join("");
+}
+
+// ── History ──
+function addToHistory(name, thumb, ok, data) {
+  history.unshift({ name, thumb, ok, data, ts: Date.now() });
+  if (history.length > 20) history = history.slice(0, 20);
+  localStorage.setItem("pai_history", JSON.stringify(history));
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById("historyList");
+  const count = document.getElementById("historyCount");
+  count.textContent = `${history.length} عملية`;
+  if (!history.length) {
+    list.innerHTML = `<div class="history-empty">لا يوجد سجل بعد</div>`;
+    return;
+  }
+  list.innerHTML = history.slice(0, 10).map(h => {
+    const date = new Date(h.ts).toLocaleString("ar-OM", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" });
+    const thumbHtml = h.thumb
+      ? `<img class="history-thumb" src="${h.thumb}" alt="">`
+      : `<div class="history-thumb" style="background:var(--surface2);display:flex;align-items:center;justify-content:center;">📄</div>`;
+    return `
+      <div class="history-item">
+        ${thumbHtml}
+        <div>
+          <div class="history-name">${truncate(h.name || "جواز", 20)}</div>
+          <div class="history-date">${date}</div>
+        </div>
+        <div class="history-status ${h.ok ? "ok" : "fail"}">${h.ok ? "✓ نجح" : "✗ فشل"}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+function clearHistory() {
+  history = [];
+  localStorage.removeItem("pai_history");
+  renderHistory();
+  showToast("🗑️", "تم مسح السجل");
+}
+
+// ── Webhook Modal ──
+function openModal() {
+  document.getElementById("modalUrlInput").value = webhookUrl;
+  document.getElementById("modalOverlay").classList.add("show");
+}
+function closeModal() { document.getElementById("modalOverlay").classList.remove("show"); }
+function closeModalOutside(e) { if (e.target === document.getElementById("modalOverlay")) closeModal(); }
+function saveModal() {
+  const v = document.getElementById("modalUrlInput").value.trim();
+  if (!v) return;
+  webhookUrl = v;
+  localStorage.setItem("pai_webhook", v);
+  updateConfigBar();
+  closeModal();
+  showToast("✅", "تم حفظ الـ Webhook");
+}
+function updateConfigBar() {
+  try {
+    const u = new URL(webhookUrl);
+    document.getElementById("configUrlDisplay").textContent = u.host + u.pathname;
+  } catch {
+    document.getElementById("configUrlDisplay").textContent = webhookUrl.slice(0, 50);
+  }
+}
+
+// ── Toast ──
+let toastTimer;
+function showToast(icon, text) {
+  const t = document.getElementById("toast");
+  document.getElementById("toastIcon").textContent = icon;
+  document.getElementById("toastText").textContent = text;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 3200);
+}
+
+// ── Image Preprocessing (mirrors the extension logic) ──
+function ensureCanvas(w, h) {
+  const c = document.createElement("canvas");
+  c.width = Math.max(1, Math.floor(w));
+  c.height = Math.max(1, Math.floor(h));
+  return c;
+}
+
+function clamp(n, min, max) { return Math.min(max, Math.max(min, n)); }
+
+async function preprocessImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const maxSide = 2200;
+          const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+          const w = Math.max(1, Math.round(img.width * scale));
+          const h = Math.max(1, Math.round(img.height * scale));
+          const canvas = ensureCanvas(w, h);
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, w, h);
+          // Light enhance
+          const imgData = ctx.getImageData(0, 0, w, h);
+          const d = imgData.data;
+          for (let i = 0; i < d.length; i += 4) {
+            d[i] = clamp(((d[i] - 128) * 1.12) + 130, 0, 255);
+            d[i+1] = clamp(((d[i+1] - 128) * 1.12) + 130, 0, 255);
+            d[i+2] = clamp(((d[i+2] - 128) * 1.12) + 130, 0, 255);
+          }
+          ctx.putImageData(imgData, 0, 0);
+          canvas.toBlob(blob => {
+            if (blob) resolve(blob);
+            else reject(new Error("Canvas to blob failed"));
+          }, "image/jpeg", 0.95);
+        } catch (e) { reject(e); }
+      };
+      img.onerror = () => reject(new Error("Image load failed"));
+      img.src = reader.result;
+    };
+    reader.onerror = () => reject(new Error("FileReader failed"));
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── Utils ──
+function formatSize(bytes) {
+  if (!bytes) return "0 B";
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+}
+function truncate(s, n) { return s.length > n ? s.slice(0, n) + "…" : s; }
+function escHtml(s) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+</script>
+</body>
+</html>
