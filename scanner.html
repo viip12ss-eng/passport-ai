@@ -1,583 +1,1140 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="theme-color" content="#000">
-<title>Scanner</title>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0b0d12">
+<title>Passport Scan Pro</title>
+<script async data-opencv src="https://docs.opencv.org/4.7.0/opencv.js"></script>
 <style>
+:root{
+  --bg:#07090d;
+  --panel:rgba(10,14,22,.7);
+  --panel-strong:rgba(13,18,28,.86);
+  --line:rgba(255,255,255,.12);
+  --text:#f6f8fb;
+  --muted:rgba(234,239,248,.64);
+  --accent:#59a8ff;
+  --accent-2:#7ce5d3;
+  --accent-soft:rgba(89,168,255,.18);
+  --danger:#ff6b67;
+  --success:#3ee09a;
+  --shadow:0 24px 64px rgba(0,0,0,.45);
+}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:-apple-system,sans-serif;color:#fff}
-#scanView{position:fixed;inset:0}
-#live{position:absolute;inset:0;width:100%;height:100%}
-#top{position:absolute;top:0;left:0;right:0;z-index:10;
-  padding:calc(env(safe-area-inset-top,44px)+6px) 20px 16px;
-  display:flex;align-items:center;justify-content:space-between;
-  background:linear-gradient(to bottom,rgba(0,0,0,.75),transparent)}
-.tb{width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.5);
-  border:1px solid rgba(255,255,255,.2);color:#fff;font-size:15px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center}
-.tb.on{background:rgba(255,210,0,.4)}
-#bot{position:absolute;bottom:0;left:0;right:0;z-index:10;
-  padding:20px 40px calc(env(safe-area-inset-bottom,34px)+16px);
-  display:flex;align-items:center;justify-content:space-between;
-  background:linear-gradient(to top,rgba(0,0,0,.75),transparent)}
-#capBtn{width:74px;height:74px;border-radius:50%;
-  border:5px solid rgba(255,255,255,.35);background:#fff;
-  cursor:pointer;position:relative;flex-shrink:0;transition:all .25s}
-#capBtn::after{content:'';position:absolute;inset:5px;border-radius:50%;background:#fff;transition:all .25s}
-#capBtn:active{transform:scale(.9)}
-#capBtn.rdy{border-color:rgba(0,122,255,.8);
-  box-shadow:0 0 0 6px rgba(0,122,255,.25),0 0 32px rgba(0,122,255,.5)}
-#capBtn.rdy::after{background:#007AFF}
-#galBtn{width:50px;height:50px;border-radius:12px;overflow:hidden;cursor:pointer;
-  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
-  display:flex;align-items:center;justify-content:center;font-size:22px}
-#galImg{width:100%;height:100%;object-fit:cover;display:none}
-#status{position:absolute;bottom:140px;left:50%;transform:translateX(-50%);
-  padding:10px 24px;border-radius:24px;white-space:nowrap;z-index:10;
-  background:rgba(0,0,0,.65);backdrop-filter:blur(12px);
-  border:1px solid rgba(255,255,255,.1);font-size:14px;font-weight:600;
-  pointer-events:none;transition:all .25s}
-#status.ok{background:rgba(0,122,255,.4);border-color:rgba(0,122,255,.7);color:#c0deff}
-#fx{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:99;transition:opacity .06s}
-
-#rv{position:fixed;inset:0;background:#000;display:none;flex-direction:column}
-#rvh{padding:calc(env(safe-area-inset-top,44px)+8px) 20px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.rb{padding:9px 20px;border-radius:20px;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
-#rtk{background:rgba(255,255,255,.12);color:#fff}
-#sndB{background:#007AFF;color:#fff}
-#rvw{flex:1;display:flex;align-items:center;justify-content:center;padding:10px;overflow:hidden}
-#rvi{max-width:100%;max-height:100%;border-radius:14px;object-fit:contain}
-#rvf{padding:10px 20px calc(env(safe-area-inset-bottom,34px)+10px);text-align:center;font-size:13px;color:rgba(255,255,255,.4);flex-shrink:0}
-
-.ov{position:fixed;inset:0;background:rgba(0,0,0,.97);display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:200;padding:28px}
-.oI{font-size:54px}.oT{font-size:20px;font-weight:800}.oS{font-size:13px;color:rgba(255,255,255,.5);text-align:center}
-.bar{width:220px;height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
-.fill{height:100%;background:linear-gradient(90deg,#007AFF,#5856D6);border-radius:2px;transition:width .4s}
-.card{width:100%;max-width:340px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:14px;display:grid;gap:8px}
-.row{display:flex;justify-content:space-between;gap:10px}
-.lbl{font-size:12px;color:rgba(255,255,255,.4);flex-shrink:0}.val{font-size:13px;font-weight:600;text-align:left}
-.nb{padding:14px 40px;border-radius:26px;background:#007AFF;border:none;color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
-.eb{padding:13px 36px;border-radius:22px;background:#ff3b30;border:none;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+html,body{
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at top, rgba(89,168,255,.16), transparent 28%),
+    radial-gradient(circle at bottom, rgba(124,229,211,.12), transparent 22%),
+    var(--bg);
+  color:var(--text);
+  font-family:"SF Pro Display","SF Pro Text",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+button,input{font:inherit}
+button{border:none;background:none;color:inherit}
+.screen{position:fixed;inset:0}
+#scanView{display:flex;flex-direction:column}
+#cameraStage{position:relative;flex:1;overflow:hidden}
+#cameraVideo,#overlayCanvas{position:absolute;inset:0;width:100%;height:100%}
+#cameraVideo{object-fit:cover;background:#000}
+#overlayCanvas{pointer-events:none}
+#flashFx{
+  position:fixed;inset:0;opacity:0;pointer-events:none;z-index:60;
+  background:rgba(255,255,255,.95);transition:opacity .11s ease;
+}
+.top-shell{
+  position:absolute;top:0;left:0;right:0;z-index:20;
+  padding:calc(env(safe-area-inset-top, 24px) + 10px) 16px 0;
+}
+.top-bar{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.icon-btn,.toggle-btn{
+  width:46px;height:46px;border-radius:16px;display:flex;align-items:center;justify-content:center;
+  background:rgba(9,12,20,.55);backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,.12);box-shadow:var(--shadow);cursor:pointer;
+}
+.toggle-btn.active{background:rgba(255,208,89,.18);border-color:rgba(255,208,89,.42)}
+.bottom-shell{
+  position:relative;z-index:20;padding:14px 24px calc(env(safe-area-inset-bottom, 22px) + 16px);
+  background:linear-gradient(to top, rgba(2,4,8,.92), rgba(2,4,8,.18), transparent);
+}
+.controls{
+  display:grid;grid-template-columns:64px 1fr 64px;align-items:center;gap:18px;
+}
+.thumb-btn,.swap-btn{
+  width:58px;height:58px;border-radius:18px;
+  background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(14px);
+  box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.thumb-btn{overflow:hidden;position:relative}
+.thumb-btn img{width:100%;height:100%;object-fit:cover;display:none}
+.thumb-btn .placeholder{font-size:20px}
+.capture-wrap{display:flex;justify-content:center}
+.capture-btn{
+  width:92px;height:92px;border-radius:50%;cursor:pointer;position:relative;
+  border:1px solid rgba(255,255,255,.22);
+  background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.96), rgba(225,231,241,.88));
+  box-shadow:0 18px 44px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.65);
+  transition:transform .12s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.capture-btn::before{
+  content:"";position:absolute;inset:8px;border-radius:50%;
+  border:5px solid rgba(7,9,13,.08)
+}
+.capture-btn.ready{
+  border-color:rgba(89,168,255,.6);
+  box-shadow:0 0 0 7px rgba(89,168,255,.14), 0 20px 44px rgba(0,0,0,.36);
+}
+.capture-btn:active{transform:scale(.95)}
+.sheet{
+  display:none;flex-direction:column;background:
+    radial-gradient(circle at top, rgba(89,168,255,.1), transparent 22%),
+    #081019;
+  overflow:hidden
+}
+.sheet-head{
+  padding:calc(env(safe-area-inset-top, 24px) + 14px) 18px 14px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.sheet-head .main{flex:1;min-width:0;text-align:center}
+.sheet-head h2{font-size:18px;font-weight:800}
+.sheet-head p{font-size:12px;color:var(--muted);margin-top:4px}
+.sheet-btn{
+  padding:11px 16px;border-radius:16px;cursor:pointer;font-size:14px;font-weight:700;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)
+}
+.sheet-btn.primary{background:linear-gradient(135deg, #3f8cff, #58c6ff);color:#fff;border-color:transparent}
+.sheet-body{flex:1;display:flex;align-items:center;justify-content:center;padding:14px 16px 0;min-height:0}
+.preview-frame{
+  width:100%;max-width:720px;height:100%;display:flex;align-items:center;justify-content:center;
+  border-radius:28px;padding:14px;background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);box-shadow:var(--shadow)
+}
+.preview-frame img{
+  width:100%;max-height:100%;object-fit:contain;border-radius:20px;background:#020406
+}
+.sheet-foot{
+  padding:14px 18px calc(env(safe-area-inset-bottom, 22px) + 16px);
+  display:grid;gap:12px
+}
+.detail-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px
+}
+.detail-card{
+  padding:14px;border-radius:18px;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08)
+}
+.detail-card small{display:block;font-size:11px;color:var(--muted);margin-bottom:5px}
+.detail-card strong{font-size:15px}
+.progress-view,.result-view,.error-view{
+  display:none;align-items:center;justify-content:center;padding:28px
+}
+.center-panel{
+  width:min(520px, 100%);padding:28px;border-radius:30px;
+  background:linear-gradient(180deg, rgba(11,16,26,.94), rgba(7,12,20,.9));
+  border:1px solid rgba(255,255,255,.08);box-shadow:var(--shadow);text-align:center
+}
+.center-panel .icon{font-size:52px;margin-bottom:14px}
+.center-panel h3{font-size:24px;font-weight:800}
+.center-panel p{font-size:13px;color:var(--muted);line-height:1.6;margin-top:8px}
+.progress-bar{
+  width:100%;height:8px;border-radius:999px;overflow:hidden;margin-top:18px;background:rgba(255,255,255,.08)
+}
+.progress-bar div{
+  height:100%;width:0%;background:linear-gradient(90deg, var(--accent), var(--accent-2));transition:width .3s ease
+}
+.result-grid{display:grid;gap:10px;margin-top:18px;text-align:right}
+.result-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)
+}
+.result-row span{font-size:12px;color:var(--muted)}
+.result-row strong{font-size:14px;text-align:left}
+.action-row{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+.action-row button{
+  padding:13px 18px;border-radius:16px;cursor:pointer;font-size:14px;font-weight:700;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)
+}
+.action-row .primary{background:linear-gradient(135deg, #32b97c, #3ee09a);color:#052014;border-color:transparent}
 input[type=file]{display:none}
+@media (max-width:720px){
+  .detail-grid{grid-template-columns:1fr}
+  .bottom-shell{padding-left:16px;padding-right:16px}
+  .controls{grid-template-columns:58px 1fr 58px;gap:12px}
+  .capture-btn{width:84px;height:84px}
+  .sheet-head{padding-left:12px;padding-right:12px}
+  .sheet-btn{padding:10px 12px}
+}
 </style>
 </head>
 <body>
-<div id="fx"></div>
-<div id="scanView">
-  <canvas id="live"></canvas>
-  <div id="top">
-    <button class="tb" onclick="goBack()">✕</button>
-    <span style="font-size:16px;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.9)">مسح ضوئي</span>
-    <button class="tb" id="flBtn" onclick="toggleFlash()">⚡</button>
-  </div>
-  <div id="status">جاري تحميل الماسح...</div>
-  <div id="bot">
-    <div id="galBtn" onclick="document.getElementById('gin').click()">
-      <img id="galImg" alt=""><span id="galIco">🖼</span>
+<div id="flashFx"></div>
+
+<section id="scanView" class="screen">
+  <div id="cameraStage">
+    <video id="cameraVideo" autoplay playsinline muted></video>
+    <canvas id="overlayCanvas"></canvas>
+
+    <div class="top-shell">
+      <div class="top-bar">
+        <button id="flashBtn" class="toggle-btn" type="button" aria-label="الفلاش">⚡</button>
+        <button id="closeBtn" class="icon-btn" type="button" aria-label="إغلاق">✕</button>
+      </div>
     </div>
-    <button id="capBtn" onclick="manualCap()"></button>
-    <button class="tb" onclick="flipCam()" style="width:44px;height:44px;font-size:19px">↺</button>
   </div>
-</div>
 
-<div id="rv" style="display:none;flex-direction:column">
-  <div id="rvh">
-    <button class="rb" id="rtk" onclick="retake()">إعادة</button>
-    <span style="font-size:16px;font-weight:600">الوثيقة المقصوصة</span>
-    <button class="rb" id="sndB" onclick="sendImg()">إرسال ✓</button>
+  <div class="bottom-shell">
+    <div class="controls">
+      <button id="galleryBtn" class="thumb-btn" type="button" aria-label="اختيار صورة">
+        <img id="galleryThumb" alt="">
+        <span class="placeholder" id="galleryIcon">🖼</span>
+      </button>
+      <div class="capture-wrap">
+        <button id="captureBtn" class="capture-btn" type="button" aria-label="التقاط"></button>
+      </div>
+      <button id="flipBtn" class="swap-btn" type="button" aria-label="تبديل الكاميرا">↺</button>
+    </div>
   </div>
-  <div id="rvw"><img id="rvi" alt=""></div>
-  <div id="rvf">✂️ تم قص الوثيقة وتقويمها تلقائياً</div>
-</div>
+</section>
 
-<div id="sndV" class="ov">
-  <div class="oI">🔬</div><div class="oT">جاري الاستخراج...</div>
-  <div class="oS" id="sndMsg">يتم تحليل الجواز</div>
-  <div class="bar"><div class="fill" id="pFll" style="width:0%"></div></div>
-</div>
-<div id="sucV" class="ov">
-  <div class="oI">✅</div><div class="oT" style="color:#30d158">تم الاستخراج!</div>
-  <div class="oS">تم إرسال البيانات للكمبيوتر</div>
-  <div class="card" id="resCard"></div>
-  <button class="nb" onclick="newScan()">📷 مسح جواز جديد</button>
-</div>
-<div id="errV" class="ov">
-  <div class="oI">❌</div><div class="oT" style="color:#ff3b30">فشل الاستخراج</div>
-  <div class="oS" id="errMsg">حدث خطأ</div>
-  <button class="eb" onclick="retake()">حاول مجدداً</button>
-</div>
-<input type="file" id="gin" accept="image/*">
+<section id="reviewView" class="screen sheet">
+  <div class="sheet-head">
+    <button id="retakeBtn" class="sheet-btn" type="button">إعادة</button>
+    <div class="main">
+      <h2>مراجعة القص</h2>
+      <p>تمت تسوية الحواف وتجهيز الصورة للإرسال أو الاستخراج</p>
+    </div>
+    <button id="sendBtn" class="sheet-btn primary" type="button">إرسال</button>
+  </div>
+  <div class="sheet-body">
+    <div class="preview-frame">
+      <img id="reviewImage" alt="">
+    </div>
+  </div>
+  <div class="sheet-foot">
+    <div class="detail-grid">
+      <div class="detail-card">
+        <small>جودة الاكتشاف</small>
+        <strong id="detailScore">0%</strong>
+      </div>
+      <div class="detail-card">
+        <small>ثبات الإطار</small>
+        <strong id="detailStability">0 / 12</strong>
+      </div>
+      <div class="detail-card">
+        <small>نوع المعالجة</small>
+        <strong id="detailMode">قص تلقائي</strong>
+      </div>
+    </div>
+  </div>
+</section>
 
-<script src="https://docs.opencv.org/4.7.0/opencv.js"></script>
+<section id="progressView" class="screen progress-view">
+  <div class="center-panel">
+    <div class="icon">🛰</div>
+    <h3>جاري إرسال الجواز</h3>
+    <p id="progressText">تحضير النسخة المقصوصة ورفعها للمعالجة.</p>
+    <div class="progress-bar"><div id="sendProgress"></div></div>
+  </div>
+</section>
+
+<section id="resultView" class="screen result-view">
+  <div class="center-panel">
+    <div class="icon">✅</div>
+    <h3>اكتمل الاستخراج</h3>
+    <p>تم إرسال الصورة وتجهيز البيانات المستخرجة بنجاح.</p>
+    <div id="resultGrid" class="result-grid"></div>
+    <div class="action-row">
+      <button id="scanAgainBtn" class="primary" type="button">مسح جديد</button>
+      <button id="reviewAgainBtn" type="button">عرض الصورة</button>
+    </div>
+  </div>
+</section>
+
+<section id="errorView" class="screen error-view">
+  <div class="center-panel">
+    <div class="icon">⚠️</div>
+    <h3>تعذر الاستخراج</h3>
+    <p id="errorText">تعذر إكمال العملية. جرّب تصوير الجواز بإضاءة أفضل.</p>
+    <div class="action-row">
+      <button id="retryBtn" class="primary" type="button">المحاولة مجدداً</button>
+      <button id="backToScanBtn" type="button">العودة للماسح</button>
+    </div>
+  </div>
+</section>
+
+<input id="galleryInput" type="file" accept="image/*">
+
 <script>
 'use strict';
-const N8N=localStorage.getItem('pai_webhook')||'https://mmnnm19991.app.n8n.cloud/webhook/passport-extract';
-const SID=(()=>{let id=localStorage.getItem('pai_sid');if(!id){id='u'+Math.random().toString(36).slice(2,9);localStorage.setItem('pai_sid',id);}return id;})();
-const $=id=>document.getElementById(id);
 
-let stream=null,vtrack=null,flashOn=false,facing='environment';
-let blob_=null,url_=null,cvReady=false,tid=null;
-
-// ══════════════════════════════════════════════
-//  RectangleFeaturesFunnel — مستوحى من WeScan
-//  يحفظ تاريخ الكشف ويحسب متوسط الزوايا
-//  للحصول على ثبات حقيقي قبل الالتقاط
-// ══════════════════════════════════════════════
-const FUNNEL_SIZE = 8;       // عدد الإطارات المحفوظة
-const CAPTURE_THRESHOLD = 8; // إطارات ثابتة قبل الالتقاط
-const NO_RECT_THRESHOLD = 3; // إطارات بدون كشف قبل الإعلان
-const MAX_CORNER_DRIFT = 25; // بكسل — الحد الأقصى للتحرك بين الإطارات
-
-class RectangleFunnel {
-  constructor(){
-    this.history = []; // سجل الزوايا
-    this.noRectCount = 0;
-    this.stableCount = 0;
-    this.captured = false;
+const WEBHOOK_URL = localStorage.getItem('pai_webhook') || 'https://mmnnm19991.app.n8n.cloud/webhook/passport-extract';
+const SESSION_ID = (() => {
+  let id = localStorage.getItem('pai_sid');
+  if (!id) {
+    id = 'u' + Math.random().toString(36).slice(2, 9);
+    localStorage.setItem('pai_sid', id);
   }
+  return id;
+})();
 
-  // أضف نتيجة كشف جديدة
-  add(quad){
-    if(!quad){
-      this.noRectCount++;
-      if(this.noRectCount >= NO_RECT_THRESHOLD){
-        this.history = [];
-        this.stableCount = 0;
-      }
-      return null;
-    }
+const PASSPORT_RATIO = 1.42;
+const AUTO_CAPTURE_FRAMES = 12;
+const PROCESS_WIDTH = 720;
+const DETECTION_SCORE_READY = 0.74;
+const $ = (id) => document.getElementById(id);
 
-    this.noRectCount = 0;
+const refs = {
+  scanView: $('scanView'),
+  reviewView: $('reviewView'),
+  progressView: $('progressView'),
+  resultView: $('resultView'),
+  errorView: $('errorView'),
+  cameraStage: $('cameraStage'),
+  cameraVideo: $('cameraVideo'),
+  overlayCanvas: $('overlayCanvas'),
+  flashFx: $('flashFx'),
+  flashBtn: $('flashBtn'),
+  captureBtn: $('captureBtn'),
+  closeBtn: $('closeBtn'),
+  flipBtn: $('flipBtn'),
+  galleryBtn: $('galleryBtn'),
+  galleryInput: $('galleryInput'),
+  galleryThumb: $('galleryThumb'),
+  galleryIcon: $('galleryIcon'),
+  reviewImage: $('reviewImage'),
+  retakeBtn: $('retakeBtn'),
+  sendBtn: $('sendBtn'),
+  detailScore: $('detailScore'),
+  detailStability: $('detailStability'),
+  detailMode: $('detailMode'),
+  progressText: $('progressText'),
+  sendProgress: $('sendProgress'),
+  resultGrid: $('resultGrid'),
+  errorText: $('errorText'),
+  retryBtn: $('retryBtn'),
+  backToScanBtn: $('backToScanBtn'),
+  scanAgainBtn: $('scanAgainBtn'),
+  reviewAgainBtn: $('reviewAgainBtn')
+};
 
-    // إذا كان لدينا تاريخ، تحقق من الاستقرار
-    if(this.history.length > 0){
-      const last = this.history[this.history.length - 1];
-      if(this._moved(quad, last)){
-        // تحرّك كثيراً — أعد من الصفر
-        this.history = [quad];
-        this.stableCount = 0;
-        return this._smooth();
-      }
-    }
+const workCanvas = document.createElement('canvas');
+const workCtx = workCanvas.getContext('2d', { willReadFrequently: true });
 
-    // أضف للسجل
-    this.history.push(quad);
-    if(this.history.length > FUNNEL_SIZE) this.history.shift();
+let stream = null;
+let videoTrack = null;
+let torchEnabled = false;
+let facingMode = 'environment';
+let cvReady = false;
+let animationId = null;
+let frameSkip = 0;
+let detection = null;
+let stableFrames = 0;
+let autoTriggered = false;
+let croppedBlob = null;
+let croppedUrl = '';
+let lastDetectionMode = 'قص تلقائي';
+let lastAcceptedPoints = null;
 
-    if(this.history.length >= FUNNEL_SIZE){
-      this.stableCount++;
-    }
-
-    return this._smooth();
-  }
-
-  // هل الزوايا تحركت كثيراً؟
-  _moved(a, b){
-    for(let i=0; i<4; i++){
-      if(dist(a[i], b[i]) > MAX_CORNER_DRIFT) return true;
-    }
-    return false;
-  }
-
-  // احسب متوسط الزوايا عبر كل السجل (smoothing)
-  _smooth(){
-    if(this.history.length === 0) return null;
-    const avg = [{x:0,y:0},{x:0,y:0},{x:0,y:0},{x:0,y:0}];
-    for(const q of this.history){
-      for(let i=0; i<4; i++){
-        avg[i].x += q[i].x;
-        avg[i].y += q[i].y;
-      }
-    }
-    const n = this.history.length;
-    return avg.map(p=>({x:p.x/n, y:p.y/n}));
-  }
-
-  get isStable(){ return this.stableCount >= CAPTURE_THRESHOLD; }
-  get progress(){ return Math.min(this.stableCount / CAPTURE_THRESHOLD, 1); }
-  reset(){ this.history=[]; this.stableCount=0; this.noRectCount=0; this.captured=false; }
-}
-
-const funnel = new RectangleFunnel();
-
-function dist(a,b){ return Math.sqrt((a.x-b.x)**2+(a.y-b.y)**2); }
-
-// فيديو مخفي
-const vid=document.createElement('video');
-vid.autoplay=true;vid.playsInline=true;vid.muted=true;
-
-// كانفاس للمعالجة
-const tmp=document.createElement('canvas');
-const tctx=tmp.getContext('2d',{willReadFrequently:true});
-
-// انتظر OpenCV
-const cvTimer=setInterval(()=>{
-  if(typeof cv!=='undefined'&&cv.Mat){
-    clearInterval(cvTimer);
-    cvReady=true;
-    setStatus('وجّه الكاميرا نحو الوثيقة','');
-  }
-},300);
-
-// ── الكاميرا ──
-async function startCam(){
-  try{
-    if(stream)stream.getTracks().forEach(t=>t.stop());
-    stream=await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:{ideal:facing},width:{ideal:1920},height:{ideal:1080}},audio:false
-    });
-    vid.srcObject=stream;
-    vtrack=stream.getVideoTracks()[0];
-    await vid.play();
-    startLoop();
-  }catch(e){setStatus('لا يمكن الوصول للكاميرا','');}
-}
-
-function stopCam(){
-  if(tid){clearInterval(tid);tid=null;}
-  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
-}
-
-// ── الحلقة الرئيسية ──
-function startLoop(){
-  if(tid)clearInterval(tid);
-  const lc=$('live');
-
-  tid=setInterval(()=>{
-    if(!vid.videoWidth||!cvReady)return;
-
-    lc.width=$('scanView').offsetWidth;
-    lc.height=$('scanView').offsetHeight;
-    const ctx=lc.getContext('2d');
-
-    // ارسم الفيديو
-    ctx.drawImage(vid,0,0,lc.width,lc.height);
-
-    // كشف المستطيل
-    tmp.width=lc.width; tmp.height=lc.height;
-    tctx.drawImage(vid,0,0,lc.width,lc.height);
-    const rawQuad = detectRect(tmp,lc.width,lc.height);
-
-    // أرسل للـ funnel
-    const smoothQuad = funnel.add(rawQuad);
-
-    if(smoothQuad){
-      // ارسم الإطار المستقر
-      drawQuad(ctx, smoothQuad, funnel.progress);
-
-      // دائرة التقدم
-      drawRing(ctx, lc.width, lc.height, funnel.progress);
-
-      $('capBtn').className='rdy';
-
-      if(funnel.isStable && !funnel.captured){
-        funnel.captured=true;
-        setStatus('✅ جاهز — جاري الالتقاط','ok');
-        setTimeout(()=>doCapture(smoothQuad),150);
-      } else {
-        setStatus('◉ وثيقة مكتشفة — ثابّت...','ok');
-      }
+function onCvLoad() {
+  const waitForCv = () => {
+    if (typeof cv !== 'undefined' && cv.Mat) {
+      cvReady = true;
     } else {
-      $('capBtn').className='';
-      setStatus('وجّه الكاميرا نحو الوثيقة','');
+      setTimeout(waitForCv, 180);
     }
-  },50);
+  };
+  waitForCv();
 }
 
-// ══ الكشف بـ OpenCV: مستطيلات ومربعات فقط ══
-function detectRect(canvas,W,H){
-  let src,gray,blur,edg,dil,k,cnts,hier;
-  try{
-    src=cv.imread(canvas);
-    gray=new cv.Mat(); cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
-    blur=new cv.Mat(); cv.GaussianBlur(gray,blur,new cv.Size(5,5),0);
-    edg=new cv.Mat(); cv.Canny(blur,edg,30,100);
-    dil=new cv.Mat(); k=cv.Mat.ones(3,3,cv.CV_8U); cv.dilate(edg,dil,k);
-    cnts=new cv.MatVector(); hier=new cv.Mat();
-    cv.findContours(dil,cnts,hier,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
-
-    let best=null, bestArea=0;
-
-    for(let i=0;i<cnts.size();i++){
-      const cnt=cnts.get(i);
-      const area=cv.contourArea(cnt);
-      if(area < W*H*0.04){cnt.delete();continue;} // صغير جداً
-
-      const peri=cv.arcLength(cnt,true);
-      const ap=new cv.Mat();
-      cv.approxPolyDP(cnt,ap,0.02*peri,true);
-
-      if(ap.rows===4){
-        const pts=[];
-        for(let j=0;j<4;j++) pts.push({x:ap.data32S[j*2],y:ap.data32S[j*2+1]});
-
-        // تحقق من الزوايا (90° ± 30°)
-        if(isRect(pts) && area>bestArea){
-          bestArea=area;
-          best=sortCorners(pts);
-        }
-      }
-      ap.delete(); cnt.delete();
-    }
-
-    return best;
-  }catch(e){return null;}
-  finally{[src,gray,blur,edg,dil,k,cnts,hier].forEach(m=>{try{if(m)m.delete();}catch{}});}
-}
-
-function isRect(pts){
-  for(let i=0;i<4;i++){
-    const a=pts[i],b=pts[(i+1)%4],c=pts[(i+2)%4];
-    const v1={x:a.x-b.x,y:a.y-b.y};
-    const v2={x:c.x-b.x,y:c.y-b.y};
-    const dot=v1.x*v2.x+v1.y*v2.y;
-    const len=Math.sqrt((v1.x**2+v1.y**2))*Math.sqrt((v2.x**2+v2.y**2));
-    if(!len)return false;
-    const ang=Math.acos(Math.max(-1,Math.min(1,dot/len)))*180/Math.PI;
-    if(ang<55||ang>125)return false;
+function bindOpenCvLoader() {
+  const opencvScript = document.querySelector('script[data-opencv]');
+  if (typeof cv !== 'undefined') {
+    onCvLoad();
+    return;
   }
-  return true;
+  if (opencvScript) {
+    opencvScript.addEventListener('load', onCvLoad, { once: true });
+    opencvScript.addEventListener('error', () => {}, { once: true });
+  }
 }
 
-function sortCorners(pts){
-  const cx=pts.reduce((s,p)=>s+p.x,0)/4;
-  const cy=pts.reduce((s,p)=>s+p.y,0)/4;
-  const tl=pts.find(p=>p.x<=cx&&p.y<=cy);
-  const tr=pts.find(p=>p.x> cx&&p.y<=cy);
-  const br=pts.find(p=>p.x> cx&&p.y> cy);
-  const bl=pts.find(p=>p.x<=cx&&p.y> cy);
-  if(!tl||!tr||!br||!bl)return null;
-  return [tl,tr,br,bl];
+async function startCamera() {
+  try {
+    stopCamera();
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: facingMode },
+        width: { ideal: 1920 },
+        height: { ideal: 1080 }
+      },
+      audio: false
+    });
+    refs.cameraVideo.srcObject = stream;
+    videoTrack = stream.getVideoTracks()[0] || null;
+    await refs.cameraVideo.play();
+    handleResize();
+    runLoop();
+  } catch (error) {}
 }
 
-// ══ رسم الإطار — اللون يتغير مع التقدم ══
-function drawQuad(ctx,pts,progress){
-  const [tl,tr,br,bl]=pts;
+function stopCamera() {
+  if (animationId) {
+    cancelAnimationFrame(animationId);
+    animationId = null;
+  }
+  if (stream) {
+    stream.getTracks().forEach((track) => track.stop());
+    stream = null;
+    videoTrack = null;
+  }
+}
 
-  // لون يتحول من أزرق إلى أخضر مع الاستقرار
-  const g=Math.round(122+progress*(211-122));
-  const b2=Math.round(255+progress*(0-255));
-  const color=`rgb(0,${g},${b2})`;
-  const alpha=0.45+progress*0.15;
+function handleResize() {
+  refs.overlayCanvas.width = refs.cameraStage.clientWidth;
+  refs.overlayCanvas.height = refs.cameraStage.clientHeight;
+}
 
-  // تعتيم خارج الوثيقة
+function runLoop() {
+  animationId = requestAnimationFrame(runLoop);
+
+  if (!cvReady) {
+    clearOverlay();
+    return;
+  }
+  const video = refs.cameraVideo;
+  if (!video.videoWidth || !video.videoHeight) {
+    clearOverlay();
+    return;
+  }
+
+  frameSkip = (frameSkip + 1) % 2;
+  if (frameSkip !== 0) {
+    drawScene();
+    return;
+  }
+
+  const scaledWidth = PROCESS_WIDTH;
+  const scaledHeight = Math.round((scaledWidth / video.videoWidth) * video.videoHeight);
+  workCanvas.width = scaledWidth;
+  workCanvas.height = scaledHeight;
+  workCtx.drawImage(video, 0, 0, scaledWidth, scaledHeight);
+
+  const nextDetection = detectPassport(workCanvas);
+  if (nextDetection) {
+    const scaleX = video.videoWidth / scaledWidth;
+    const scaleY = video.videoHeight / scaledHeight;
+    const scaledPoints = nextDetection.points.map((point) => ({
+      x: point.x * scaleX,
+      y: point.y * scaleY
+    }));
+    nextDetection.points = smoothDetectedQuad(lastAcceptedPoints, scaledPoints);
+    lastAcceptedPoints = nextDetection.points.map((point) => ({ ...point }));
+    detection = nextDetection;
+
+    if (nextDetection.score >= DETECTION_SCORE_READY) {
+      stableFrames = Math.min(AUTO_CAPTURE_FRAMES, stableFrames + 1);
+    } else {
+      stableFrames = Math.max(0, stableFrames - 1);
+    }
+
+    updateMetrics();
+    refs.captureBtn.classList.toggle('ready', nextDetection.score >= DETECTION_SCORE_READY);
+
+    if (stableFrames >= AUTO_CAPTURE_FRAMES && !autoTriggered) {
+      autoTriggered = true;
+      doCapture();
+    }
+  } else {
+    detection = null;
+    stableFrames = 0;
+    lastAcceptedPoints = null;
+    refs.captureBtn.classList.remove('ready');
+    updateMetrics();
+  }
+
+  drawScene();
+}
+
+function updateMetrics() {
+  refs.detailStability.textContent = `${stableFrames} / ${AUTO_CAPTURE_FRAMES}`;
+  refs.detailScore.textContent = `${Math.round((detection ? detection.score : 0) * 100)}%`;
+}
+
+function smoothDetectedQuad(previous, next) {
+  if (!previous || previous.length !== 4 || !next || next.length !== 4) {
+    return next;
+  }
+
+  const motion = averagePointDistance(previous, next);
+  const blend = motion < 14 ? 0.72 : motion < 28 ? 0.46 : 0;
+  if (!blend) return next;
+
+  return next.map((point, index) => ({
+    x: previous[index].x * blend + point.x * (1 - blend),
+    y: previous[index].y * blend + point.y * (1 - blend)
+  }));
+}
+
+function averagePointDistance(a, b) {
+  let total = 0;
+  for (let i = 0; i < 4; i += 1) {
+    total += distance(a[i], b[i]);
+  }
+  return total / 4;
+}
+
+function drawScene() {
+  const ctx = refs.overlayCanvas.getContext('2d');
+  ctx.clearRect(0, 0, refs.overlayCanvas.width, refs.overlayCanvas.height);
+  if (!detection) {
+    clearOverlay(ctx);
+    return;
+  }
+
+  const screenPoints = mapVideoPointsToScreen(detection.points);
+  drawLiveOverlay(ctx, screenPoints, detection.score);
+}
+
+function clearOverlay(ctx = refs.overlayCanvas.getContext('2d')) {
+  if (!ctx) return;
+  const w = refs.overlayCanvas.width;
+  const h = refs.overlayCanvas.height;
+  ctx.clearRect(0, 0, w, h);
+}
+
+function mapVideoPointsToScreen(points) {
+  const video = refs.cameraVideo;
+  const canvas = refs.overlayCanvas;
+  const videoRatio = video.videoWidth / video.videoHeight;
+  const canvasRatio = canvas.width / canvas.height;
+  let scale;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  if (videoRatio > canvasRatio) {
+    scale = canvas.height / video.videoHeight;
+    offsetX = (canvas.width - video.videoWidth * scale) / 2;
+  } else {
+    scale = canvas.width / video.videoWidth;
+    offsetY = (canvas.height - video.videoHeight * scale) / 2;
+  }
+  return points.map((point) => ({
+    x: point.x * scale + offsetX,
+    y: point.y * scale + offsetY
+  }));
+}
+
+function drawLiveOverlay(ctx, points, score) {
+  const w = refs.overlayCanvas.width;
+  const h = refs.overlayCanvas.height;
+  const [tl, tr, br, bl] = points;
+
   ctx.save();
-  ctx.fillStyle=`rgba(0,0,0,${alpha})`;
-  ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);
-  ctx.globalCompositeOperation='destination-out';
+  ctx.fillStyle = 'rgba(3,6,10,.56)';
+  ctx.fillRect(0, 0, w, h);
+  ctx.globalCompositeOperation = 'destination-out';
   ctx.beginPath();
-  ctx.moveTo(tl.x,tl.y);ctx.lineTo(tr.x,tr.y);ctx.lineTo(br.x,br.y);ctx.lineTo(bl.x,bl.y);
-  ctx.closePath();ctx.fill();
+  ctx.moveTo(tl.x, tl.y);
+  ctx.lineTo(tr.x, tr.y);
+  ctx.lineTo(br.x, br.y);
+  ctx.lineTo(bl.x, bl.y);
+  ctx.closePath();
+  ctx.fill();
   ctx.restore();
 
-  // تعبئة داخلية
   ctx.beginPath();
-  ctx.moveTo(tl.x,tl.y);ctx.lineTo(tr.x,tr.y);ctx.lineTo(br.x,br.y);ctx.lineTo(bl.x,bl.y);
+  ctx.moveTo(tl.x, tl.y);
+  ctx.lineTo(tr.x, tr.y);
+  ctx.lineTo(br.x, br.y);
+  ctx.lineTo(bl.x, bl.y);
   ctx.closePath();
-  ctx.fillStyle=`rgba(0,${g},${b2},0.06)`;ctx.fill();
+  ctx.fillStyle = `rgba(89,168,255,${0.08 + score * 0.12})`;
+  ctx.fill();
+  ctx.strokeStyle = score >= 0.82 ? 'rgba(124,229,211,.98)' : 'rgba(89,168,255,.96)';
+  ctx.lineWidth = 2.6;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
 
-  // حدود
-  ctx.beginPath();
-  ctx.moveTo(tl.x,tl.y);ctx.lineTo(tr.x,tr.y);ctx.lineTo(br.x,br.y);ctx.lineTo(bl.x,bl.y);
-  ctx.closePath();
-  ctx.strokeStyle=color;ctx.lineWidth=2+progress;ctx.lineJoin='round';ctx.stroke();
+  const marker = 30;
+  ctx.strokeStyle = score >= 0.82 ? '#7ce5d3' : '#59a8ff';
+  ctx.lineWidth = 4.2;
+  ctx.lineCap = 'round';
+  drawPolyCorner(ctx, bl, tl, tr, marker);
+  drawPolyCorner(ctx, tl, tr, br, marker);
+  drawPolyCorner(ctx, tr, br, bl, marker);
+  drawPolyCorner(ctx, br, bl, tl, marker);
 
-  // زوايا واضحة
-  const L=26+progress*6;
-  ctx.strokeStyle=color;ctx.lineWidth=4;ctx.lineCap='round';
-  [[bl,tl,tr],[tl,tr,br],[tr,br,bl],[br,bl,tl]].forEach(([a,m,b])=>{
-    const d1=dist(m,a)||1,d2=dist(m,b)||1;
+  points.forEach((point) => {
     ctx.beginPath();
-    ctx.moveTo(m.x+(a.x-m.x)/d1*L,m.y+(a.y-m.y)/d1*L);
-    ctx.lineTo(m.x,m.y);
-    ctx.lineTo(m.x+(b.x-m.x)/d2*L,m.y+(b.y-m.y)/d2*L);
+    ctx.arc(point.x, point.y, 4.8, 0, Math.PI * 2);
+    ctx.fillStyle = '#f5fbff';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, 11.5, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,255,255,.2)';
+    ctx.lineWidth = 2;
     ctx.stroke();
   });
-
-  // نقاط الزوايا مع هالة
-  [tl,tr,br,bl].forEach(p=>{
-    ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);
-    ctx.fillStyle=color;ctx.fill();
-    ctx.beginPath();ctx.arc(p.x,p.y,11,0,Math.PI*2);
-    ctx.strokeStyle=`rgba(0,${g},${b2},0.35)`;ctx.lineWidth=2;ctx.stroke();
-  });
 }
 
-// دائرة تقدم
-function drawRing(ctx,w,h,p){
-  if(p<=0)return;
-  const cx=w/2,cy=h/2,r=30;
-  const g=Math.round(122+p*(211-122));
-  const b2=Math.round(255+p*(0-255));
-  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
-  ctx.fillStyle='rgba(0,0,0,.6)';ctx.fill();
+function drawPolyCorner(ctx, from, pivot, to, length) {
+  const len1 = Math.hypot(from.x - pivot.x, from.y - pivot.y) || 1;
+  const len2 = Math.hypot(to.x - pivot.x, to.y - pivot.y) || 1;
   ctx.beginPath();
-  ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(p,1));
-  ctx.strokeStyle=`rgb(0,${g},${b2})`;ctx.lineWidth=4.5;ctx.lineCap='round';ctx.stroke();
+  ctx.moveTo(pivot.x + ((from.x - pivot.x) / len1) * length, pivot.y + ((from.y - pivot.y) / len1) * length);
+  ctx.lineTo(pivot.x, pivot.y);
+  ctx.lineTo(pivot.x + ((to.x - pivot.x) / len2) * length, pivot.y + ((to.y - pivot.y) / len2) * length);
+  ctx.stroke();
 }
 
-// ══ الالتقاط + القص ══
-function doCapture(quad){
-  if(tid){clearInterval(tid);tid=null;}
-  $('fx').style.opacity='1';
-  setTimeout(()=>$('fx').style.opacity='0',80);
+function detectPassport(canvas) {
+  let src = null;
+  let gray = null;
+  let blurred = null;
+  let normalized = null;
+  let edges = null;
+  let thresholded = null;
+  let merged = null;
+  let closed = null;
+  let kernel = null;
+  let contours = null;
+  let hierarchy = null;
+  let bestApprox = null;
 
-  const full=document.createElement('canvas');
-  full.width=vid.videoWidth||1280;full.height=vid.videoHeight||720;
-  full.getContext('2d').drawImage(vid,0,0,full.width,full.height);
+  try {
+    src = cv.imread(canvas);
+    gray = new cv.Mat();
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
 
-  // حوّل الزوايا من الشاشة لإحداثيات الفيديو
-  const lc=$('live');
-  const sx=full.width/lc.width, sy=full.height/lc.height;
-  const [tl,tr,br,bl]=quad.map(p=>({x:p.x*sx,y:p.y*sy}));
+    blurred = new cv.Mat();
+    cv.GaussianBlur(gray, blurred, new cv.Size(5, 5), 0);
 
-  // Perspective crop
-  const cropped=perspCrop(full,tl,tr,br,bl);
-  const out=cropped||full;
-  enhance(out.getContext('2d'),out.width,out.height);
-  url_=out.toDataURL('image/jpeg',.95);
-  out.toBlob(b=>{blob_=b;showReview();},'image/jpeg',.95);
-}
+    normalized = new cv.Mat();
+    cv.equalizeHist(blurred, normalized);
 
-function manualCap(){
-  if(!vid.videoWidth)return;
-  if(tid){clearInterval(tid);tid=null;}
-  const full=document.createElement('canvas');
-  full.width=vid.videoWidth;full.height=vid.videoHeight;
-  full.getContext('2d').drawImage(vid,0,0,full.width,full.height);
-  enhance(full.getContext('2d'),full.width,full.height);
-  url_=full.toDataURL('image/jpeg',.95);
-  full.toBlob(b=>{blob_=b;showReview();},'image/jpeg',.95);
-}
+    edges = new cv.Mat();
+    cv.Canny(normalized, edges, 40, 140);
 
-function perspCrop(src,tl,tr,br,bl){
-  let s,d,sm,dm,M;
-  try{
-    const W=Math.round(Math.max(dist(tl,tr),dist(bl,br)));
-    const H=Math.round(Math.max(dist(tl,bl),dist(tr,br)));
-    if(W<50||H<50)return null;
-    s=cv.imread(src);d=new cv.Mat();
-    sm=cv.matFromArray(4,1,cv.CV_32FC2,[tl.x,tl.y,tr.x,tr.y,br.x,br.y,bl.x,bl.y]);
-    dm=cv.matFromArray(4,1,cv.CV_32FC2,[0,0,W,0,W,H,0,H]);
-    M=cv.getPerspectiveTransform(sm,dm);
-    cv.warpPerspective(s,d,M,new cv.Size(W,H),cv.INTER_LINEAR,cv.BORDER_CONSTANT,new cv.Scalar());
-    const out=document.createElement('canvas');
-    out.width=W;out.height=H;cv.imshow(out,d);
-    return out;
-  }catch(e){return null;}
-  finally{[s,d,sm,dm,M].forEach(m=>{try{if(m)m.delete();}catch{}});}
-}
+    thresholded = new cv.Mat();
+    cv.threshold(normalized, thresholded, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
 
-function enhance(ctx,w,h){
-  const d=ctx.getImageData(0,0,w,h);
-  for(let i=0;i<d.data.length;i+=4){
-    d.data[i]=cl(((d.data[i]-128)*1.18)+132);
-    d.data[i+1]=cl(((d.data[i+1]-128)*1.18)+132);
-    d.data[i+2]=cl(((d.data[i+2]-128)*1.18)+132);
+    merged = new cv.Mat();
+    cv.bitwise_or(edges, thresholded, merged);
+
+    kernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(7, 7));
+    closed = new cv.Mat();
+    cv.morphologyEx(merged, closed, cv.MORPH_CLOSE, kernel);
+
+    contours = new cv.MatVector();
+    hierarchy = new cv.Mat();
+    cv.findContours(closed, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+    let bestScore = 0;
+    let bestPoints = null;
+
+    for (let i = 0; i < contours.size(); i += 1) {
+      const contour = contours.get(i);
+      const area = cv.contourArea(contour);
+      if (area < canvas.width * canvas.height * 0.08) {
+        contour.delete();
+        continue;
+      }
+
+      const perimeter = cv.arcLength(contour, true);
+      const attempts = [0.018, 0.024, 0.03];
+      let points = null;
+      let approx = null;
+
+      for (const epsilonFactor of attempts) {
+        const candidate = new cv.Mat();
+        cv.approxPolyDP(contour, candidate, epsilonFactor * perimeter, true);
+        if (candidate.rows === 4) {
+          points = extractPointsFromApprox(candidate);
+          approx = candidate;
+          break;
+        }
+        candidate.delete();
+      }
+
+      if (points && approx) {
+        const ordered = sortQuad(points);
+        if (ordered) {
+          const score = scoreQuad(ordered, area, canvas.width, canvas.height, contour, perimeter);
+          if (score > bestScore) {
+            bestScore = score;
+            bestPoints = ordered;
+            if (bestApprox) bestApprox.delete();
+            bestApprox = approx;
+          } else {
+            approx.delete();
+          }
+        } else {
+          approx.delete();
+        }
+      } else if (approx) {
+        approx.delete();
+      }
+      contour.delete();
+    }
+
+    if (!bestPoints) return null;
+
+    return {
+      points: bestPoints,
+      score: Math.max(0, Math.min(0.98, bestScore))
+    };
+  } catch (error) {
+    return null;
+  } finally {
+    [src, gray, blurred, normalized, edges, thresholded, merged, closed, kernel, contours, hierarchy, bestApprox].forEach((mat) => {
+      try {
+        if (mat) mat.delete();
+      } catch (_) {}
+    });
   }
-  ctx.putImageData(d,0,0);
-}
-const cl=v=>Math.min(255,Math.max(0,Math.round(v)));
-
-function showReview(){
-  stopCam();$('rvi').src=url_;
-  $('scanView').style.display='none';$('rv').style.display='flex';
 }
 
-function retake(){
-  blob_=null;url_=null;
-  ['rv','sndV','sucV','errV'].forEach(id=>{$(id).style.display='none';});
-  $('scanView').style.display='';
-  funnel.reset();$('capBtn').className='';
-  startCam();
+function extractPointsFromApprox(approx) {
+  const pts = [];
+  for (let i = 0; i < 4; i += 1) {
+    pts.push({ x: approx.data32S[i * 2], y: approx.data32S[i * 2 + 1] });
+  }
+  return pts;
 }
 
-async function sendImg(){
-  if(!blob_)return;
-  $('rv').style.display='none';$('sndV').style.display='flex';
-  prog(15);sMsg('جاري الإرسال...');
-  try{
-    prog(35);
-    const fd=new FormData();fd.append('data',blob_,'passport.jpg');fd.append('_sid',SID);
-    const res=await fetch(N8N,{method:'POST',body:fd});
-    prog(70);sMsg('جاري قراءة البيانات...');
-    const txt=await res.text();
-    let j=null;
-    try{j=JSON.parse(txt);}catch{const m=txt.match(/\{[\s\S]*\}/);if(m)try{j=JSON.parse(m[0]);}catch{}}
-    if(!res.ok)throw new Error('HTTP '+res.status);
-    if(!j)throw new Error('لم يرجع بيانات');
-    if(Array.isArray(j))j=j[0]||{};
-    if(j.data&&typeof j.data==='object')j=j.data;
-    prog(100);sMsg('تم!');setTimeout(()=>showSuc(j),300);
-  }catch(e){$('sndV').style.display='none';$('errMsg').textContent=e.message||'خطأ';$('errV').style.display='flex';}
+function sortQuad(points) {
+  if (!points || points.length !== 4) return null;
+  const center = points.reduce((acc, point) => ({
+    x: acc.x + point.x / 4,
+    y: acc.y + point.y / 4
+  }), { x: 0, y: 0 });
+
+  const byAngle = [...points].sort((a, b) => {
+    const angleA = Math.atan2(a.y - center.y, a.x - center.x);
+    const angleB = Math.atan2(b.y - center.y, b.x - center.x);
+    return angleA - angleB;
+  });
+
+  let startIndex = 0;
+  let minScore = Infinity;
+  for (let i = 0; i < byAngle.length; i += 1) {
+    const score = byAngle[i].x + byAngle[i].y;
+    if (score < minScore) {
+      minScore = score;
+      startIndex = i;
+    }
+  }
+
+  const ordered = [
+    byAngle[startIndex],
+    byAngle[(startIndex + 1) % 4],
+    byAngle[(startIndex + 2) % 4],
+    byAngle[(startIndex + 3) % 4]
+  ];
+
+  if (polygonArea(ordered) < 0) {
+    ordered.reverse();
+    ordered.unshift(ordered.pop());
+  }
+
+  const unique = new Set(ordered.map((p) => `${Math.round(p.x)}:${Math.round(p.y)}`));
+  if (unique.size < 4) return null;
+  return ordered;
 }
-const prog=p=>$('pFll').style.width=p+'%';
-const sMsg=m=>$('sndMsg').textContent=m;
 
-function showSuc(d){
-  $('sndV').style.display='none';
-  const F=[['الاسم',d.nameEnglish],['رقم الجواز',d.passportNumber||d.passportNo],
-    ['الجنسية',d.nationalityArabic],['الميلاد',d.dateOfBirth],['الإصدار',d.dateOfIssue],['الانتهاء',d.dateOfExpiry]
-  ].filter(([,v])=>v&&v!=='null');
-  $('resCard').innerHTML=F.map(([l,v])=>`<div class="row"><span class="lbl">${l}</span><span class="val">${v}</span></div>`).join('');
-  $('sucV').style.display='flex';
+function polygonArea(points) {
+  let total = 0;
+  for (let i = 0; i < points.length; i += 1) {
+    const current = points[i];
+    const next = points[(i + 1) % points.length];
+    total += current.x * next.y - next.x * current.y;
+  }
+  return total / 2;
 }
 
-function newScan(){
-  $('sucV').style.display='none';$('scanView').style.display='';
-  blob_=null;url_=null;funnel.reset();startCam();
+function scoreQuad(points, contourArea, width, height, contour, perimeter) {
+  const [tl, tr, br, bl] = points;
+  const top = distance(tl, tr);
+  const bottom = distance(bl, br);
+  const left = distance(tl, bl);
+  const right = distance(tr, br);
+
+  const averageWidth = (top + bottom) / 2;
+  const averageHeight = (left + right) / 2;
+  const ratio = averageWidth / Math.max(1, averageHeight);
+  const ratioScore = 1 - Math.min(1, Math.abs(ratio - PASSPORT_RATIO) / 0.9);
+
+  const balanceScore = 1 - Math.min(1, Math.abs(top - bottom) / Math.max(top, bottom, 1) + Math.abs(left - right) / Math.max(left, right, 1));
+  const sizeScore = Math.min(1, contourArea / (width * height * 0.46));
+  const angleScore = getAngleScore(points);
+  const fillScore = Math.min(1, Math.abs(polygonArea(points)) / Math.max(contourArea, 1));
+  const compactness = Math.min(1, (4 * Math.PI * contourArea) / Math.max(perimeter * perimeter, 1));
+  const documentShapeScore = 1 - Math.abs(fillScore - 1);
+  const compactScore = 1 - Math.min(1, Math.abs(compactness - 0.78) / 0.45);
+
+  return ratioScore * 0.26 + balanceScore * 0.16 + sizeScore * 0.22 + angleScore * 0.16 + documentShapeScore * 0.1 + compactScore * 0.1;
 }
 
-const setStatus=(t,c)=>{const p=$('status');p.textContent=t;p.className=c};
-
-async function toggleFlash(){
-  if(!vtrack)return;flashOn=!flashOn;
-  try{await vtrack.applyConstraints({advanced:[{torch:flashOn}]});$('flBtn').className='tb'+(flashOn?' on':'');}
-  catch{$('flBtn').style.opacity='.4';}
+function getAngleScore(points) {
+  const angles = [];
+  for (let i = 0; i < 4; i += 1) {
+    const prev = points[(i + 3) % 4];
+    const cur = points[i];
+    const next = points[(i + 1) % 4];
+    const v1 = { x: prev.x - cur.x, y: prev.y - cur.y };
+    const v2 = { x: next.x - cur.x, y: next.y - cur.y };
+    const dot = v1.x * v2.x + v1.y * v2.y;
+    const mag1 = Math.hypot(v1.x, v1.y) || 1;
+    const mag2 = Math.hypot(v2.x, v2.y) || 1;
+    const angle = Math.acos(Math.max(-1, Math.min(1, dot / (mag1 * mag2))));
+    angles.push(angle * (180 / Math.PI));
+  }
+  const avgDeviation = angles.reduce((sum, angle) => sum + Math.abs(angle - 90), 0) / angles.length;
+  return 1 - Math.min(1, avgDeviation / 28);
 }
-async function flipCam(){facing=facing==='environment'?'user':'environment';stopCam();funnel.reset();await startCam();}
-function goBack(){stopCam();if(window.history.length>1)window.history.back();else window.location.href='index.html';}
 
-$('gin').addEventListener('change',e=>{
-  const f=e.target.files[0];if(!f)return;
-  const rd=new FileReader();
-  rd.onload=()=>{
-    const img=new Image();
-    img.onload=()=>{
-      $('galImg').src=rd.result;$('galImg').style.display='block';$('galIco').style.display='none';
-      const s=Math.min(1,2200/Math.max(img.width,img.height));
-      const c=document.createElement('canvas');
-      c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);
-      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-      let out=c;
-      if(cvReady){
-        tmp.width=c.width;tmp.height=c.height;tctx.drawImage(img,0,0,c.width,c.height);
-        const q=detectRect(tmp,c.width,c.height);
-        if(q){
-          const [tl,tr,br,bl]=q;
-          const cr=perspCrop(c,tl,tr,br,bl);
-          if(cr)out=cr;
+function distance(a, b) {
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function doCapture() {
+  const video = refs.cameraVideo;
+  if (!video.videoWidth || !video.videoHeight) return;
+
+  if (animationId) {
+    cancelAnimationFrame(animationId);
+    animationId = null;
+  }
+
+  flashScreen();
+
+  const fullCanvas = document.createElement('canvas');
+  fullCanvas.width = video.videoWidth;
+  fullCanvas.height = video.videoHeight;
+  fullCanvas.getContext('2d').drawImage(video, 0, 0, fullCanvas.width, fullCanvas.height);
+
+  let outputCanvas = null;
+  if (detection && cvReady) {
+    outputCanvas = perspectiveCrop(fullCanvas, detection.points);
+    lastDetectionMode = outputCanvas ? 'قص تلقائي' : 'تحسين بدون قص';
+  }
+
+  if (!outputCanvas) {
+    outputCanvas = fullCanvas;
+    enhanceCanvas(outputCanvas, false);
+  }
+
+  refs.detailMode.textContent = lastDetectionMode;
+  croppedUrl = outputCanvas.toDataURL('image/jpeg', 0.96);
+  outputCanvas.toBlob((blob) => {
+    croppedBlob = blob;
+    showReview();
+  }, 'image/jpeg', 0.96);
+}
+
+function perspectiveCrop(sourceCanvas, points) {
+  let src = null;
+  let dst = null;
+  let srcTri = null;
+  let dstTri = null;
+  let transform = null;
+
+  try {
+    const [tl, tr, br, bl] = points;
+    const top = distance(tl, tr);
+    const bottom = distance(bl, br);
+    const left = distance(tl, bl);
+    const right = distance(tr, br);
+    let targetWidth = Math.round(Math.max(top, bottom));
+    let targetHeight = Math.round(Math.max(left, right));
+
+    if (targetWidth < 100 || targetHeight < 60) return null;
+    const ratio = targetWidth / Math.max(1, targetHeight);
+    if (ratio < 1.1) {
+      const swap = targetWidth;
+      targetWidth = Math.round(targetHeight * PASSPORT_RATIO);
+      targetHeight = Math.round(swap / PASSPORT_RATIO);
+    }
+
+    src = cv.imread(sourceCanvas);
+    dst = new cv.Mat();
+    srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
+      tl.x, tl.y,
+      tr.x, tr.y,
+      br.x, br.y,
+      bl.x, bl.y
+    ]);
+    dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
+      0, 0,
+      targetWidth, 0,
+      targetWidth, targetHeight,
+      0, targetHeight
+    ]);
+    transform = cv.getPerspectiveTransform(srcTri, dstTri);
+    cv.warpPerspective(src, dst, transform, new cv.Size(targetWidth, targetHeight), cv.INTER_LINEAR, cv.BORDER_REPLICATE, new cv.Scalar());
+
+    const out = document.createElement('canvas');
+    out.width = targetWidth;
+    out.height = targetHeight;
+    cv.imshow(out, dst);
+    enhanceCanvas(out, true);
+    return out;
+  } catch (error) {
+    return null;
+  } finally {
+    [src, dst, srcTri, dstTri, transform].forEach((mat) => {
+      try {
+        if (mat) mat.delete();
+      } catch (_) {}
+    });
+  }
+}
+
+function enhanceCanvas(canvas, sharpen) {
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = image.data;
+
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+    const gain = sharpen ? 1.12 : 1.06;
+    const boost = sharpen ? 10 : 6;
+    data[i] = clamp((r - luma) * gain + luma + boost);
+    data[i + 1] = clamp((g - luma) * gain + luma + boost);
+    data[i + 2] = clamp((b - luma) * gain + luma + boost);
+  }
+  ctx.putImageData(image, 0, 0);
+}
+
+function clamp(value) {
+  return Math.max(0, Math.min(255, Math.round(value)));
+}
+
+function flashScreen() {
+  refs.flashFx.style.opacity = '1';
+  setTimeout(() => {
+    refs.flashFx.style.opacity = '0';
+  }, 90);
+}
+
+function showReview() {
+  stopCamera();
+  refs.reviewImage.src = croppedUrl;
+  refs.scanView.style.display = 'none';
+  refs.resultView.style.display = 'none';
+  refs.errorView.style.display = 'none';
+  refs.progressView.style.display = 'none';
+  refs.reviewView.style.display = 'flex';
+}
+
+function resetScanner() {
+  croppedBlob = null;
+  croppedUrl = '';
+  detection = null;
+  stableFrames = 0;
+  autoTriggered = false;
+  refs.captureBtn.classList.remove('ready');
+  refs.detailScore.textContent = '0%';
+  refs.detailStability.textContent = `0 / ${AUTO_CAPTURE_FRAMES}`;
+  refs.detailMode.textContent = 'قص تلقائي';
+}
+
+function goToScanner() {
+  refs.reviewView.style.display = 'none';
+  refs.progressView.style.display = 'none';
+  refs.resultView.style.display = 'none';
+  refs.errorView.style.display = 'none';
+  refs.scanView.style.display = 'flex';
+  resetScanner();
+  startCamera();
+}
+
+async function sendImage() {
+  if (!croppedBlob) return;
+  refs.reviewView.style.display = 'none';
+  refs.progressView.style.display = 'flex';
+  updateProgress(18, 'رفع الصورة المقصوصة إلى الخدمة.');
+
+  try {
+    const form = new FormData();
+    form.append('data', croppedBlob, 'passport-scan.jpg');
+    form.append('_sid', SESSION_ID);
+
+    updateProgress(44, 'تم الرفع، ننتظر نتيجة التحليل.');
+    const response = await fetch(WEBHOOK_URL, { method: 'POST', body: form });
+    const text = await response.text();
+    updateProgress(78, 'جاري قراءة البيانات المسترجعة.');
+
+    let payload = null;
+    try {
+      payload = JSON.parse(text);
+    } catch (_) {
+      const match = text.match(/\{[\s\S]*\}/);
+      if (match) {
+        try {
+          payload = JSON.parse(match[0]);
+        } catch (_) {}
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    if (Array.isArray(payload)) payload = payload[0] || {};
+    if (payload && payload.data && typeof payload.data === 'object') payload = payload.data;
+    if (!payload || typeof payload !== 'object') {
+      throw new Error('لم تصل بيانات صالحة من الخدمة');
+    }
+
+    updateProgress(100, 'تم استلام البيانات بنجاح.');
+    setTimeout(() => showResult(payload), 300);
+  } catch (error) {
+    refs.progressView.style.display = 'none';
+    refs.errorText.textContent = error.message || 'حدث خطأ غير متوقع أثناء الإرسال.';
+    refs.errorView.style.display = 'flex';
+  }
+}
+
+function updateProgress(percent, message) {
+  refs.sendProgress.style.width = `${percent}%`;
+  refs.progressText.textContent = message;
+}
+
+function showResult(data) {
+  refs.progressView.style.display = 'none';
+  const rows = [
+    ['الاسم', data.nameEnglish || data.fullName || data.name],
+    ['رقم الجواز', data.passportNumber || data.passportNo || data.documentNumber],
+    ['الجنسية', data.nationalityArabic || data.nationality],
+    ['تاريخ الميلاد', data.dateOfBirth || data.birthDate],
+    ['تاريخ الإصدار', data.dateOfIssue || data.issueDate],
+    ['تاريخ الانتهاء', data.dateOfExpiry || data.expiryDate]
+  ].filter(([, value]) => value && value !== 'null' && value !== 'undefined');
+
+  refs.resultGrid.innerHTML = rows.length
+    ? rows.map(([label, value]) => `<div class="result-row"><span>${label}</span><strong>${value}</strong></div>`).join('')
+    : '<div class="result-row"><span>ملاحظة</span><strong>تم الإرسال لكن لم ترجع الحقول المتوقعة.</strong></div>';
+
+  refs.resultView.style.display = 'flex';
+}
+
+async function toggleTorch() {
+  if (!videoTrack) return;
+  torchEnabled = !torchEnabled;
+  try {
+    await videoTrack.applyConstraints({ advanced: [{ torch: torchEnabled }] });
+    refs.flashBtn.classList.toggle('active', torchEnabled);
+  } catch (_) {
+    torchEnabled = false;
+    refs.flashBtn.classList.remove('active');
+  }
+}
+
+async function flipCamera() {
+  facingMode = facingMode === 'environment' ? 'user' : 'environment';
+  resetScanner();
+  await startCamera();
+}
+
+function goBack() {
+  stopCamera();
+  if (window.history.length > 1) {
+    window.history.back();
+  } else {
+    window.location.href = 'index.html';
+  }
+}
+
+function handleGalleryFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const image = new Image();
+    image.onload = () => {
+      const scale = Math.min(1, 2400 / Math.max(image.width, image.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(image.width * scale);
+      canvas.height = Math.round(image.height * scale);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+      refs.galleryThumb.src = reader.result;
+      refs.galleryThumb.style.display = 'block';
+      refs.galleryIcon.style.display = 'none';
+
+      let output = null;
+      if (cvReady) {
+        const found = detectPassport(canvas);
+        if (found) {
+          output = perspectiveCrop(canvas, found.points);
+          detection = found;
+          stableFrames = AUTO_CAPTURE_FRAMES;
+          refs.detailScore.textContent = `${Math.round(found.score * 100)}%`;
+          refs.detailStability.textContent = `${AUTO_CAPTURE_FRAMES} / ${AUTO_CAPTURE_FRAMES}`;
+          lastDetectionMode = output ? 'قص من صورة مرفوعة' : 'تحسين من صورة مرفوعة';
         }
       }
-      enhance(out.getContext('2d'),out.width,out.height);
-      url_=out.toDataURL('image/jpeg',.95);
-      out.toBlob(b=>{blob_=b;$('rvi').src=url_;showReview();},'image/jpeg',.95);
+
+      if (!output) {
+        output = canvas;
+        enhanceCanvas(output, false);
+        lastDetectionMode = 'تحسين من صورة مرفوعة';
+      }
+
+      refs.detailMode.textContent = lastDetectionMode;
+      croppedUrl = output.toDataURL('image/jpeg', 0.96);
+      output.toBlob((blob) => {
+        croppedBlob = blob;
+        showReview();
+      }, 'image/jpeg', 0.96);
     };
-    img.src=rd.result;
+    image.src = reader.result;
   };
-  rd.readAsDataURL(f);e.target.value='';
+  reader.readAsDataURL(file);
+}
+
+refs.captureBtn.addEventListener('click', doCapture);
+refs.flashBtn.addEventListener('click', toggleTorch);
+refs.flipBtn.addEventListener('click', flipCamera);
+refs.closeBtn.addEventListener('click', goBack);
+refs.galleryBtn.addEventListener('click', () => refs.galleryInput.click());
+refs.galleryInput.addEventListener('change', (event) => {
+  const file = event.target.files[0];
+  handleGalleryFile(file);
+  event.target.value = '';
+});
+refs.retakeBtn.addEventListener('click', goToScanner);
+refs.sendBtn.addEventListener('click', sendImage);
+refs.retryBtn.addEventListener('click', sendImage);
+refs.backToScanBtn.addEventListener('click', goToScanner);
+refs.scanAgainBtn.addEventListener('click', goToScanner);
+refs.reviewAgainBtn.addEventListener('click', () => {
+  refs.resultView.style.display = 'none';
+  refs.reviewView.style.display = 'flex';
 });
 
-document.addEventListener('visibilitychange',()=>{
-  if(document.hidden)stopCam();
-  else if($('scanView').style.display!=='none'){funnel.reset();startCam();}
+window.addEventListener('resize', handleResize);
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    stopCamera();
+  } else if (refs.scanView.style.display !== 'none') {
+    resetScanner();
+    startCamera();
+  }
 });
 
-startCam();
+bindOpenCvLoader();
+startCamera();
 </script>
 </body>
 </html>
