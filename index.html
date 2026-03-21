@@ -94,12 +94,11 @@ body { background: var(--bg); color: var(--text); font-family: 'Cairo', sans-ser
   </div>
 
   <div class="action-grid">
-    <label class="action-btn btn-camera">
-      <input type="file" accept="image/*" capture="environment" id="cameraIn">
+    <div class="action-btn btn-camera" onclick="window.location.href='scanner.html'" style="cursor:pointer">
       <span class="btn-icon">📷</span>
       <span class="btn-label">كاميرا</span>
-      <span class="btn-sub">مسح مباشر</span>
-    </label>
+      <span class="btn-sub">ماسح ضوئي</span>
+    </div>
     <label class="action-btn btn-gallery">
       <input type="file" accept="image/*" id="galleryIn">
       <span class="btn-icon">🖼️</span>
