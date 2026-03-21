@@ -153,7 +153,7 @@ let tid=null;
 
 // متغيرات الاستقرار
 let stableCount=0;
-const STABLE=20; // 2 ثانية
+const STABLE=8; // 2 ثانية
 let captured=false;
 
 // كانفاس مؤقت للمعالجة
@@ -211,33 +211,55 @@ function startLoop(v){
     try{result=scanner.highlightPaper(tmp);}catch(e){}
 
     if(result){
-      // رسم النتيجة (فيديو + إطار)
       ctx.drawImage(result,0,0,lc.width,lc.height);
 
-      stableCount++;
-      const progress=Math.min(stableCount/STABLE,1);
+      // تحقق من جودة الكشف — هل الكانفاس المرجع مختلف عن الأصلي؟
+      const isGood = verifyDetection(result, tmp, lc.width, lc.height);
 
-      // دائرة العداد
-      drawRing(ctx,lc.width,lc.height,progress);
+      if(isGood){
+        stableCount++;
+      } else {
+        stableCount = Math.max(0, stableCount - 1);
+      }
 
-      if(stableCount<STABLE){
-        const s=(((STABLE-stableCount)*0.1)).toFixed(1);
-        setStatus(`◉ اكتشف الجواز  ${s}s`,'ok');
-        $('capBtn').className='found';
-      }else if(!captured){
-        captured=true;
-        setStatus('✅ جاري الالتقاط...','ok');
-        setTimeout(()=>doCapture(v),150);
+      const progress = Math.min(stableCount / STABLE, 1);
+      drawRing(ctx, lc.width, lc.height, progress);
+
+      if(stableCount >= STABLE && !captured){
+        captured = true;
+        setStatus('✅ جاري الالتقاط...', 'ok');
+        setTimeout(()=>doCapture(v), 100);
+      } else if(stableCount > 0){
+        setStatus('◉ جواز مكتشف — ثابّت...', 'ok');
+        $('capBtn').className = 'found';
       }
     }else{
-      // لا يوجد وثيقة — اعرض الفيديو العادي
       ctx.drawImage(tmp,0,0,lc.width,lc.height);
-      if(stableCount>0) stableCount=Math.max(0,stableCount-2);
-      if(stableCount===0) captured=false;
-      $('capBtn').className='';
-      setStatus('ضع الجواز أمام الكاميرا','');
+      stableCount = Math.max(0, stableCount - 2);
+      if(stableCount === 0){ captured = false; $('capBtn').className = ''; }
+      setStatus('ضع الجواز أمام الكاميرا', '');
     }
-  },100);
+  },50);
+}
+
+
+// تحقق من أن الكشف حقيقي — الكانفاس المرجع يجب أن يختلف عن الأصل
+function verifyDetection(result, original, w, h){
+  try{
+    const rctx = result.getContext('2d');
+    const octx = original.getContext('2d');
+    const sample = 20; // عينة من النقاط
+    const step = Math.floor(w / sample);
+    let diff = 0;
+    const rd = rctx.getImageData(0, Math.floor(h*0.5), w, 1).data;
+    const od = octx.getImageData(0, Math.floor(h*0.5), w, 1).data;
+    for(let x=0; x<w; x+=step){
+      const i = x*4;
+      diff += Math.abs(rd[i]-od[i]) + Math.abs(rd[i+1]-od[i+1]) + Math.abs(rd[i+2]-od[i+2]);
+    }
+    // إذا كان الفرق كافياً = رُسم إطار = تم الكشف
+    return diff > 300;
+  }catch(e){ return true; }
 }
 
 function drawRing(ctx,w,h,p){
