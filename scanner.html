@@ -19,17 +19,19 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:-ap
 .tb{width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.5);
   border:1px solid rgba(255,255,255,.2);color:#fff;font-size:15px;cursor:pointer;
   display:flex;align-items:center;justify-content:center}
+.tb.on{background:rgba(255,210,0,.4)}
 #bot{position:absolute;bottom:0;left:0;right:0;z-index:10;
   padding:20px 40px calc(env(safe-area-inset-bottom,34px)+16px);
   display:flex;align-items:center;justify-content:space-between;
   background:linear-gradient(to top,rgba(0,0,0,.75),transparent)}
 #capBtn{width:74px;height:74px;border-radius:50%;
   border:5px solid rgba(255,255,255,.35);background:#fff;
-  cursor:pointer;position:relative;flex-shrink:0;transition:all .2s}
-#capBtn::after{content:'';position:absolute;inset:5px;border-radius:50%;background:#fff;transition:all .2s}
+  cursor:pointer;position:relative;flex-shrink:0;transition:all .25s}
+#capBtn::after{content:'';position:absolute;inset:5px;border-radius:50%;background:#fff;transition:all .25s}
 #capBtn:active{transform:scale(.9)}
-#capBtn.found::after{background:#007AFF}
-#capBtn.found{border-color:rgba(0,122,255,.7);box-shadow:0 0 0 6px rgba(0,122,255,.2),0 0 30px rgba(0,122,255,.4)}
+#capBtn.rdy{border-color:rgba(0,122,255,.8);
+  box-shadow:0 0 0 6px rgba(0,122,255,.25),0 0 32px rgba(0,122,255,.5)}
+#capBtn.rdy::after{background:#007AFF}
 #galBtn{width:50px;height:50px;border-radius:12px;overflow:hidden;cursor:pointer;
   background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
   display:flex;align-items:center;justify-content:center;font-size:22px}
@@ -40,36 +42,26 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:-ap
   border:1px solid rgba(255,255,255,.1);font-size:14px;font-weight:600;
   pointer-events:none;transition:all .25s}
 #status.ok{background:rgba(0,122,255,.4);border-color:rgba(0,122,255,.7);color:#c0deff}
-#status.go{background:rgba(52,199,89,.4);border-color:rgba(52,199,89,.7);color:#aff5c4}
 #fx{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:99;transition:opacity .06s}
 
-/* REVIEW */
 #rv{position:fixed;inset:0;background:#000;display:none;flex-direction:column}
-#rvh{padding:calc(env(safe-area-inset-top,44px)+8px) 20px 14px;
-  display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+#rvh{padding:calc(env(safe-area-inset-top,44px)+8px) 20px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .rb{padding:9px 20px;border-radius:20px;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
 #rtk{background:rgba(255,255,255,.12);color:#fff}
-#snd{background:#007AFF;color:#fff}
+#sndB{background:#007AFF;color:#fff}
 #rvw{flex:1;display:flex;align-items:center;justify-content:center;padding:10px;overflow:hidden}
 #rvi{max-width:100%;max-height:100%;border-radius:14px;object-fit:contain}
-#rvf{padding:10px 20px calc(env(safe-area-inset-bottom,34px)+10px);
-  text-align:center;font-size:13px;color:rgba(255,255,255,.4);flex-shrink:0}
+#rvf{padding:10px 20px calc(env(safe-area-inset-bottom,34px)+10px);text-align:center;font-size:13px;color:rgba(255,255,255,.4);flex-shrink:0}
 
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.97);display:none;
-  flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:200;padding:28px}
-.oIco{font-size:54px}.oTtl{font-size:20px;font-weight:800}
-.oSub{font-size:13px;color:rgba(255,255,255,.5);text-align:center}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.97);display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:200;padding:28px}
+.oI{font-size:54px}.oT{font-size:20px;font-weight:800}.oS{font-size:13px;color:rgba(255,255,255,.5);text-align:center}
 .bar{width:220px;height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
 .fill{height:100%;background:linear-gradient(90deg,#007AFF,#5856D6);border-radius:2px;transition:width .4s}
-.card{width:100%;max-width:340px;background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:14px;display:grid;gap:8px}
+.card{width:100%;max-width:340px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:14px;display:grid;gap:8px}
 .row{display:flex;justify-content:space-between;gap:10px}
-.lbl{font-size:12px;color:rgba(255,255,255,.4);flex-shrink:0}
-.val{font-size:13px;font-weight:600;text-align:left}
-.newBtn{padding:14px 40px;border-radius:26px;background:#007AFF;border:none;
-  color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
-.errBtn{padding:13px 36px;border-radius:22px;background:#ff3b30;border:none;
-  color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+.lbl{font-size:12px;color:rgba(255,255,255,.4);flex-shrink:0}.val{font-size:13px;font-weight:600;text-align:left}
+.nb{padding:14px 40px;border-radius:26px;background:#007AFF;border:none;color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+.eb{padding:13px 36px;border-radius:22px;background:#ff3b30;border:none;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
 input[type=file]{display:none}
 </style>
 </head>
@@ -95,30 +87,28 @@ input[type=file]{display:none}
 <div id="rv" style="display:none;flex-direction:column">
   <div id="rvh">
     <button class="rb" id="rtk" onclick="retake()">إعادة</button>
-    <span style="font-size:16px;font-weight:600">الجواز المقصوص</span>
-    <button class="rb" id="snd" onclick="sendImg()">إرسال ✓</button>
+    <span style="font-size:16px;font-weight:600">الوثيقة المقصوصة</span>
+    <button class="rb" id="sndB" onclick="sendImg()">إرسال ✓</button>
   </div>
   <div id="rvw"><img id="rvi" alt=""></div>
   <div id="rvf">✂️ تم قص الوثيقة وتقويمها تلقائياً</div>
 </div>
 
-<div id="sndV" class="overlay">
-  <div class="oIco">🔬</div><div class="oTtl">جاري الاستخراج...</div>
-  <div class="oSub" id="sndMsg">يتم تحليل الجواز</div>
+<div id="sndV" class="ov">
+  <div class="oI">🔬</div><div class="oT">جاري الاستخراج...</div>
+  <div class="oS" id="sndMsg">يتم تحليل الجواز</div>
   <div class="bar"><div class="fill" id="pFll" style="width:0%"></div></div>
 </div>
-<div id="sucV" class="overlay">
-  <div class="oIco">✅</div>
-  <div class="oTtl" style="color:#30d158">تم الاستخراج!</div>
-  <div class="oSub">تم إرسال البيانات للكمبيوتر</div>
+<div id="sucV" class="ov">
+  <div class="oI">✅</div><div class="oT" style="color:#30d158">تم الاستخراج!</div>
+  <div class="oS">تم إرسال البيانات للكمبيوتر</div>
   <div class="card" id="resCard"></div>
-  <button class="newBtn" onclick="newScan()">📷 مسح جواز جديد</button>
+  <button class="nb" onclick="newScan()">📷 مسح جواز جديد</button>
 </div>
-<div id="errV" class="overlay">
-  <div class="oIco">❌</div>
-  <div class="oTtl" style="color:#ff3b30">فشل الاستخراج</div>
-  <div class="oSub" id="errMsg">حدث خطأ</div>
-  <button class="errBtn" onclick="retake()">حاول مجدداً</button>
+<div id="errV" class="ov">
+  <div class="oI">❌</div><div class="oT" style="color:#ff3b30">فشل الاستخراج</div>
+  <div class="oS" id="errMsg">حدث خطأ</div>
+  <button class="eb" onclick="retake()">حاول مجدداً</button>
 </div>
 <input type="file" id="gin" accept="image/*">
 
@@ -130,10 +120,91 @@ const SID=(()=>{let id=localStorage.getItem('pai_sid');if(!id){id='u'+Math.rando
 const $=id=>document.getElementById(id);
 
 let stream=null,vtrack=null,flashOn=false,facing='environment';
-let blob_=null,url_=null;
-let cvReady=false,tid=null;
-let stableCount=0,captured=false;
-const STABLE=12; // ~0.6 ثانية
+let blob_=null,url_=null,cvReady=false,tid=null;
+
+// ══════════════════════════════════════════════
+//  RectangleFeaturesFunnel — مستوحى من WeScan
+//  يحفظ تاريخ الكشف ويحسب متوسط الزوايا
+//  للحصول على ثبات حقيقي قبل الالتقاط
+// ══════════════════════════════════════════════
+const FUNNEL_SIZE = 8;       // عدد الإطارات المحفوظة
+const CAPTURE_THRESHOLD = 8; // إطارات ثابتة قبل الالتقاط
+const NO_RECT_THRESHOLD = 3; // إطارات بدون كشف قبل الإعلان
+const MAX_CORNER_DRIFT = 25; // بكسل — الحد الأقصى للتحرك بين الإطارات
+
+class RectangleFunnel {
+  constructor(){
+    this.history = []; // سجل الزوايا
+    this.noRectCount = 0;
+    this.stableCount = 0;
+    this.captured = false;
+  }
+
+  // أضف نتيجة كشف جديدة
+  add(quad){
+    if(!quad){
+      this.noRectCount++;
+      if(this.noRectCount >= NO_RECT_THRESHOLD){
+        this.history = [];
+        this.stableCount = 0;
+      }
+      return null;
+    }
+
+    this.noRectCount = 0;
+
+    // إذا كان لدينا تاريخ، تحقق من الاستقرار
+    if(this.history.length > 0){
+      const last = this.history[this.history.length - 1];
+      if(this._moved(quad, last)){
+        // تحرّك كثيراً — أعد من الصفر
+        this.history = [quad];
+        this.stableCount = 0;
+        return this._smooth();
+      }
+    }
+
+    // أضف للسجل
+    this.history.push(quad);
+    if(this.history.length > FUNNEL_SIZE) this.history.shift();
+
+    if(this.history.length >= FUNNEL_SIZE){
+      this.stableCount++;
+    }
+
+    return this._smooth();
+  }
+
+  // هل الزوايا تحركت كثيراً؟
+  _moved(a, b){
+    for(let i=0; i<4; i++){
+      if(dist(a[i], b[i]) > MAX_CORNER_DRIFT) return true;
+    }
+    return false;
+  }
+
+  // احسب متوسط الزوايا عبر كل السجل (smoothing)
+  _smooth(){
+    if(this.history.length === 0) return null;
+    const avg = [{x:0,y:0},{x:0,y:0},{x:0,y:0},{x:0,y:0}];
+    for(const q of this.history){
+      for(let i=0; i<4; i++){
+        avg[i].x += q[i].x;
+        avg[i].y += q[i].y;
+      }
+    }
+    const n = this.history.length;
+    return avg.map(p=>({x:p.x/n, y:p.y/n}));
+  }
+
+  get isStable(){ return this.stableCount >= CAPTURE_THRESHOLD; }
+  get progress(){ return Math.min(this.stableCount / CAPTURE_THRESHOLD, 1); }
+  reset(){ this.history=[]; this.stableCount=0; this.noRectCount=0; this.captured=false; }
+}
+
+const funnel = new RectangleFunnel();
+
+function dist(a,b){ return Math.sqrt((a.x-b.x)**2+(a.y-b.y)**2); }
 
 // فيديو مخفي
 const vid=document.createElement('video');
@@ -186,268 +257,219 @@ function startLoop(){
     // ارسم الفيديو
     ctx.drawImage(vid,0,0,lc.width,lc.height);
 
-    // كشف المستطيلات
-    tmp.width=lc.width;tmp.height=lc.height;
+    // كشف المستطيل
+    tmp.width=lc.width; tmp.height=lc.height;
     tctx.drawImage(vid,0,0,lc.width,lc.height);
+    const rawQuad = detectRect(tmp,lc.width,lc.height);
 
-    const quad=detectRect(tmp,lc.width,lc.height);
+    // أرسل للـ funnel
+    const smoothQuad = funnel.add(rawQuad);
 
-    if(quad){
-      drawQuad(ctx,quad);
-      stableCount++;
-      const p=Math.min(stableCount/STABLE,1);
-      drawRing(ctx,lc.width,lc.height,p);
+    if(smoothQuad){
+      // ارسم الإطار المستقر
+      drawQuad(ctx, smoothQuad, funnel.progress);
 
-      if(stableCount>=STABLE&&!captured){
-        captured=true;
-        setStatus('✅ جاهز للالتقاط','go');
-        $('capBtn').className='found';
-        setTimeout(()=>doCapture(quad),120);
-      }else{
-        setStatus('◉ تم اكتشاف الوثيقة','ok');
-        $('capBtn').className='found';
+      // دائرة التقدم
+      drawRing(ctx, lc.width, lc.height, funnel.progress);
+
+      $('capBtn').className='rdy';
+
+      if(funnel.isStable && !funnel.captured){
+        funnel.captured=true;
+        setStatus('✅ جاهز — جاري الالتقاط','ok');
+        setTimeout(()=>doCapture(smoothQuad),150);
+      } else {
+        setStatus('◉ وثيقة مكتشفة — ثابّت...','ok');
       }
-    }else{
-      stableCount=Math.max(0,stableCount-3);
-      if(stableCount===0){captured=false;$('capBtn').className='';}
+    } else {
+      $('capBtn').className='';
       setStatus('وجّه الكاميرا نحو الوثيقة','');
     }
   },50);
 }
 
-// ══ كشف المستطيل/المربع بـ OpenCV ══
+// ══ الكشف بـ OpenCV: مستطيلات ومربعات فقط ══
 function detectRect(canvas,W,H){
   let src,gray,blur,edg,dil,k,cnts,hier;
   try{
     src=cv.imread(canvas);
-    gray=new cv.Mat();
-    cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
-
-    // تحسين التباين
-    blur=new cv.Mat();
-    cv.GaussianBlur(gray,blur,new cv.Size(5,5),0);
-
-    edg=new cv.Mat();
-    cv.Canny(blur,edg,30,100); // حساسية عالية
-
-    dil=new cv.Mat();
-    k=cv.Mat.ones(3,3,cv.CV_8U);
-    cv.dilate(edg,dil,k);
-
-    cnts=new cv.MatVector();
-    hier=new cv.Mat();
+    gray=new cv.Mat(); cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
+    blur=new cv.Mat(); cv.GaussianBlur(gray,blur,new cv.Size(5,5),0);
+    edg=new cv.Mat(); cv.Canny(blur,edg,30,100);
+    dil=new cv.Mat(); k=cv.Mat.ones(3,3,cv.CV_8U); cv.dilate(edg,dil,k);
+    cnts=new cv.MatVector(); hier=new cv.Mat();
     cv.findContours(dil,cnts,hier,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
 
-    let bestQuad=null,bestScore=0;
+    let best=null, bestArea=0;
 
     for(let i=0;i<cnts.size();i++){
       const cnt=cnts.get(i);
       const area=cv.contourArea(cnt);
-
-      // تجاهل الأشكال الصغيرة جداً (أقل من 5% من الشاشة)
-      if(area<W*H*0.05){cnt.delete();continue;}
+      if(area < W*H*0.04){cnt.delete();continue;} // صغير جداً
 
       const peri=cv.arcLength(cnt,true);
-      const approx=new cv.Mat();
-      cv.approxPolyDP(cnt,approx,0.02*peri,true);
+      const ap=new cv.Mat();
+      cv.approxPolyDP(cnt,ap,0.02*peri,true);
 
-      // نريد فقط المستطيلات والمربعات (4 زوايا)
-      if(approx.rows===4){
+      if(ap.rows===4){
         const pts=[];
-        for(let j=0;j<4;j++){
-          pts.push({x:approx.data32S[j*2],y:approx.data32S[j*2+1]});
-        }
+        for(let j=0;j<4;j++) pts.push({x:ap.data32S[j*2],y:ap.data32S[j*2+1]});
 
-        // تحقق من أن الزوايا قريبة من 90 درجة (مستطيل حقيقي)
-        if(isRectangle(pts)){
-          const score=area; // نفضل أكبر مستطيل
-          if(score>bestScore){
-            bestScore=score;
-            bestQuad=sortCorners(pts);
-          }
+        // تحقق من الزوايا (90° ± 30°)
+        if(isRect(pts) && area>bestArea){
+          bestArea=area;
+          best=sortCorners(pts);
         }
       }
-      approx.delete();cnt.delete();
+      ap.delete(); cnt.delete();
     }
 
-    return bestQuad;
+    return best;
   }catch(e){return null;}
-  finally{
-    [src,gray,blur,edg,dil,k,cnts,hier].forEach(m=>{try{if(m)m.delete();}catch{}});
-  }
+  finally{[src,gray,blur,edg,dil,k,cnts,hier].forEach(m=>{try{if(m)m.delete();}catch{}});}
 }
 
-// تحقق من أن الشكل مستطيل (الزوايا قريبة من 90°)
-function isRectangle(pts){
+function isRect(pts){
   for(let i=0;i<4;i++){
     const a=pts[i],b=pts[(i+1)%4],c=pts[(i+2)%4];
-    const ang=angle(a,b,c);
-    // الزاوية يجب أن تكون بين 60° و 120°
-    if(ang<60||ang>120)return false;
+    const v1={x:a.x-b.x,y:a.y-b.y};
+    const v2={x:c.x-b.x,y:c.y-b.y};
+    const dot=v1.x*v2.x+v1.y*v2.y;
+    const len=Math.sqrt((v1.x**2+v1.y**2))*Math.sqrt((v2.x**2+v2.y**2));
+    if(!len)return false;
+    const ang=Math.acos(Math.max(-1,Math.min(1,dot/len)))*180/Math.PI;
+    if(ang<55||ang>125)return false;
   }
   return true;
 }
 
-function angle(a,b,c){
-  const v1={x:a.x-b.x,y:a.y-b.y};
-  const v2={x:c.x-b.x,y:c.y-b.y};
-  const dot=v1.x*v2.x+v1.y*v2.y;
-  const len=Math.sqrt((v1.x**2+v1.y**2))*Math.sqrt((v2.x**2+v2.y**2));
-  if(!len)return 90;
-  return Math.acos(Math.max(-1,Math.min(1,dot/len)))*180/Math.PI;
-}
-
-// ترتيب الزوايا: أعلى يسار، أعلى يمين، أسفل يمين، أسفل يسار
 function sortCorners(pts){
   const cx=pts.reduce((s,p)=>s+p.x,0)/4;
   const cy=pts.reduce((s,p)=>s+p.y,0)/4;
-  const tl=pts.find(p=>p.x<=cx&&p.y<=cy)||pts[0];
-  const tr=pts.find(p=>p.x> cx&&p.y<=cy)||pts[1];
-  const br=pts.find(p=>p.x> cx&&p.y> cy)||pts[2];
-  const bl=pts.find(p=>p.x<=cx&&p.y> cy)||pts[3];
+  const tl=pts.find(p=>p.x<=cx&&p.y<=cy);
+  const tr=pts.find(p=>p.x> cx&&p.y<=cy);
+  const br=pts.find(p=>p.x> cx&&p.y> cy);
+  const bl=pts.find(p=>p.x<=cx&&p.y> cy);
   if(!tl||!tr||!br||!bl)return null;
   return [tl,tr,br,bl];
 }
 
-// ══ رسم الإطار مع الزوايا ══
-function drawQuad(ctx,pts){
+// ══ رسم الإطار — اللون يتغير مع التقدم ══
+function drawQuad(ctx,pts,progress){
   const [tl,tr,br,bl]=pts;
+
+  // لون يتحول من أزرق إلى أخضر مع الاستقرار
+  const g=Math.round(122+progress*(211-122));
+  const b2=Math.round(255+progress*(0-255));
+  const color=`rgb(0,${g},${b2})`;
+  const alpha=0.45+progress*0.15;
 
   // تعتيم خارج الوثيقة
   ctx.save();
-  ctx.fillStyle='rgba(0,0,0,0.45)';
+  ctx.fillStyle=`rgba(0,0,0,${alpha})`;
   ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);
   ctx.globalCompositeOperation='destination-out';
   ctx.beginPath();
-  ctx.moveTo(tl.x,tl.y);ctx.lineTo(tr.x,tr.y);
-  ctx.lineTo(br.x,br.y);ctx.lineTo(bl.x,bl.y);
+  ctx.moveTo(tl.x,tl.y);ctx.lineTo(tr.x,tr.y);ctx.lineTo(br.x,br.y);ctx.lineTo(bl.x,bl.y);
   ctx.closePath();ctx.fill();
   ctx.restore();
 
-  // تعبئة زرقاء شفافة
+  // تعبئة داخلية
   ctx.beginPath();
-  ctx.moveTo(tl.x,tl.y);ctx.lineTo(tr.x,tr.y);
-  ctx.lineTo(br.x,br.y);ctx.lineTo(bl.x,bl.y);
+  ctx.moveTo(tl.x,tl.y);ctx.lineTo(tr.x,tr.y);ctx.lineTo(br.x,br.y);ctx.lineTo(bl.x,bl.y);
   ctx.closePath();
-  ctx.fillStyle='rgba(0,122,255,0.08)';ctx.fill();
+  ctx.fillStyle=`rgba(0,${g},${b2},0.06)`;ctx.fill();
 
-  // حدود المستطيل
+  // حدود
   ctx.beginPath();
-  ctx.moveTo(tl.x,tl.y);ctx.lineTo(tr.x,tr.y);
-  ctx.lineTo(br.x,br.y);ctx.lineTo(bl.x,bl.y);
+  ctx.moveTo(tl.x,tl.y);ctx.lineTo(tr.x,tr.y);ctx.lineTo(br.x,br.y);ctx.lineTo(bl.x,bl.y);
   ctx.closePath();
-  ctx.strokeStyle='rgba(0,122,255,0.8)';
-  ctx.lineWidth=2;ctx.lineJoin='round';ctx.stroke();
+  ctx.strokeStyle=color;ctx.lineWidth=2+progress;ctx.lineJoin='round';ctx.stroke();
 
-  // ══ زوايا واضحة وسميكة ══
-  const L=28; // طول خط الزاوية
-  ctx.strokeStyle='#007AFF';
-  ctx.lineWidth=4;
-  ctx.lineCap='round';
-
-  function drawCorner(p1,corner,p2){
-    const d1=Math.hypot(corner.x-p1.x,corner.y-p1.y)||1;
-    const d2=Math.hypot(corner.x-p2.x,corner.y-p2.y)||1;
-    const ax=corner.x+(p1.x-corner.x)/d1*L;
-    const ay=corner.y+(p1.y-corner.y)/d1*L;
-    const bx=corner.x+(p2.x-corner.x)/d2*L;
-    const by=corner.y+(p2.y-corner.y)/d2*L;
+  // زوايا واضحة
+  const L=26+progress*6;
+  ctx.strokeStyle=color;ctx.lineWidth=4;ctx.lineCap='round';
+  [[bl,tl,tr],[tl,tr,br],[tr,br,bl],[br,bl,tl]].forEach(([a,m,b])=>{
+    const d1=dist(m,a)||1,d2=dist(m,b)||1;
     ctx.beginPath();
-    ctx.moveTo(ax,ay);
-    ctx.lineTo(corner.x,corner.y);
-    ctx.lineTo(bx,by);
+    ctx.moveTo(m.x+(a.x-m.x)/d1*L,m.y+(a.y-m.y)/d1*L);
+    ctx.lineTo(m.x,m.y);
+    ctx.lineTo(m.x+(b.x-m.x)/d2*L,m.y+(b.y-m.y)/d2*L);
     ctx.stroke();
-  }
+  });
 
-  drawCorner(bl,tl,tr); // ↖
-  drawCorner(tl,tr,br); // ↗
-  drawCorner(tr,br,bl); // ↘
-  drawCorner(br,bl,tl); // ↙
-
-  // نقطة في كل زاوية
+  // نقاط الزوايا مع هالة
   [tl,tr,br,bl].forEach(p=>{
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,5,0,Math.PI*2);
-    ctx.fillStyle='#007AFF';
-    ctx.fill();
-    // هالة
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,10,0,Math.PI*2);
-    ctx.strokeStyle='rgba(0,122,255,0.3)';
-    ctx.lineWidth=2;
-    ctx.stroke();
+    ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);
+    ctx.fillStyle=color;ctx.fill();
+    ctx.beginPath();ctx.arc(p.x,p.y,11,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(0,${g},${b2},0.35)`;ctx.lineWidth=2;ctx.stroke();
   });
 }
 
 // دائرة تقدم
 function drawRing(ctx,w,h,p){
   if(p<=0)return;
-  const cx=w/2,cy=h/2,r=28;
+  const cx=w/2,cy=h/2,r=30;
+  const g=Math.round(122+p*(211-122));
+  const b2=Math.round(255+p*(0-255));
   ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
   ctx.fillStyle='rgba(0,0,0,.6)';ctx.fill();
   ctx.beginPath();
-  ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*p);
-  ctx.strokeStyle=p>=1?'#34C759':'#007AFF';
-  ctx.lineWidth=4;ctx.lineCap='round';ctx.stroke();
+  ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(p,1));
+  ctx.strokeStyle=`rgb(0,${g},${b2})`;ctx.lineWidth=4.5;ctx.lineCap='round';ctx.stroke();
 }
 
-// ══ الالتقاط + القص بـ Perspective Transform ══
+// ══ الالتقاط + القص ══
 function doCapture(quad){
   if(tid){clearInterval(tid);tid=null;}
   $('fx').style.opacity='1';
   setTimeout(()=>$('fx').style.opacity='0',80);
 
-  // التقط بالدقة الكاملة
   const full=document.createElement('canvas');
-  full.width=vid.videoWidth||1280;
-  full.height=vid.videoHeight||720;
+  full.width=vid.videoWidth||1280;full.height=vid.videoHeight||720;
   full.getContext('2d').drawImage(vid,0,0,full.width,full.height);
 
-  // حوّل الزوايا من إحداثيات الشاشة لإحداثيات الفيديو
+  // حوّل الزوايا من الشاشة لإحداثيات الفيديو
   const lc=$('live');
-  const sx=full.width/lc.width;
-  const sy=full.height/lc.height;
+  const sx=full.width/lc.width, sy=full.height/lc.height;
   const [tl,tr,br,bl]=quad.map(p=>({x:p.x*sx,y:p.y*sy}));
 
   // Perspective crop
-  const cropped=perspectiveCrop(full,tl,tr,br,bl);
+  const cropped=perspCrop(full,tl,tr,br,bl);
   const out=cropped||full;
   enhance(out.getContext('2d'),out.width,out.height);
   url_=out.toDataURL('image/jpeg',.95);
   out.toBlob(b=>{blob_=b;showReview();},'image/jpeg',.95);
 }
 
-// قص وتقويم المستطيل
-function perspectiveCrop(src,tl,tr,br,bl){
-  let s,d,sm,dm,M;
-  try{
-    const W=Math.round(Math.max(Math.hypot(tr.x-tl.x,tr.y-tl.y),Math.hypot(br.x-bl.x,br.y-bl.y)));
-    const H=Math.round(Math.max(Math.hypot(bl.x-tl.x,bl.y-tl.y),Math.hypot(br.x-tr.x,br.y-tr.y)));
-    if(W<50||H<50)return null;
-    s=cv.imread(src);
-    d=new cv.Mat();
-    sm=cv.matFromArray(4,1,cv.CV_32FC2,[tl.x,tl.y,tr.x,tr.y,br.x,br.y,bl.x,bl.y]);
-    dm=cv.matFromArray(4,1,cv.CV_32FC2,[0,0,W,0,W,H,0,H]);
-    M=cv.getPerspectiveTransform(sm,dm);
-    cv.warpPerspective(s,d,M,new cv.Size(W,H),cv.INTER_LINEAR,cv.BORDER_CONSTANT,new cv.Scalar());
-    const out=document.createElement('canvas');
-    out.width=W;out.height=H;
-    cv.imshow(out,d);
-    return out;
-  }catch(e){return null;}
-  finally{[s,d,sm,dm,M].forEach(m=>{try{if(m)m.delete();}catch{}});}
-}
-
 function manualCap(){
   if(!vid.videoWidth)return;
   if(tid){clearInterval(tid);tid=null;}
-  // التقط مباشرة بدون قص إذا لم يكن هناك كشف
   const full=document.createElement('canvas');
   full.width=vid.videoWidth;full.height=vid.videoHeight;
   full.getContext('2d').drawImage(vid,0,0,full.width,full.height);
   enhance(full.getContext('2d'),full.width,full.height);
   url_=full.toDataURL('image/jpeg',.95);
   full.toBlob(b=>{blob_=b;showReview();},'image/jpeg',.95);
+}
+
+function perspCrop(src,tl,tr,br,bl){
+  let s,d,sm,dm,M;
+  try{
+    const W=Math.round(Math.max(dist(tl,tr),dist(bl,br)));
+    const H=Math.round(Math.max(dist(tl,bl),dist(tr,br)));
+    if(W<50||H<50)return null;
+    s=cv.imread(src);d=new cv.Mat();
+    sm=cv.matFromArray(4,1,cv.CV_32FC2,[tl.x,tl.y,tr.x,tr.y,br.x,br.y,bl.x,bl.y]);
+    dm=cv.matFromArray(4,1,cv.CV_32FC2,[0,0,W,0,W,H,0,H]);
+    M=cv.getPerspectiveTransform(sm,dm);
+    cv.warpPerspective(s,d,M,new cv.Size(W,H),cv.INTER_LINEAR,cv.BORDER_CONSTANT,new cv.Scalar());
+    const out=document.createElement('canvas');
+    out.width=W;out.height=H;cv.imshow(out,d);
+    return out;
+  }catch(e){return null;}
+  finally{[s,d,sm,dm,M].forEach(m=>{try{if(m)m.delete();}catch{}});}
 }
 
 function enhance(ctx,w,h){
@@ -462,17 +484,15 @@ function enhance(ctx,w,h){
 const cl=v=>Math.min(255,Math.max(0,Math.round(v)));
 
 function showReview(){
-  stopCam();
-  $('rvi').src=url_;
-  $('scanView').style.display='none';
-  $('rv').style.display='flex';
+  stopCam();$('rvi').src=url_;
+  $('scanView').style.display='none';$('rv').style.display='flex';
 }
 
 function retake(){
   blob_=null;url_=null;
   ['rv','sndV','sucV','errV'].forEach(id=>{$(id).style.display='none';});
   $('scanView').style.display='';
-  stableCount=0;captured=false;$('capBtn').className='';
+  funnel.reset();$('capBtn').className='';
   startCam();
 }
 
@@ -482,9 +502,7 @@ async function sendImg(){
   prog(15);sMsg('جاري الإرسال...');
   try{
     prog(35);
-    const fd=new FormData();
-    fd.append('data',blob_,'passport.jpg');
-    fd.append('_sid',SID);
+    const fd=new FormData();fd.append('data',blob_,'passport.jpg');fd.append('_sid',SID);
     const res=await fetch(N8N,{method:'POST',body:fd});
     prog(70);sMsg('جاري قراءة البيانات...');
     const txt=await res.text();
@@ -494,13 +512,8 @@ async function sendImg(){
     if(!j)throw new Error('لم يرجع بيانات');
     if(Array.isArray(j))j=j[0]||{};
     if(j.data&&typeof j.data==='object')j=j.data;
-    prog(100);sMsg('تم!');
-    setTimeout(()=>showSuc(j),300);
-  }catch(e){
-    $('sndV').style.display='none';
-    $('errMsg').textContent=e.message||'خطأ';
-    $('errV').style.display='flex';
-  }
+    prog(100);sMsg('تم!');setTimeout(()=>showSuc(j),300);
+  }catch(e){$('sndV').style.display='none';$('errMsg').textContent=e.message||'خطأ';$('errV').style.display='flex';}
 }
 const prog=p=>$('pFll').style.width=p+'%';
 const sMsg=m=>$('sndMsg').textContent=m;
@@ -508,8 +521,7 @@ const sMsg=m=>$('sndMsg').textContent=m;
 function showSuc(d){
   $('sndV').style.display='none';
   const F=[['الاسم',d.nameEnglish],['رقم الجواز',d.passportNumber||d.passportNo],
-    ['الجنسية',d.nationalityArabic],['الميلاد',d.dateOfBirth],
-    ['الإصدار',d.dateOfIssue],['الانتهاء',d.dateOfExpiry]
+    ['الجنسية',d.nationalityArabic],['الميلاد',d.dateOfBirth],['الإصدار',d.dateOfIssue],['الانتهاء',d.dateOfExpiry]
   ].filter(([,v])=>v&&v!=='null');
   $('resCard').innerHTML=F.map(([l,v])=>`<div class="row"><span class="lbl">${l}</span><span class="val">${v}</span></div>`).join('');
   $('sucV').style.display='flex';
@@ -517,25 +529,17 @@ function showSuc(d){
 
 function newScan(){
   $('sucV').style.display='none';$('scanView').style.display='';
-  blob_=null;url_=null;stableCount=0;captured=false;
-  startCam();
+  blob_=null;url_=null;funnel.reset();startCam();
 }
 
 const setStatus=(t,c)=>{const p=$('status');p.textContent=t;p.className=c};
 
 async function toggleFlash(){
   if(!vtrack)return;flashOn=!flashOn;
-  try{await vtrack.applyConstraints({advanced:[{torch:flashOn}]});
-    $('flBtn').className='tb'+(flashOn?' on':'');}
+  try{await vtrack.applyConstraints({advanced:[{torch:flashOn}]});$('flBtn').className='tb'+(flashOn?' on':'');}
   catch{$('flBtn').style.opacity='.4';}
 }
-
-async function flipCam(){
-  facing=facing==='environment'?'user':'environment';
-  stopCam();stableCount=0;captured=false;
-  await startCam();
-}
-
+async function flipCam(){facing=facing==='environment'?'user':'environment';stopCam();funnel.reset();await startCam();}
 function goBack(){stopCam();if(window.history.length>1)window.history.back();else window.location.href='index.html';}
 
 $('gin').addEventListener('change',e=>{
@@ -549,21 +553,19 @@ $('gin').addEventListener('change',e=>{
       const c=document.createElement('canvas');
       c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);
       c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      let out=c;
       if(cvReady){
-        tctx.drawImage(img,0,0,c.width,c.height);
-        tmp.width=c.width;tmp.height=c.height;
-        tctx.drawImage(img,0,0,c.width,c.height);
+        tmp.width=c.width;tmp.height=c.height;tctx.drawImage(img,0,0,c.width,c.height);
         const q=detectRect(tmp,c.width,c.height);
         if(q){
-          const cr=perspectiveCrop(c,...q);
-          if(cr){enhance(cr.getContext('2d'),cr.width,cr.height);
-            url_=cr.toDataURL('image/jpeg',.95);
-            cr.toBlob(b=>{blob_=b;$('rvi').src=url_;showReview();},'image/jpeg',.95);return;}
+          const [tl,tr,br,bl]=q;
+          const cr=perspCrop(c,tl,tr,br,bl);
+          if(cr)out=cr;
         }
       }
-      enhance(c.getContext('2d'),c.width,c.height);
-      url_=c.toDataURL('image/jpeg',.95);
-      c.toBlob(b=>{blob_=b;$('rvi').src=url_;showReview();},'image/jpeg',.95);
+      enhance(out.getContext('2d'),out.width,out.height);
+      url_=out.toDataURL('image/jpeg',.95);
+      out.toBlob(b=>{blob_=b;$('rvi').src=url_;showReview();},'image/jpeg',.95);
     };
     img.src=rd.result;
   };
@@ -572,7 +574,7 @@ $('gin').addEventListener('change',e=>{
 
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden)stopCam();
-  else if($('scanView').style.display!=='none'){stableCount=0;captured=false;startCam();}
+  else if($('scanView').style.display!=='none'){funnel.reset();startCam();}
 });
 
 startCam();
