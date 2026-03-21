@@ -11,9 +11,7 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:-apple-system,sans-serif;color:#fff}
 #scanView{position:fixed;inset:0}
-/* الكانفاس يملأ الشاشة كاملة — يعرض الفيديو + الإطار */
 #live{position:absolute;inset:0;width:100%;height:100%}
-/* شريط علوي */
 #top{position:absolute;top:0;left:0;right:0;z-index:10;
   padding:calc(env(safe-area-inset-top,44px)+6px) 20px 16px;
   display:flex;align-items:center;justify-content:space-between;
@@ -21,7 +19,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:-ap
 .tb{width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.5);
   border:1px solid rgba(255,255,255,.2);color:#fff;font-size:15px;cursor:pointer;
   display:flex;align-items:center;justify-content:center}
-/* زر الالتقاط */
 #bot{position:absolute;bottom:0;left:0;right:0;z-index:10;
   padding:20px 40px calc(env(safe-area-inset-bottom,34px)+16px);
   display:flex;align-items:center;justify-content:space-between;
@@ -29,8 +26,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:-ap
 #capBtn{width:74px;height:74px;border-radius:50%;
   border:5px solid rgba(255,255,255,.35);background:#fff;
   cursor:pointer;position:relative;flex-shrink:0;transition:all .2s}
-#capBtn::after{content:'';position:absolute;inset:5px;border-radius:50%;
-  background:#fff;border:1px solid rgba(0,0,0,.06);transition:all .2s}
+#capBtn::after{content:'';position:absolute;inset:5px;border-radius:50%;background:#fff;transition:all .2s}
 #capBtn:active{transform:scale(.9)}
 #capBtn.found::after{background:#007AFF}
 #capBtn.found{border-color:rgba(0,122,255,.7);box-shadow:0 0 0 6px rgba(0,122,255,.2),0 0 30px rgba(0,122,255,.4)}
@@ -38,14 +34,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:-ap
   background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
   display:flex;align-items:center;justify-content:center;font-size:22px}
 #galImg{width:100%;height:100%;object-fit:cover;display:none}
-/* حالة */
 #status{position:absolute;bottom:140px;left:50%;transform:translateX(-50%);
   padding:10px 24px;border-radius:24px;white-space:nowrap;z-index:10;
   background:rgba(0,0,0,.65);backdrop-filter:blur(12px);
   border:1px solid rgba(255,255,255,.1);font-size:14px;font-weight:600;
   pointer-events:none;transition:all .25s}
 #status.ok{background:rgba(0,122,255,.4);border-color:rgba(0,122,255,.7);color:#c0deff}
-/* flash */
+#status.go{background:rgba(52,199,89,.4);border-color:rgba(52,199,89,.7);color:#aff5c4}
 #fx{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:99;transition:opacity .06s}
 
 /* REVIEW */
@@ -60,7 +55,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:-ap
 #rvf{padding:10px 20px calc(env(safe-area-inset-bottom,34px)+10px);
   text-align:center;font-size:13px;color:rgba(255,255,255,.4);flex-shrink:0}
 
-/* SENDING / SUCCESS / ERROR */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.97);display:none;
   flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:200;padding:28px}
 .oIco{font-size:54px}.oTtl{font-size:20px;font-weight:800}
@@ -81,8 +75,6 @@ input[type=file]{display:none}
 </head>
 <body>
 <div id="fx"></div>
-
-<!-- SCANNER -->
 <div id="scanView">
   <canvas id="live"></canvas>
   <div id="top">
@@ -100,7 +92,6 @@ input[type=file]{display:none}
   </div>
 </div>
 
-<!-- REVIEW -->
 <div id="rv" style="display:none;flex-direction:column">
   <div id="rvh">
     <button class="rb" id="rtk" onclick="retake()">إعادة</button>
@@ -108,18 +99,14 @@ input[type=file]{display:none}
     <button class="rb" id="snd" onclick="sendImg()">إرسال ✓</button>
   </div>
   <div id="rvw"><img id="rvi" alt=""></div>
-  <div id="rvf">✂️ تم قص الجواز وتقويمه تلقائياً</div>
+  <div id="rvf">✂️ تم قص الوثيقة وتقويمها تلقائياً</div>
 </div>
 
-<!-- SENDING -->
 <div id="sndV" class="overlay">
-  <div class="oIco">🔬</div>
-  <div class="oTtl">جاري الاستخراج...</div>
+  <div class="oIco">🔬</div><div class="oTtl">جاري الاستخراج...</div>
   <div class="oSub" id="sndMsg">يتم تحليل الجواز</div>
   <div class="bar"><div class="fill" id="pFll" style="width:0%"></div></div>
 </div>
-
-<!-- SUCCESS -->
 <div id="sucV" class="overlay">
   <div class="oIco">✅</div>
   <div class="oTtl" style="color:#30d158">تم الاستخراج!</div>
@@ -127,44 +114,41 @@ input[type=file]{display:none}
   <div class="card" id="resCard"></div>
   <button class="newBtn" onclick="newScan()">📷 مسح جواز جديد</button>
 </div>
-
-<!-- ERROR -->
 <div id="errV" class="overlay">
   <div class="oIco">❌</div>
   <div class="oTtl" style="color:#ff3b30">فشل الاستخراج</div>
   <div class="oSub" id="errMsg">حدث خطأ</div>
   <button class="errBtn" onclick="retake()">حاول مجدداً</button>
 </div>
-
 <input type="file" id="gin" accept="image/*">
 
 <script src="https://docs.opencv.org/4.7.0/opencv.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/ColonelParrot/jscanify@master/src/jscanify.min.js"></script>
 <script>
 'use strict';
-const N8N = localStorage.getItem('pai_webhook')||'https://mmnnm19991.app.n8n.cloud/webhook/passport-extract';
-const SID = (()=>{let id=localStorage.getItem('pai_sid');if(!id){id='u'+Math.random().toString(36).slice(2,9);localStorage.setItem('pai_sid',id);}return id;})();
+const N8N=localStorage.getItem('pai_webhook')||'https://mmnnm19991.app.n8n.cloud/webhook/passport-extract';
+const SID=(()=>{let id=localStorage.getItem('pai_sid');if(!id){id='u'+Math.random().toString(36).slice(2,9);localStorage.setItem('pai_sid',id);}return id;})();
 const $=id=>document.getElementById(id);
 
 let stream=null,vtrack=null,flashOn=false,facing='environment';
 let blob_=null,url_=null;
-let scanner=null,cvReady=false;
-let tid=null;
+let cvReady=false,tid=null;
+let stableCount=0,captured=false;
+const STABLE=12; // ~0.6 ثانية
 
-// متغيرات الاستقرار
-let stableCount=0;
-const STABLE=8; // 2 ثانية
-let captured=false;
+// فيديو مخفي
+const vid=document.createElement('video');
+vid.autoplay=true;vid.playsInline=true;vid.muted=true;
 
-// كانفاس مؤقت للمعالجة
+// كانفاس للمعالجة
 const tmp=document.createElement('canvas');
-const tctx=tmp.getContext('2d');
+const tctx=tmp.getContext('2d',{willReadFrequently:true});
 
-// ── انتظر المكتبتين ──
-const libTimer=setInterval(()=>{
-  if(typeof cv!=='undefined'&&cv.Mat&&typeof jscanify!=='undefined'){
-    clearInterval(libTimer);
-    try{scanner=new jscanify();cvReady=true;setStatus('ضع الجواز أمام الكاميرا','');}catch(e){}
+// انتظر OpenCV
+const cvTimer=setInterval(()=>{
+  if(typeof cv!=='undefined'&&cv.Mat){
+    clearInterval(cvTimer);
+    cvReady=true;
+    setStatus('وجّه الكاميرا نحو الوثيقة','');
   }
 },300);
 
@@ -175,132 +159,295 @@ async function startCam(){
     stream=await navigator.mediaDevices.getUserMedia({
       video:{facingMode:{ideal:facing},width:{ideal:1920},height:{ideal:1080}},audio:false
     });
-    const v=document.createElement('video');
-    v.srcObject=stream;v.autoplay=true;v.playsInline=true;v.muted=true;
-    await v.play();
-    startLoop(v);
-    window._vid=v;
+    vid.srcObject=stream;
+    vtrack=stream.getVideoTracks()[0];
+    await vid.play();
+    startLoop();
   }catch(e){setStatus('لا يمكن الوصول للكاميرا','');}
 }
 
 function stopCam(){
   if(tid){clearInterval(tid);tid=null;}
-  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;vtrack=stream?.getVideoTracks()[0];}
-  if(stream)vtrack=null;
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
 }
 
 // ── الحلقة الرئيسية ──
-function startLoop(v){
+function startLoop(){
   if(tid)clearInterval(tid);
   const lc=$('live');
 
   tid=setInterval(()=>{
-    if(!v.videoWidth||!cvReady||!scanner)return;
+    if(!vid.videoWidth||!cvReady)return;
 
-    // ضبط الكانفاس
     lc.width=$('scanView').offsetWidth;
     lc.height=$('scanView').offsetHeight;
     const ctx=lc.getContext('2d');
 
-    // ارسم الفيديو على كانفاس مؤقت
+    // ارسم الفيديو
+    ctx.drawImage(vid,0,0,lc.width,lc.height);
+
+    // كشف المستطيلات
     tmp.width=lc.width;tmp.height=lc.height;
-    tctx.drawImage(v,0,0,lc.width,lc.height);
+    tctx.drawImage(vid,0,0,lc.width,lc.height);
 
-    // jscanify.highlightPaper: يكشف الوثيقة ويرسم الإطار
-    let result=null;
-    try{result=scanner.highlightPaper(tmp);}catch(e){}
+    const quad=detectRect(tmp,lc.width,lc.height);
 
-    if(result){
-      ctx.drawImage(result,0,0,lc.width,lc.height);
+    if(quad){
+      drawQuad(ctx,quad);
+      stableCount++;
+      const p=Math.min(stableCount/STABLE,1);
+      drawRing(ctx,lc.width,lc.height,p);
 
-      // تحقق من جودة الكشف — هل الكانفاس المرجع مختلف عن الأصلي؟
-      const isGood = verifyDetection(result, tmp, lc.width, lc.height);
-
-      if(isGood){
-        stableCount++;
-      } else {
-        stableCount = Math.max(0, stableCount - 1);
-      }
-
-      const progress = Math.min(stableCount / STABLE, 1);
-      drawRing(ctx, lc.width, lc.height, progress);
-
-      if(stableCount >= STABLE && !captured){
-        captured = true;
-        setStatus('✅ جاري الالتقاط...', 'ok');
-        setTimeout(()=>doCapture(v), 100);
-      } else if(stableCount > 0){
-        setStatus('◉ جواز مكتشف — ثابّت...', 'ok');
-        $('capBtn').className = 'found';
+      if(stableCount>=STABLE&&!captured){
+        captured=true;
+        setStatus('✅ جاهز للالتقاط','go');
+        $('capBtn').className='found';
+        setTimeout(()=>doCapture(quad),120);
+      }else{
+        setStatus('◉ تم اكتشاف الوثيقة','ok');
+        $('capBtn').className='found';
       }
     }else{
-      ctx.drawImage(tmp,0,0,lc.width,lc.height);
-      stableCount = Math.max(0, stableCount - 2);
-      if(stableCount === 0){ captured = false; $('capBtn').className = ''; }
-      setStatus('ضع الجواز أمام الكاميرا', '');
+      stableCount=Math.max(0,stableCount-3);
+      if(stableCount===0){captured=false;$('capBtn').className='';}
+      setStatus('وجّه الكاميرا نحو الوثيقة','');
     }
   },50);
 }
 
-
-// تحقق من أن الكشف حقيقي — الكانفاس المرجع يجب أن يختلف عن الأصل
-function verifyDetection(result, original, w, h){
+// ══ كشف المستطيل/المربع بـ OpenCV ══
+function detectRect(canvas,W,H){
+  let src,gray,blur,edg,dil,k,cnts,hier;
   try{
-    const rctx = result.getContext('2d');
-    const octx = original.getContext('2d');
-    const sample = 20; // عينة من النقاط
-    const step = Math.floor(w / sample);
-    let diff = 0;
-    const rd = rctx.getImageData(0, Math.floor(h*0.5), w, 1).data;
-    const od = octx.getImageData(0, Math.floor(h*0.5), w, 1).data;
-    for(let x=0; x<w; x+=step){
-      const i = x*4;
-      diff += Math.abs(rd[i]-od[i]) + Math.abs(rd[i+1]-od[i+1]) + Math.abs(rd[i+2]-od[i+2]);
+    src=cv.imread(canvas);
+    gray=new cv.Mat();
+    cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
+
+    // تحسين التباين
+    blur=new cv.Mat();
+    cv.GaussianBlur(gray,blur,new cv.Size(5,5),0);
+
+    edg=new cv.Mat();
+    cv.Canny(blur,edg,30,100); // حساسية عالية
+
+    dil=new cv.Mat();
+    k=cv.Mat.ones(3,3,cv.CV_8U);
+    cv.dilate(edg,dil,k);
+
+    cnts=new cv.MatVector();
+    hier=new cv.Mat();
+    cv.findContours(dil,cnts,hier,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
+
+    let bestQuad=null,bestScore=0;
+
+    for(let i=0;i<cnts.size();i++){
+      const cnt=cnts.get(i);
+      const area=cv.contourArea(cnt);
+
+      // تجاهل الأشكال الصغيرة جداً (أقل من 5% من الشاشة)
+      if(area<W*H*0.05){cnt.delete();continue;}
+
+      const peri=cv.arcLength(cnt,true);
+      const approx=new cv.Mat();
+      cv.approxPolyDP(cnt,approx,0.02*peri,true);
+
+      // نريد فقط المستطيلات والمربعات (4 زوايا)
+      if(approx.rows===4){
+        const pts=[];
+        for(let j=0;j<4;j++){
+          pts.push({x:approx.data32S[j*2],y:approx.data32S[j*2+1]});
+        }
+
+        // تحقق من أن الزوايا قريبة من 90 درجة (مستطيل حقيقي)
+        if(isRectangle(pts)){
+          const score=area; // نفضل أكبر مستطيل
+          if(score>bestScore){
+            bestScore=score;
+            bestQuad=sortCorners(pts);
+          }
+        }
+      }
+      approx.delete();cnt.delete();
     }
-    // إذا كان الفرق كافياً = رُسم إطار = تم الكشف
-    return diff > 300;
-  }catch(e){ return true; }
+
+    return bestQuad;
+  }catch(e){return null;}
+  finally{
+    [src,gray,blur,edg,dil,k,cnts,hier].forEach(m=>{try{if(m)m.delete();}catch{}});
+  }
 }
 
+// تحقق من أن الشكل مستطيل (الزوايا قريبة من 90°)
+function isRectangle(pts){
+  for(let i=0;i<4;i++){
+    const a=pts[i],b=pts[(i+1)%4],c=pts[(i+2)%4];
+    const ang=angle(a,b,c);
+    // الزاوية يجب أن تكون بين 60° و 120°
+    if(ang<60||ang>120)return false;
+  }
+  return true;
+}
+
+function angle(a,b,c){
+  const v1={x:a.x-b.x,y:a.y-b.y};
+  const v2={x:c.x-b.x,y:c.y-b.y};
+  const dot=v1.x*v2.x+v1.y*v2.y;
+  const len=Math.sqrt((v1.x**2+v1.y**2))*Math.sqrt((v2.x**2+v2.y**2));
+  if(!len)return 90;
+  return Math.acos(Math.max(-1,Math.min(1,dot/len)))*180/Math.PI;
+}
+
+// ترتيب الزوايا: أعلى يسار، أعلى يمين، أسفل يمين، أسفل يسار
+function sortCorners(pts){
+  const cx=pts.reduce((s,p)=>s+p.x,0)/4;
+  const cy=pts.reduce((s,p)=>s+p.y,0)/4;
+  const tl=pts.find(p=>p.x<=cx&&p.y<=cy)||pts[0];
+  const tr=pts.find(p=>p.x> cx&&p.y<=cy)||pts[1];
+  const br=pts.find(p=>p.x> cx&&p.y> cy)||pts[2];
+  const bl=pts.find(p=>p.x<=cx&&p.y> cy)||pts[3];
+  if(!tl||!tr||!br||!bl)return null;
+  return [tl,tr,br,bl];
+}
+
+// ══ رسم الإطار مع الزوايا ══
+function drawQuad(ctx,pts){
+  const [tl,tr,br,bl]=pts;
+
+  // تعتيم خارج الوثيقة
+  ctx.save();
+  ctx.fillStyle='rgba(0,0,0,0.45)';
+  ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);
+  ctx.globalCompositeOperation='destination-out';
+  ctx.beginPath();
+  ctx.moveTo(tl.x,tl.y);ctx.lineTo(tr.x,tr.y);
+  ctx.lineTo(br.x,br.y);ctx.lineTo(bl.x,bl.y);
+  ctx.closePath();ctx.fill();
+  ctx.restore();
+
+  // تعبئة زرقاء شفافة
+  ctx.beginPath();
+  ctx.moveTo(tl.x,tl.y);ctx.lineTo(tr.x,tr.y);
+  ctx.lineTo(br.x,br.y);ctx.lineTo(bl.x,bl.y);
+  ctx.closePath();
+  ctx.fillStyle='rgba(0,122,255,0.08)';ctx.fill();
+
+  // حدود المستطيل
+  ctx.beginPath();
+  ctx.moveTo(tl.x,tl.y);ctx.lineTo(tr.x,tr.y);
+  ctx.lineTo(br.x,br.y);ctx.lineTo(bl.x,bl.y);
+  ctx.closePath();
+  ctx.strokeStyle='rgba(0,122,255,0.8)';
+  ctx.lineWidth=2;ctx.lineJoin='round';ctx.stroke();
+
+  // ══ زوايا واضحة وسميكة ══
+  const L=28; // طول خط الزاوية
+  ctx.strokeStyle='#007AFF';
+  ctx.lineWidth=4;
+  ctx.lineCap='round';
+
+  function drawCorner(p1,corner,p2){
+    const d1=Math.hypot(corner.x-p1.x,corner.y-p1.y)||1;
+    const d2=Math.hypot(corner.x-p2.x,corner.y-p2.y)||1;
+    const ax=corner.x+(p1.x-corner.x)/d1*L;
+    const ay=corner.y+(p1.y-corner.y)/d1*L;
+    const bx=corner.x+(p2.x-corner.x)/d2*L;
+    const by=corner.y+(p2.y-corner.y)/d2*L;
+    ctx.beginPath();
+    ctx.moveTo(ax,ay);
+    ctx.lineTo(corner.x,corner.y);
+    ctx.lineTo(bx,by);
+    ctx.stroke();
+  }
+
+  drawCorner(bl,tl,tr); // ↖
+  drawCorner(tl,tr,br); // ↗
+  drawCorner(tr,br,bl); // ↘
+  drawCorner(br,bl,tl); // ↙
+
+  // نقطة في كل زاوية
+  [tl,tr,br,bl].forEach(p=>{
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,5,0,Math.PI*2);
+    ctx.fillStyle='#007AFF';
+    ctx.fill();
+    // هالة
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,10,0,Math.PI*2);
+    ctx.strokeStyle='rgba(0,122,255,0.3)';
+    ctx.lineWidth=2;
+    ctx.stroke();
+  });
+}
+
+// دائرة تقدم
 function drawRing(ctx,w,h,p){
-  const cx=w/2,cy=h/2,r=30;
+  if(p<=0)return;
+  const cx=w/2,cy=h/2,r=28;
   ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
   ctx.fillStyle='rgba(0,0,0,.6)';ctx.fill();
   ctx.beginPath();
   ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*p);
   ctx.strokeStyle=p>=1?'#34C759':'#007AFF';
-  ctx.lineWidth=5;ctx.lineCap='round';ctx.stroke();
+  ctx.lineWidth=4;ctx.lineCap='round';ctx.stroke();
 }
 
-// ── التقاط + قص ──
-function doCapture(v){
+// ══ الالتقاط + القص بـ Perspective Transform ══
+function doCapture(quad){
   if(tid){clearInterval(tid);tid=null;}
   $('fx').style.opacity='1';
   setTimeout(()=>$('fx').style.opacity='0',80);
 
   // التقط بالدقة الكاملة
   const full=document.createElement('canvas');
-  full.width=v.videoWidth||1280;full.height=v.videoHeight||720;
-  full.getContext('2d').drawImage(v,0,0,full.width,full.height);
+  full.width=vid.videoWidth||1280;
+  full.height=vid.videoHeight||720;
+  full.getContext('2d').drawImage(vid,0,0,full.width,full.height);
 
-  // extractPaper: يقص الوثيقة ويقوّمها
-  let cropped=null;
-  try{
-    const outW=Math.min(full.width,1600);
-    const outH=Math.round(outW/1.42);
-    cropped=scanner.extractPaper(full,outW,outH);
-  }catch(e){}
+  // حوّل الزوايا من إحداثيات الشاشة لإحداثيات الفيديو
+  const lc=$('live');
+  const sx=full.width/lc.width;
+  const sy=full.height/lc.height;
+  const [tl,tr,br,bl]=quad.map(p=>({x:p.x*sx,y:p.y*sy}));
 
-  const out=cropped&&cropped.width>50?cropped:full;
+  // Perspective crop
+  const cropped=perspectiveCrop(full,tl,tr,br,bl);
+  const out=cropped||full;
   enhance(out.getContext('2d'),out.width,out.height);
   url_=out.toDataURL('image/jpeg',.95);
   out.toBlob(b=>{blob_=b;showReview();},'image/jpeg',.95);
 }
 
+// قص وتقويم المستطيل
+function perspectiveCrop(src,tl,tr,br,bl){
+  let s,d,sm,dm,M;
+  try{
+    const W=Math.round(Math.max(Math.hypot(tr.x-tl.x,tr.y-tl.y),Math.hypot(br.x-bl.x,br.y-bl.y)));
+    const H=Math.round(Math.max(Math.hypot(bl.x-tl.x,bl.y-tl.y),Math.hypot(br.x-tr.x,br.y-tr.y)));
+    if(W<50||H<50)return null;
+    s=cv.imread(src);
+    d=new cv.Mat();
+    sm=cv.matFromArray(4,1,cv.CV_32FC2,[tl.x,tl.y,tr.x,tr.y,br.x,br.y,bl.x,bl.y]);
+    dm=cv.matFromArray(4,1,cv.CV_32FC2,[0,0,W,0,W,H,0,H]);
+    M=cv.getPerspectiveTransform(sm,dm);
+    cv.warpPerspective(s,d,M,new cv.Size(W,H),cv.INTER_LINEAR,cv.BORDER_CONSTANT,new cv.Scalar());
+    const out=document.createElement('canvas');
+    out.width=W;out.height=H;
+    cv.imshow(out,d);
+    return out;
+  }catch(e){return null;}
+  finally{[s,d,sm,dm,M].forEach(m=>{try{if(m)m.delete();}catch{}});}
+}
+
 function manualCap(){
-  if(!window._vid||!window._vid.videoWidth)return;
+  if(!vid.videoWidth)return;
   if(tid){clearInterval(tid);tid=null;}
-  doCapture(window._vid);
+  // التقط مباشرة بدون قص إذا لم يكن هناك كشف
+  const full=document.createElement('canvas');
+  full.width=vid.videoWidth;full.height=vid.videoHeight;
+  full.getContext('2d').drawImage(vid,0,0,full.width,full.height);
+  enhance(full.getContext('2d'),full.width,full.height);
+  url_=full.toDataURL('image/jpeg',.95);
+  full.toBlob(b=>{blob_=b;showReview();},'image/jpeg',.95);
 }
 
 function enhance(ctx,w,h){
@@ -314,27 +461,24 @@ function enhance(ctx,w,h){
 }
 const cl=v=>Math.min(255,Math.max(0,Math.round(v)));
 
-// ── REVIEW ──
 function showReview(){
   stopCam();
   $('rvi').src=url_;
   $('scanView').style.display='none';
   $('rv').style.display='flex';
 }
+
 function retake(){
   blob_=null;url_=null;
   ['rv','sndV','sucV','errV'].forEach(id=>{$(id).style.display='none';});
   $('scanView').style.display='';
-  stableCount=0;captured=false;
-  $('capBtn').className='';
+  stableCount=0;captured=false;$('capBtn').className='';
   startCam();
 }
 
-// ── SEND ──
 async function sendImg(){
   if(!blob_)return;
-  $('rv').style.display='none';
-  $('sndV').style.display='flex';
+  $('rv').style.display='none';$('sndV').style.display='flex';
   prog(15);sMsg('جاري الإرسال...');
   try{
     prog(35);
@@ -372,8 +516,7 @@ function showSuc(d){
 }
 
 function newScan(){
-  $('sucV').style.display='none';
-  $('scanView').style.display='';
+  $('sucV').style.display='none';$('scanView').style.display='';
   blob_=null;url_=null;stableCount=0;captured=false;
   startCam();
 }
@@ -406,16 +549,21 @@ $('gin').addEventListener('change',e=>{
       const c=document.createElement('canvas');
       c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);
       c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-      let out=c;
-      if(cvReady&&scanner){
-        try{
-          const cr=scanner.extractPaper(c,Math.min(c.width,1600),Math.round(Math.min(c.width,1600)/1.42));
-          if(cr&&cr.width>50)out=cr;
-        }catch(e){}
+      if(cvReady){
+        tctx.drawImage(img,0,0,c.width,c.height);
+        tmp.width=c.width;tmp.height=c.height;
+        tctx.drawImage(img,0,0,c.width,c.height);
+        const q=detectRect(tmp,c.width,c.height);
+        if(q){
+          const cr=perspectiveCrop(c,...q);
+          if(cr){enhance(cr.getContext('2d'),cr.width,cr.height);
+            url_=cr.toDataURL('image/jpeg',.95);
+            cr.toBlob(b=>{blob_=b;$('rvi').src=url_;showReview();},'image/jpeg',.95);return;}
+        }
       }
-      enhance(out.getContext('2d'),out.width,out.height);
-      url_=out.toDataURL('image/jpeg',.95);
-      out.toBlob(b=>{blob_=b;$('rvi').src=url_;showReview();},'image/jpeg',.95);
+      enhance(c.getContext('2d'),c.width,c.height);
+      url_=c.toDataURL('image/jpeg',.95);
+      c.toBlob(b=>{blob_=b;$('rvi').src=url_;showReview();},'image/jpeg',.95);
     };
     img.src=rd.result;
   };
