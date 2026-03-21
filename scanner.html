@@ -476,12 +476,12 @@ function runLoop() {
   animationId = requestAnimationFrame(runLoop);
 
   if (!cvReady) {
-    drawGuideFrame();
+    clearOverlay();
     return;
   }
   const video = refs.cameraVideo;
   if (!video.videoWidth || !video.videoHeight) {
-    drawGuideFrame();
+    clearOverlay();
     return;
   }
 
@@ -531,7 +531,7 @@ function runLoop() {
     detection = null;
     stableFrames = 0;
     refs.captureBtn.classList.remove('ready');
-    setStatus('ابحث عن حدود الجواز', 'وجّه الصفحة داخل الإطار المرسوم', 'يفضل خلفية متباينة وإضاءة ثابتة.', 0.08);
+    setStatus('جاري البحث التلقائي', 'وجّه الكاميرا نحو الجواز فقط', 'ما يحتاج مربع ثابت، مجرد خلّ الصفحة كاملة وواضحة أمام الكاميرا.', 0.08);
     updateBadge();
   }
 
@@ -550,7 +550,7 @@ function updateBadge() {
   const isReady = stableFrames >= Math.floor(AUTO_CAPTURE_FRAMES * 0.6) && detection;
   refs.scanBadge.textContent = detection
     ? (isReady ? 'ثابت تقريباً... سيتم الالتقاط' : 'تم العثور على الجواز')
-    : 'انتظر حتى يثبت الإطار';
+    : 'كشف تلقائي للحواف';
   refs.scanBadge.classList.toggle('ready', Boolean(isReady));
   refs.detailStability.textContent = `${stableFrames} / ${AUTO_CAPTURE_FRAMES}`;
   refs.detailScore.textContent = `${Math.round((detection ? detection.score : 0) * 100)}%`;
@@ -567,7 +567,7 @@ function drawScene() {
   const ctx = refs.overlayCanvas.getContext('2d');
   ctx.clearRect(0, 0, refs.overlayCanvas.width, refs.overlayCanvas.height);
   if (!detection) {
-    drawGuideFrame(ctx);
+    clearOverlay(ctx);
     return;
   }
 
@@ -575,44 +575,11 @@ function drawScene() {
   drawLiveOverlay(ctx, screenPoints, detection.score);
 }
 
-function drawGuideFrame(ctx = refs.overlayCanvas.getContext('2d')) {
+function clearOverlay(ctx = refs.overlayCanvas.getContext('2d')) {
+  if (!ctx) return;
   const w = refs.overlayCanvas.width;
   const h = refs.overlayCanvas.height;
   ctx.clearRect(0, 0, w, h);
-
-  const padX = w * 0.08;
-  const guideWidth = w - padX * 2;
-  const guideHeight = guideWidth / PASSPORT_RATIO;
-  const guideY = Math.max(h * 0.18, (h - guideHeight) / 2);
-  const x = padX;
-  const y = guideY;
-  const c = 28;
-
-  ctx.fillStyle = 'rgba(2,5,10,.24)';
-  ctx.fillRect(0, 0, w, h);
-  ctx.clearRect(x, y, guideWidth, guideHeight);
-
-  ctx.strokeStyle = 'rgba(255,255,255,.18)';
-  ctx.lineWidth = 1.5;
-  ctx.setLineDash([10, 8]);
-  ctx.strokeRect(x, y, guideWidth, guideHeight);
-  ctx.setLineDash([]);
-  ctx.strokeStyle = 'rgba(255,255,255,.65)';
-  ctx.lineWidth = 4;
-  ctx.lineCap = 'round';
-
-  drawCorner(ctx, x, y, c, 1, 1);
-  drawCorner(ctx, x + guideWidth, y, c, -1, 1);
-  drawCorner(ctx, x + guideWidth, y + guideHeight, c, -1, -1);
-  drawCorner(ctx, x, y + guideHeight, c, 1, -1);
-}
-
-function drawCorner(ctx, x, y, size, dirX, dirY) {
-  ctx.beginPath();
-  ctx.moveTo(x + size * dirX, y);
-  ctx.lineTo(x, y);
-  ctx.lineTo(x, y + size * dirY);
-  ctx.stroke();
 }
 
 function mapVideoPointsToScreen(points) {
