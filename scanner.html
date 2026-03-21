@@ -8,75 +8,71 @@
 <meta name="apple-mobile-web-app-title" content="Scanner">
 <meta name="theme-color" content="#000">
 <title>Scanner</title>
+
+<!-- OpenCV.js — المكتبة الرئيسية -->
+<script src="https://docs.opencv.org/4.7.0/opencv.js" async></script>
+
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:-apple-system,sans-serif;color:#fff}
 
-/* ─── SCANNER ─── */
 #scanView{position:fixed;inset:0;display:flex;flex-direction:column}
-#vWrap{position:relative;flex:1;overflow:hidden;background:#000;display:flex;align-items:center;justify-content:center}
-#vid{width:100%;height:100%;object-fit:cover;display:block}
-#cv{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#vWrap{position:relative;flex:1;overflow:hidden;background:#000}
+#vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 
-/* Top bar */
+/* الكانفاس الخفي للمعالجة */
+#procCanvas{display:none}
+
+/* الكانفاس الظاهر للعرض */
+#dispCanvas{
+  position:absolute;inset:0;width:100%;height:100%;
+  pointer-events:none;
+}
+
+/* TopBar */
 #topBar{
   position:absolute;top:0;left:0;right:0;z-index:30;
   display:flex;align-items:center;justify-content:space-between;
-  padding:calc(env(safe-area-inset-top,44px) + 8px) 16px 16px;
-  background:linear-gradient(to bottom,rgba(0,0,0,.75) 0%,transparent 100%);
+  padding:calc(env(safe-area-inset-top,44px) + 6px) 16px 14px;
+  background:linear-gradient(to bottom,rgba(0,0,0,.75),transparent);
 }
 .tBtn{
-  width:40px;height:40px;border-radius:50%;border:none;cursor:pointer;
-  background:rgba(30,30,30,.75);backdrop-filter:blur(12px);
-  border:1px solid rgba(255,255,255,.18);
-  color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;
-  transition:all .2s;flex-shrink:0;
+  width:40px;height:40px;border-radius:50%;
+  background:rgba(20,20,20,.7);backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.2);
+  color:#fff;font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
 }
-.tBtn.lit{background:rgba(255,210,0,.35);border-color:rgba(255,210,0,.6)}
-#topLabel{font-size:16px;font-weight:600;letter-spacing:.3px;text-shadow:0 1px 4px rgba(0,0,0,.9)}
+.tBtn.on{background:rgba(255,213,0,.4);border-color:rgba(255,213,0,.7)}
+#topTitle{font-size:16px;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.9)}
 
-/* Status pill */
+/* Pill */
 #pill{
-  position:absolute;bottom:110px;left:50%;transform:translateX(-50%);
-  padding:9px 22px;border-radius:22px;white-space:nowrap;
-  background:rgba(0,0,0,.7);backdrop-filter:blur(16px);
+  position:absolute;bottom:118px;left:50%;transform:translateX(-50%);
+  padding:9px 22px;border-radius:22px;white-space:nowrap;z-index:30;
+  background:rgba(0,0,0,.65);backdrop-filter:blur(14px);
   border:1px solid rgba(255,255,255,.12);
-  font-size:14px;font-weight:500;z-index:30;pointer-events:none;
-  transition:background .3s,border .3s,color .3s;
+  font-size:14px;font-weight:500;pointer-events:none;
+  transition:all .25s;
 }
-#pill.found{
-  background:rgba(0,122,255,.35);border-color:rgba(0,122,255,.7);
-  color:#a8d4ff;
-}
+#pill.found{background:rgba(0,122,255,.35);border-color:rgba(0,122,255,.7);color:#aad4ff}
+#pill.loading{color:rgba(255,255,255,.5)}
 
-/* Bottom bar */
+/* BottomBar */
 #botBar{
   padding:14px 28px calc(env(safe-area-inset-bottom,34px)+10px);
-  background:linear-gradient(to top,rgba(0,0,0,.8) 0%,transparent 100%);
-  display:flex;align-items:center;justify-content:space-between;
-  flex-shrink:0;
+  background:linear-gradient(to top,rgba(0,0,0,.8),transparent);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
 }
-/* Capture button — exactly like Notes */
 #capBtn{
   width:76px;height:76px;border-radius:50%;
-  border:5px solid rgba(255,255,255,.4);
-  background:#fff;cursor:pointer;position:relative;
-  transition:transform .1s,box-shadow .2s;
-  flex-shrink:0;
+  border:5px solid rgba(255,255,255,.4);background:#fff;
+  cursor:pointer;position:relative;flex-shrink:0;transition:transform .1s,box-shadow .2s;
 }
-#capBtn::after{
-  content:'';position:absolute;inset:6px;border-radius:50%;
-  background:#fff;border:1px solid rgba(0,0,0,.08);
-  transition:background .2s,transform .2s;
-}
+#capBtn::after{content:'';position:absolute;inset:6px;border-radius:50%;background:#fff;border:1px solid rgba(0,0,0,.08);transition:background .2s}
 #capBtn:active{transform:scale(.91)}
-#capBtn.rdy{
-  border-color:rgba(0,122,255,.6);
-  box-shadow:0 0 0 5px rgba(0,122,255,.2),0 0 28px rgba(0,122,255,.4);
-}
+#capBtn.rdy{border-color:rgba(0,122,255,.7);box-shadow:0 0 0 5px rgba(0,122,255,.25),0 0 28px rgba(0,122,255,.45)}
 #capBtn.rdy::after{background:#007AFF}
-
-/* Gallery / Flip */
 #galBtn{
   width:54px;height:54px;border-radius:14px;overflow:hidden;cursor:pointer;
   background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.2);
@@ -86,76 +82,58 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:-ap
 #flipBtn{
   width:44px;height:44px;border-radius:50%;
   background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.2);
-  color:#fff;font-size:19px;cursor:pointer;
+  color:#fff;font-size:20px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
 }
 #flashFx{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:99;transition:opacity .07s}
 
-/* ─── REVIEW ─── */
+/* REVIEW */
 #rvView{position:fixed;inset:0;background:#111;display:none;flex-direction:column}
-#rvHead{
-  padding:calc(env(safe-area-inset-top,44px)+8px) 20px 14px;
-  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
-}
+#rvHead{padding:calc(env(safe-area-inset-top,44px)+8px) 20px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .rvBtn{padding:9px 20px;border-radius:22px;border:none;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
 #rvRetake{background:rgba(255,255,255,.12);color:#fff}
 #rvSend{background:#007AFF;color:#fff}
 #rvTitle{font-size:17px;font-weight:600}
-#rvImgWrap{flex:1;display:flex;align-items:center;justify-content:center;padding:10px;overflow:hidden}
-#rvImg{max-width:100%;max-height:100%;border-radius:16px;object-fit:contain;
-  box-shadow:0 8px 40px rgba(0,0,0,.6)}
-#rvFoot{padding:12px 20px calc(env(safe-area-inset-bottom,34px)+12px);
-  text-align:center;font-size:13px;color:rgba(255,255,255,.4);flex-shrink:0}
+#rvWrap{flex:1;display:flex;align-items:center;justify-content:center;padding:10px;overflow:hidden}
+#rvImg{max-width:100%;max-height:100%;border-radius:16px;object-fit:contain;box-shadow:0 8px 40px rgba(0,0,0,.6)}
+#rvFoot{padding:12px 20px calc(env(safe-area-inset-bottom,34px)+12px);text-align:center;font-size:13px;color:rgba(255,255,255,.4);flex-shrink:0}
 
-/* ─── SENDING ─── */
-#sndView{position:fixed;inset:0;background:rgba(0,0,0,.96);display:none;
-  flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:200}
-.sIco{font-size:52px}.sTtl{font-size:20px;font-weight:700}
-.sSub{font-size:13px;color:rgba(255,255,255,.5);text-align:center;padding:0 28px}
-.pTrk{width:220px;height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
-.pFll{height:100%;background:linear-gradient(90deg,#007AFF,#5856D6);border-radius:2px;transition:width .4s ease}
+/* SENDING */
+#sndView{position:fixed;inset:0;background:rgba(0,0,0,.97);display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:200}
+.sI{font-size:52px}.sT{font-size:20px;font-weight:700}.sS{font-size:13px;color:rgba(255,255,255,.5);text-align:center;padding:0 28px}
+.pT{width:220px;height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
+.pF{height:100%;background:linear-gradient(90deg,#007AFF,#5856D6);border-radius:2px;transition:width .4s ease}
 
-/* ─── SUCCESS ─── */
-#sucView{position:fixed;inset:0;background:rgba(0,0,0,.97);display:none;
-  flex-direction:column;align-items:center;justify-content:center;
-  padding:28px;gap:10px;z-index:200}
-.scIco{font-size:60px}.scTtl{font-size:22px;font-weight:800;color:#30d158}
-.scSub{font-size:13px;color:rgba(255,255,255,.5);text-align:center;margin-bottom:8px}
-.resCard{width:100%;max-width:360px;background:rgba(255,255,255,.05);
-  border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:16px;
-  display:grid;gap:10px}
-.resRow{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.resLbl{font-size:12px;color:rgba(255,255,255,.4);flex-shrink:0}
-.resVal{font-size:13px;font-weight:600;text-align:left}
-.newBtn{margin-top:8px;padding:14px 44px;border-radius:28px;
-  background:#007AFF;border:none;color:#fff;
-  font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+/* SUCCESS */
+#sucView{position:fixed;inset:0;background:rgba(0,0,0,.97);display:none;flex-direction:column;align-items:center;justify-content:center;padding:28px;gap:10px;z-index:200}
+.scI{font-size:60px}.scT{font-size:22px;font-weight:800;color:#30d158}.scS{font-size:13px;color:rgba(255,255,255,.5);text-align:center;margin-bottom:8px}
+.rc{width:100%;max-width:360px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:16px;display:grid;gap:10px}
+.rr{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.rl{font-size:12px;color:rgba(255,255,255,.4);flex-shrink:0}.rv{font-size:13px;font-weight:600;text-align:left}
+.nb{margin-top:8px;padding:14px 44px;border-radius:28px;background:#007AFF;border:none;color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
 
-/* ─── ERROR ─── */
-#errView{position:fixed;inset:0;background:rgba(0,0,0,.97);display:none;
-  flex-direction:column;align-items:center;justify-content:center;
-  padding:28px;gap:14px;z-index:200}
-.erIco{font-size:52px}.erTtl{font-size:20px;font-weight:700;color:#ff3b30}
-.erSub{font-size:13px;color:rgba(255,255,255,.5);text-align:center}
-.retryBtn{padding:13px 38px;border-radius:24px;background:#ff3b30;
-  border:none;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+/* ERROR */
+#errView{position:fixed;inset:0;background:rgba(0,0,0,.97);display:none;flex-direction:column;align-items:center;justify-content:center;padding:28px;gap:14px;z-index:200}
+.eI{font-size:52px}.eT{font-size:20px;font-weight:700;color:#ff3b30}.eS{font-size:13px;color:rgba(255,255,255,.5);text-align:center}
+.retryB{padding:13px 38px;border-radius:24px;background:#ff3b30;border:none;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
 input[type=file]{display:none}
 </style>
 </head>
 <body>
 <div id="flashFx"></div>
 
-<!-- ── SCANNER ── -->
+<!-- SCANNER -->
 <div id="scanView">
   <div id="vWrap">
     <video id="vid" autoplay playsinline muted></video>
-    <canvas id="cv"></canvas>
+    <canvas id="procCanvas"></canvas>
+    <canvas id="dispCanvas"></canvas>
     <div id="topBar">
       <button class="tBtn" id="closeBtn" onclick="goBack()">✕</button>
-      <div id="topLabel">مسح ضوئي</div>
+      <div id="topTitle">مسح ضوئي</div>
       <button class="tBtn" id="flashBtn" onclick="toggleFlash()">⚡</button>
     </div>
-    <div id="pill">ضع الوثيقة أمام الكاميرا</div>
+    <div id="pill" class="loading">جاري تحميل محرك الكشف...</div>
   </div>
   <div id="botBar">
     <div id="galBtn" onclick="document.getElementById('gin').click()">
@@ -166,68 +144,78 @@ input[type=file]{display:none}
   </div>
 </div>
 
-<!-- ── REVIEW ── -->
+<!-- REVIEW -->
 <div id="rvView">
   <div id="rvHead">
     <button class="rvBtn" id="rvRetake" onclick="retake()">إعادة</button>
     <div id="rvTitle">مراجعة</div>
     <button class="rvBtn" id="rvSend" onclick="sendImg()">إرسال ✓</button>
   </div>
-  <div id="rvImgWrap"><img id="rvImg" alt=""></div>
+  <div id="rvWrap"><img id="rvImg" alt=""></div>
   <div id="rvFoot">تأكد أن النص واضح قبل الإرسال</div>
 </div>
 
-<!-- ── SENDING ── -->
+<!-- SENDING -->
 <div id="sndView">
-  <div class="sIco">🔬</div>
-  <div class="sTtl">جاري الاستخراج...</div>
-  <div class="sSub" id="sndMsg">يتم تحليل صورة الجواز</div>
-  <div class="pTrk"><div class="pFll" id="pFll" style="width:0%"></div></div>
+  <div class="sI">🔬</div>
+  <div class="sT">جاري الاستخراج...</div>
+  <div class="sS" id="sndMsg">يتم تحليل صورة الجواز</div>
+  <div class="pT"><div class="pF" id="pFll" style="width:0%"></div></div>
 </div>
 
-<!-- ── SUCCESS ── -->
+<!-- SUCCESS -->
 <div id="sucView">
-  <div class="scIco">✅</div>
-  <div class="scTtl">تم الاستخراج!</div>
-  <div class="scSub">تم إرسال البيانات للكمبيوتر</div>
-  <div class="resCard" id="resCard"></div>
-  <button class="newBtn" onclick="newScan()">📷 مسح جواز جديد</button>
+  <div class="scI">✅</div>
+  <div class="scT">تم الاستخراج!</div>
+  <div class="scS">تم إرسال البيانات للكمبيوتر</div>
+  <div class="rc" id="resCard"></div>
+  <button class="nb" onclick="newScan()">📷 مسح جواز جديد</button>
 </div>
 
-<!-- ── ERROR ── -->
+<!-- ERROR -->
 <div id="errView">
-  <div class="erIco">❌</div>
-  <div class="erTtl">فشل الاستخراج</div>
-  <div class="erSub" id="errMsg">حدث خطأ</div>
-  <button class="retryBtn" onclick="retake()">حاول مجدداً</button>
+  <div class="eI">❌</div>
+  <div class="eT">فشل الاستخراج</div>
+  <div class="eS" id="errMsg">حدث خطأ</div>
+  <button class="retryB" onclick="retake()">حاول مجدداً</button>
 </div>
 
 <input type="file" id="gin" accept="image/*">
 
+<!-- jscanify — مكتبة الكشف عن الوثائق (تستخدم OpenCV) -->
+<script src="https://cdn.jsdelivr.net/gh/ColonelParrot/jscanify@master/src/jscanify.min.js"></script>
+
 <script>
 'use strict';
-
 const N8N = localStorage.getItem('pai_webhook') || 'https://mmnnm19991.app.n8n.cloud/webhook/passport-extract';
-const SID = (()=>{ let id = localStorage.getItem('pai_sid'); if(!id){ id='u'+Math.random().toString(36).slice(2,9); localStorage.setItem('pai_sid',id); } return id; })();
-
-const $= id => document.getElementById(id);
+const SID = (()=>{ let id=localStorage.getItem('pai_sid'); if(!id){id='u'+Math.random().toString(36).slice(2,9);localStorage.setItem('pai_sid',id);} return id; })();
+const $=id=>document.getElementById(id);
 
 let stream=null, vtrack=null, flashOn=false, facing='environment';
 let blob_=null, url_=null;
 let rafId=null, stable=0, autoFired=false;
-let lastQuad=null; // الإطار المرسوم
+let scanner=null, cvReady=false;
 
-// كانفاس للمعالجة
-const pc = document.createElement('canvas');
-const px = pc.getContext('2d', {willReadFrequently:true});
+// انتظر تحميل OpenCV
+function onOpenCvReady(){
+  cvReady=true;
+  scanner=new jscanify();
+  setPill('ضع الجواز أمام الكاميرا',false);
+  console.log('OpenCV + jscanify ready');
+}
 
-// ── بدء الكاميرا ──
+// OpenCV يستدعي هذه الدالة عند الجهوز
+window['Module']={onRuntimeInitialized:function(){
+  // jscanify تحتاج cv object
+  setTimeout(onOpenCvReady,500);
+}};
+
+// ── الكاميرا ──
 async function startCam(){
   try{
-    if(stream) stream.getTracks().forEach(t=>t.stop());
-    stream = await navigator.mediaDevices.getUserMedia({
-      video:{ facingMode:{ideal:facing}, width:{ideal:1920}, height:{ideal:1080} },
-      audio:false
+    if(stream)stream.getTracks().forEach(t=>t.stop());
+    stream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:{ideal:facing},width:{ideal:1920},height:{ideal:1080}},audio:false
     });
     const v=$('vid');
     v.srcObject=stream;
@@ -235,325 +223,204 @@ async function startCam(){
     await v.play();
     onResize();
     loop();
-  }catch(e){ setPill('لا يمكن الوصول للكاميرا',false); }
+  }catch(e){setPill('لا يمكن الوصول للكاميرا',false);}
 }
 
 function stopCam(){
-  if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
-  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; vtrack=null; }
+  if(rafId){cancelAnimationFrame(rafId);rafId=null;}
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;vtrack=null;}
 }
 
 function onResize(){
-  const c=$('cv'), w=$('vWrap');
-  c.width=w.offsetWidth; c.height=w.offsetHeight;
+  const dc=$('dispCanvas'),w=$('vWrap');
+  dc.width=w.offsetWidth;dc.height=w.offsetHeight;
+  const pc=$('procCanvas');
+  pc.width=w.offsetWidth;pc.height=w.offsetHeight;
 }
 
-// ── حلقة الكشف الرئيسية (مثل VNDetectRectanglesRequest) ──
-let frameSkip=0;
+// ── حلقة الكشف باستخدام jscanify ──
+let lastPts=null;
 function loop(){
   rafId=requestAnimationFrame(loop);
   const v=$('vid');
-  if(!v.videoWidth) return;
+  if(!v.videoWidth||!cvReady||!scanner)return;
 
-  // معالجة كل إطارين فقط للأداء
-  frameSkip=(frameSkip+1)%2;
-  if(frameSkip!==0){ if(lastQuad) redrawQuad(); return; }
+  // ارسم الفيديو على كانفاس المعالجة
+  const pc=$('procCanvas');
+  const pctx=pc.getContext('2d');
+  pctx.drawImage(v,0,0,pc.width,pc.height);
 
-  // حجم تحليل مصغّر
-  const SW=400, SH=Math.round(400*v.videoHeight/v.videoWidth);
-  pc.width=SW; pc.height=SH;
-  px.drawImage(v,0,0,SW,SH);
+  // استخدم jscanify للكشف عن الوثيقة
+  let highlighted;
+  try{
+    highlighted=scanner.highlightPaper(pc);
+  }catch(e){
+    drawGuide();
+    return;
+  }
 
-  const imgData=px.getImageData(0,0,SW,SH);
-  const quad=detectRect(imgData.data,SW,SH);
+  // استخرج نقاط الزوايا من النتيجة
+  const pts=getCornerPoints(pc);
 
-  const canvas=$('cv');
-  const ctx=canvas.getContext('2d');
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const dc=$('dispCanvas');
+  const dctx=dc.getContext('2d');
+  dctx.clearRect(0,0,dc.width,dc.height);
 
-  if(quad){
-    // تحويل للشاشة
-    const sx=canvas.width/SW, sy=canvas.height/SH;
-    lastQuad=quad.map(p=>({x:p.x*sx, y:p.y*sy}));
-    drawQuad(ctx,lastQuad,canvas.width,canvas.height);
-    setPill('✅ تم اكتشاف الوثيقة',true);
+  if(pts){
+    lastPts=pts;
+    drawDocOverlay(dctx,pts,dc.width,dc.height);
+    setPill('✅ تم اكتشاف الجواز',true);
     $('capBtn').classList.add('rdy');
     stable++;
-    // التقاط تلقائي بعد استقرار ~1.5s
-    if(stable>=20 && !autoFired){ autoFired=true; capture(); }
+    if(stable>=18&&!autoFired){autoFired=true;capture();}
   }else{
-    lastQuad=null;
-    drawGuide(ctx,canvas.width,canvas.height);
-    setPill('ضع الوثيقة أمام الكاميرا',false);
+    lastPts=null;
+    drawGuide();
+    setPill('ضع الجواز أمام الكاميرا',false);
     $('capBtn').classList.remove('rdy');
     stable=0;
   }
 }
 
-function redrawQuad(){
-  if(!lastQuad) return;
-  const canvas=$('cv');
-  const ctx=canvas.getContext('2d');
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  drawQuad(ctx,lastQuad,canvas.width,canvas.height);
-}
+// استخراج نقاط الزوايا من jscanify مباشرة
+function getCornerPoints(canvas){
+  if(!cvReady||!scanner)return null;
+  try{
+    // jscanify يكشف أكبر مضلع رباعي الأضلاع في الصورة
+    const src=cv.imread(canvas);
+    const gray=new cv.Mat();
+    cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
 
-// ══════════════════════════════════════════
-//  خوارزمية الكشف — مثل VNDetectRectanglesRequest
-//  1. Gaussian blur لتقليل الضوضاء
-//  2. Canny edge detection
-//  3. Hough lines (مبسّط) → نبحث عن 4 خطوط تشكّل مستطيلاً
-// ══════════════════════════════════════════
-function detectRect(data, w, h){
-  // 1. تحويل للتدرج الرمادي
-  const gray = new Uint8Array(w*h);
-  for(let i=0,p=0;i<data.length;i+=4,p++){
-    gray[p] = (data[i]*77 + data[i+1]*150 + data[i+2]*29) >> 8;
-  }
+    // blur
+    const blurred=new cv.Mat();
+    const ksize=new cv.Size(5,5);
+    cv.GaussianBlur(gray,blurred,ksize,0);
 
-  // 2. Gaussian blur 5x5
-  const blur = gaussBlur(gray,w,h);
+    // Canny
+    const edges=new cv.Mat();
+    cv.Canny(blurred,edges,75,200);
 
-  // 3. Canny edge detection (Sobel + threshold)
-  const edge = canny(blur,w,h,20,60);
+    // dilate
+    const dilated=new cv.Mat();
+    const kernel=cv.Mat.ones(5,5,cv.CV_8U);
+    cv.dilate(edges,dilated,kernel);
 
-  // 4. بحث عن أكبر مستطيل
-  const rect = findLargestRect(edge,w,h);
-  return rect;
-}
+    // contours
+    const contours=new cv.MatVector();
+    const hierarchy=new cv.Mat();
+    cv.findContours(dilated,contours,hierarchy,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
 
-function gaussBlur(g,w,h){
-  const out=new Uint8Array(w*h);
-  const K=[1,4,6,4,1, 4,16,24,16,4, 6,24,36,24,6, 4,16,24,16,4, 1,4,6,4,1];
-  const KS=256;
-  for(let y=2;y<h-2;y++){
-    for(let x=2;x<w-2;x++){
-      let s=0;
-      for(let ky=-2;ky<=2;ky++)
-        for(let kx=-2;kx<=2;kx++)
-          s+=g[(y+ky)*w+(x+kx)]*K[(ky+2)*5+(kx+2)];
-      out[y*w+x]=s/KS;
+    let maxArea=0, bestContour=null;
+    for(let i=0;i<contours.size();i++){
+      const c=contours.get(i);
+      const area=cv.contourArea(c);
+      if(area>maxArea){maxArea=area;bestContour=c;}
     }
-  }
-  return out;
-}
 
-function canny(g,w,h,lo,hi){
-  const gx=new Float32Array(w*h);
-  const gy=new Float32Array(w*h);
-  const mag=new Float32Array(w*h);
-  const dir=new Uint8Array(w*h);
+    let pts=null;
+    if(bestContour&&maxArea>canvas.width*canvas.height*0.05){
+      const peri=cv.arcLength(bestContour,true);
+      const approx=new cv.Mat();
+      cv.approxPolyDP(bestContour,approx,0.02*peri,true);
 
-  // Sobel
-  for(let y=1;y<h-1;y++){
-    for(let x=1;x<w-1;x++){
-      const i=y*w+x;
-      gx[i]=(-g[i-w-1]+g[i-w+1]-2*g[i-1]+2*g[i+1]-g[i+w-1]+g[i+w+1]);
-      gy[i]=(-g[i-w-1]-2*g[i-w]-g[i-w+1]+g[i+w-1]+2*g[i+w]+g[i+w+1]);
-      mag[i]=Math.sqrt(gx[i]*gx[i]+gy[i]*gy[i]);
-      // 0=أفقي، 1=+45°، 2=عمودي، 3=-45°
-      const a=(Math.atan2(gy[i],gx[i])*180/Math.PI+180)%180;
-      dir[i]=a<22.5||a>=157.5?0:a<67.5?1:a<112.5?2:3;
-    }
-  }
-
-  // Non-maximum suppression + double threshold
-  const edge=new Uint8Array(w*h);
-  for(let y=1;y<h-1;y++){
-    for(let x=1;x<w-1;x++){
-      const i=y*w+x;
-      const m=mag[i];
-      if(m<lo) continue;
-      // تحقق من الجيران في اتجاه الحافة
-      let n1,n2;
-      switch(dir[i]){
-        case 0: n1=mag[i-1];n2=mag[i+1];break;
-        case 1: n1=mag[i-w+1];n2=mag[i+w-1];break;
-        case 2: n1=mag[i-w];n2=mag[i+w];break;
-        default:n1=mag[i-w-1];n2=mag[i+w+1];
-      }
-      if(m>=n1&&m>=n2) edge[i]=m>hi?255:128;
-    }
-  }
-  return edge;
-}
-
-// ── البحث عن أكبر مستطيل (مستوحى من VNDetectRectanglesRequest) ──
-function findLargestRect(edge, w, h){
-  const mx=Math.floor(w*.04), my=Math.floor(h*.04);
-  const BLK=12; // حجم البلوك للبحث
-
-  // حساب كثافة الحواف في شبكة بلوكات
-  const cols=Math.floor((w-mx*2)/BLK);
-  const rows=Math.floor((h-my*2)/BLK);
-  const grid=new Float32Array(cols*rows);
-
-  for(let r=0;r<rows;r++){
-    for(let c=0;c<cols;c++){
-      let s=0;
-      const x0=mx+c*BLK, y0=my+r*BLK;
-      for(let dy=0;dy<BLK;dy++)
-        for(let dx=0;dx<BLK;dx++){
-          const v=edge[(y0+dy)*w+(x0+dx)];
-          if(v>127) s++;
+      if(approx.rows===4){
+        const p=[];
+        for(let i=0;i<4;i++){
+          p.push({x:approx.data32S[i*2],y:approx.data32S[i*2+1]});
         }
-      grid[r*cols+c]=s/(BLK*BLK);
-    }
-  }
-
-  // ابحث عن أكبر مستطيل بكثافة حواف على أطرافه
-  let bestScore=0, bestRect=null;
-  const minW=Math.floor(cols*.25), minH=Math.floor(rows*.15);
-  const step=2;
-
-  for(let r0=0;r0<rows-minH;r0+=step){
-    for(let c0=0;c0<cols-minW;c0+=step){
-      for(let r1=r0+minH;r1<rows;r1+=step){
-        for(let c1=c0+minW;c1<cols;c1+=step){
-          // نسبة العرض للارتفاع منطقية
-          const rW=c1-c0, rH=r1-r0;
-          const ratio=rW/rH;
-          if(ratio<0.5||ratio>4) continue;
-
-          // قيّم كثافة الحواف على الأطراف
-          let perim=0, count=0;
-          // أعلى وأسفل
-          for(let c=c0;c<=c1;c++){
-            perim+=grid[r0*cols+c]+grid[r1*cols+c]; count+=2;
-          }
-          // يسار ويمين
-          for(let r=r0+1;r<r1;r++){
-            perim+=grid[r*cols+c0]+grid[r*cols+c1]; count+=2;
-          }
-          const perimScore=perim/count;
-
-          // مساحة المستطيل (نفضّل الأكبر)
-          const area=rW*rH;
-          const score=perimScore*Math.sqrt(area);
-
-          if(score>bestScore && perimScore>0.08){
-            bestScore=score;
-            bestRect={r0,c0,r1,c1};
-          }
-        }
+        // رتّب الزوايا: أعلى يسار، أعلى يمين، أسفل يمين، أسفل يسار
+        pts=sortCorners(p);
       }
+      approx.delete();
     }
-  }
 
-  if(!bestRect||bestScore<0.5) return null;
+    src.delete();gray.delete();blurred.delete();edges.delete();dilated.delete();
+    kernel.delete();contours.delete();hierarchy.delete();
+    if(bestContour)bestContour.delete();
 
-  // تحويل البلوكات لبكسل
-  const {r0,c0,r1,c1}=bestRect;
-  const px0=mx+c0*BLK, py0=my+r0*BLK;
-  const px1=mx+c1*BLK, py1=my+r1*BLK;
-
-  // تحقق من الحجم الأدنى
-  if((px1-px0)<w*.2||(py1-py0)<h*.1) return null;
-
-  // إعادة تعديل الزوايا بدقة أكبر باستخدام الحواف الأصلية
-  return refineCorners(edge,w,h,px0,py0,px1,py1);
+    return pts;
+  }catch(e){return null;}
 }
 
-// ── تحسين الزوايا ──
-function refineCorners(edge,w,h,x0,y0,x1,y1){
-  const R=8; // نطاق البحث
-  function bestCorner(sx,sy,dx,dy){
-    let bx=sx,by=sy,bv=0;
-    for(let dy_=-R;dy_<=R;dy_++){
-      for(let dx_=-R;dx_<=R;dx_++){
-        const nx=sx+dx_,ny=sy+dy_;
-        if(nx<0||nx>=w||ny<0||ny>=h) continue;
-        const v=edge[ny*w+nx];
-        if(v>bv){ bv=v; bx=nx; by=ny; }
-      }
-    }
-    return {x:bx,y:by};
-  }
-  const tl=bestCorner(x0,y0,-1,-1);
-  const tr=bestCorner(x1,y0, 1,-1);
-  const bl=bestCorner(x0,y1,-1, 1);
-  const br=bestCorner(x1,y1, 1, 1);
-  return [tl,tr,br,bl]; // ترتيب عكس الساعة
+// ترتيب الزوايا الأربع
+function sortCorners(pts){
+  const cx=pts.reduce((s,p)=>s+p.x,0)/4;
+  const cy=pts.reduce((s,p)=>s+p.y,0)/4;
+  const tl=pts.filter(p=>p.x<cx&&p.y<cy)[0]||pts[0];
+  const tr=pts.filter(p=>p.x>cx&&p.y<cy)[0]||pts[1];
+  const br=pts.filter(p=>p.x>cx&&p.y>cy)[0]||pts[2];
+  const bl=pts.filter(p=>p.x<cx&&p.y>cy)[0]||pts[3];
+  if(!tl||!tr||!br||!bl)return null;
+  return [tl,tr,br,bl];
 }
 
-// ══ رسم الإطار مثل Apple Notes ══
-function drawQuad(ctx, pts, cw, ch){
+// ── رسم الإطار (مثل Apple Notes) ──
+function drawDocOverlay(ctx,pts,cw,ch){
   const [tl,tr,br,bl]=pts;
 
   // تعتيم خارج الوثيقة
   ctx.save();
-  ctx.fillStyle='rgba(0,0,0,0.48)';
+  ctx.fillStyle='rgba(0,0,0,0.5)';
   ctx.fillRect(0,0,cw,ch);
   ctx.globalCompositeOperation='destination-out';
   ctx.beginPath();
   ctx.moveTo(tl.x,tl.y);ctx.lineTo(tr.x,tr.y);
   ctx.lineTo(br.x,br.y);ctx.lineTo(bl.x,bl.y);
   ctx.closePath();
-  ctx.fillStyle='rgba(0,0,0,1)';
   ctx.fill();
   ctx.restore();
 
-  // تعبئة زرقاء شفافة داخل الوثيقة (مثل Notes)
+  // تعبئة زرقاء شفافة (مثل Notes)
   ctx.beginPath();
   ctx.moveTo(tl.x,tl.y);ctx.lineTo(tr.x,tr.y);
   ctx.lineTo(br.x,br.y);ctx.lineTo(bl.x,bl.y);
   ctx.closePath();
-  ctx.fillStyle='rgba(0,122,255,0.12)';
+  ctx.fillStyle='rgba(0,122,255,0.13)';
   ctx.fill();
 
-  // حدود الوثيقة
+  // حدود
   ctx.beginPath();
   ctx.moveTo(tl.x,tl.y);ctx.lineTo(tr.x,tr.y);
   ctx.lineTo(br.x,br.y);ctx.lineTo(bl.x,bl.y);
   ctx.closePath();
-  ctx.strokeStyle='rgba(0,122,255,0.9)';
-  ctx.lineWidth=2.5;
-  ctx.lineJoin='round';
+  ctx.strokeStyle='rgba(0,122,255,0.92)';
+  ctx.lineWidth=2.5;ctx.lineJoin='round';
   ctx.stroke();
 
-  // ── زوايا مميزة مثل Notes ──
-  const L=26;
-  ctx.strokeStyle='#007AFF';
-  ctx.lineWidth=4;
-  ctx.lineCap='round';
-
-  function corner(p1,p2,p3){
-    // رسم زاوية L من ثلاث نقاط
-    const d1=Math.sqrt((p2.x-p1.x)**2+(p2.y-p1.y)**2)||1;
-    const d2=Math.sqrt((p3.x-p2.x)**2+(p3.y-p2.y)**2)||1;
-    const a1x=p2.x+(p1.x-p2.x)/d1*L, a1y=p2.y+(p1.y-p2.y)/d1*L;
-    const a2x=p2.x+(p3.x-p2.x)/d2*L, a2y=p2.y+(p3.y-p2.y)/d2*L;
-    ctx.beginPath();ctx.moveTo(a1x,a1y);ctx.lineTo(p2.x,p2.y);ctx.lineTo(a2x,a2y);ctx.stroke();
+  // زوايا مميزة
+  const L=24;
+  ctx.strokeStyle='#007AFF';ctx.lineWidth=4;ctx.lineCap='round';
+  function corner(a,b,c){
+    const d1=Math.hypot(b.x-a.x,b.y-a.y)||1;
+    const d2=Math.hypot(c.x-b.x,c.y-b.y)||1;
+    ctx.beginPath();
+    ctx.moveTo(b.x+(a.x-b.x)/d1*L,b.y+(a.y-b.y)/d1*L);
+    ctx.lineTo(b.x,b.y);
+    ctx.lineTo(b.x+(c.x-b.x)/d2*L,b.y+(c.y-b.y)/d2*L);
+    ctx.stroke();
   }
-
-  corner(bl,tl,tr); // أعلى يسار
-  corner(tl,tr,br); // أعلى يمين
-  corner(tr,br,bl); // أسفل يمين
-  corner(br,bl,tl); // أسفل يسار
+  corner(bl,tl,tr);corner(tl,tr,br);corner(tr,br,bl);corner(br,bl,tl);
 
   // نقاط الزوايا
   [tl,tr,br,bl].forEach(p=>{
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,5,0,Math.PI*2);
-    ctx.fillStyle='#007AFF';
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,10,0,Math.PI*2);
-    ctx.strokeStyle='rgba(0,122,255,0.35)';
-    ctx.lineWidth=2;
-    ctx.stroke();
+    ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);
+    ctx.fillStyle='#007AFF';ctx.fill();
+    ctx.beginPath();ctx.arc(p.x,p.y,10,0,Math.PI*2);
+    ctx.strokeStyle='rgba(0,122,255,0.38)';ctx.lineWidth=2;ctx.stroke();
   });
 }
 
-// ── دليل مرئي عند عدم اكتشاف وثيقة ──
-function drawGuide(ctx,w,h){
-  const mx=w*.08,my=h*.2,gw=w*.84,gh=h*.58,L=28;
-  ctx.strokeStyle='rgba(255,255,255,.2)';
-  ctx.lineWidth=1.5;ctx.setLineDash([7,6]);
+function drawGuide(){
+  const dc=$('dispCanvas');
+  const ctx=dc.getContext('2d');
+  ctx.clearRect(0,0,dc.width,dc.height);
+  const w=dc.width,h=dc.height;
+  const mx=w*.08,my=h*.22,gw=w*.84,gh=h*.55,L=26;
+  ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1.5;ctx.setLineDash([7,5]);
   ctx.strokeRect(mx,my,gw,gh);ctx.setLineDash([]);
   ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=3.5;ctx.lineCap='round';
-  [[mx,my,1,0,0,1],[mx+gw,my,-1,0,0,1],[mx,my+gh,1,0,0,-1],[mx+gw,my+gh,-1,0,0,-1]].forEach(([x,y,dx1,dy1,dx2,dy2])=>{
-    ctx.beginPath();ctx.moveTo(x+dx1*L,y);ctx.lineTo(x,y);ctx.lineTo(x,y+dy2*L);ctx.stroke();
+  [[mx,my,1,0,0,1],[mx+gw,my,-1,0,0,1],[mx,my+gh,1,0,0,-1],[mx+gw,my+gh,-1,0,0,-1]].forEach(([x,y,a,b,c,d])=>{
+    ctx.beginPath();ctx.moveTo(x+a*L,y);ctx.lineTo(x,y);ctx.lineTo(x,y+d*L);ctx.stroke();
   });
 }
 
@@ -594,14 +461,14 @@ function retake(){
   blob_=null;url_=null;
   ['rvView','sndView','sucView','errView'].forEach(id=>$(id).style.display='none');
   $('scanView').style.display='flex';
-  stable=0;autoFired=false;lastQuad=null;
+  stable=0;autoFired=false;lastPts=null;
   $('capBtn').classList.remove('rdy');
   startCam();
 }
 
 // ── SEND ──
 async function sendImg(){
-  if(!blob_) return;
+  if(!blob_)return;
   $('rvView').style.display='none';
   $('sndView').style.display='flex';
   prog(15);sMsg('جاري تجهيز الصورة...');
@@ -615,8 +482,8 @@ async function sendImg(){
     const txt=await res.text();
     let json=null;
     try{json=JSON.parse(txt);}catch{const m=txt.match(/\{[\s\S]*\}/);if(m)try{json=JSON.parse(m[0]);}catch{}}
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    if(!json) throw new Error('لم يرجع بيانات');
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    if(!json)throw new Error('لم يرجع بيانات');
     if(Array.isArray(json))json=json[0]||{};
     if(json.data&&typeof json.data==='object')json=json.data;
     prog(100);sMsg('تم!');
@@ -637,35 +504,35 @@ function showSuc(d){
     ['الإصدار',d.dateOfIssue],['الانتهاء',d.dateOfExpiry]
   ].filter(([,v])=>v&&v!=='null');
   $('resCard').innerHTML=F.map(([l,v])=>
-    `<div class="resRow"><span class="resLbl">${l}</span><span class="resVal">${v}</span></div>`).join('');
+    `<div class="rr"><span class="rl">${l}</span><span class="rv">${v}</span></div>`).join('');
   $('sucView').style.display='flex';
 }
 
 function newScan(){
   $('sucView').style.display='none';
   $('scanView').style.display='flex';
-  blob_=null;url_=null;stable=0;autoFired=false;lastQuad=null;
+  blob_=null;url_=null;stable=0;autoFired=false;lastPts=null;
   startCam();
 }
 
-// ── UTILS ──
 const setPill=(t,ok)=>{const p=$('pill');p.textContent=t;p.className=ok?'found':''};
 
 async function toggleFlash(){
   if(!vtrack)return;flashOn=!flashOn;
-  try{await vtrack.applyConstraints({advanced:[{torch:flashOn}]});$('flashBtn').className='tBtn'+(flashOn?' lit':'');}
+  try{await vtrack.applyConstraints({advanced:[{torch:flashOn}]});
+    $('flashBtn').className='tBtn'+(flashOn?' on':'');}
   catch{$('flashBtn').style.opacity='.4';}
 }
 
 async function flipCam(){
   facing=facing==='environment'?'user':'environment';
-  stopCam();stable=0;autoFired=false;lastQuad=null;
+  stopCam();stable=0;autoFired=false;lastPts=null;
   await startCam();
 }
 
 function goBack(){stopCam();if(window.history.length>1)window.history.back();else window.location.href='index.html';}
 
-// ── GALLERY ──
+// GALLERY
 $('gin').addEventListener('change',e=>{
   const f=e.target.files[0];if(!f)return;
   const rd=new FileReader();
