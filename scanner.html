@@ -220,7 +220,10 @@ input[type=file]{display:none}
       <h2>مراجعة القص</h2>
       <p>تمت تسوية الحواف وتجهيز الصورة للإرسال أو الاستخراج</p>
     </div>
-    <button id="sendBtn" class="sheet-btn primary" type="button">إرسال</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button id="downloadBtn" class="sheet-btn" type="button">تنزيل</button>
+      <button id="sendBtn" class="sheet-btn primary" type="button">إرسال</button>
+    </div>
   </div>
   <div class="sheet-body">
     <div class="preview-frame">
@@ -320,6 +323,7 @@ const refs = {
   galleryIcon: $('galleryIcon'),
   reviewImage: $('reviewImage'),
   retakeBtn: $('retakeBtn'),
+  downloadBtn: $('downloadBtn'),
   sendBtn: $('sendBtn'),
   detailScore: $('detailScore'),
   detailStability: $('detailStability'),
@@ -1050,6 +1054,16 @@ function goToScanner() {
   startCamera();
 }
 
+function downloadImage() {
+  if (!croppedUrl) return;
+  const link = document.createElement('a');
+  link.href = croppedUrl;
+  link.download = `scan-${Date.now()}.jpg`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
 async function sendImage() {
   if (!croppedBlob) return;
   refs.reviewView.style.display = 'none';
@@ -1205,6 +1219,7 @@ refs.galleryInput.addEventListener('change', (event) => {
   event.target.value = '';
 });
 refs.retakeBtn.addEventListener('click', goToScanner);
+refs.downloadBtn.addEventListener('click', downloadImage);
 refs.sendBtn.addEventListener('click', sendImage);
 refs.retryBtn.addEventListener('click', sendImage);
 refs.backToScanBtn.addEventListener('click', goToScanner);
