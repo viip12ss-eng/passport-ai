@@ -5,733 +5,491 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Passport Scanner">
+<meta name="apple-mobile-web-app-title" content="Scanner">
 <meta name="theme-color" content="#000">
 <title>Passport Scanner</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: -apple-system, 'Helvetica Neue', sans-serif; color: #fff; }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:-apple-system,'Helvetica Neue',sans-serif;color:#fff}
+#scannerView{position:fixed;inset:0;display:flex;flex-direction:column}
+#videoWrap{position:relative;flex:1;overflow:hidden;background:#000}
+#video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#oc{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#topBar{position:absolute;top:0;left:0;right:0;z-index:20;
+  padding:calc(env(safe-area-inset-top,44px) + 8px) 16px 14px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(to bottom,rgba(0,0,0,.72),transparent)}
+#closeBtn,#flashBtn,#flipBtn{width:38px;height:38px;border-radius:50%;
+  background:rgba(0,0,0,.5);backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:16px}
+#flashBtn.on{background:rgba(255,213,0,.4);border-color:rgba(255,213,0,.7)}
+#topTitle{font-size:16px;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.8)}
+#pill{position:absolute;bottom:120px;left:50%;transform:translateX(-50%);
+  padding:8px 20px;border-radius:20px;white-space:nowrap;z-index:20;
+  background:rgba(0,0,0,.65);backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.15);font-size:14px;font-weight:500;
+  transition:all .25s;pointer-events:none}
+#pill.ok{background:rgba(34,197,94,.35);border-color:rgba(34,197,94,.6);color:#86efac}
+#bottomBar{padding:16px 28px calc(env(safe-area-inset-bottom,34px) + 12px);
+  background:linear-gradient(to top,rgba(0,0,0,.8),transparent);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+#captureBtn{width:74px;height:74px;border-radius:50%;border:4px solid rgba(255,255,255,.5);
+  background:#fff;cursor:pointer;position:relative;flex-shrink:0;transition:transform .1s;
+  box-shadow:0 0 0 2px rgba(255,255,255,.15)}
+#captureBtn::after{content:'';position:absolute;inset:5px;border-radius:50%;background:#fff;border:1px solid rgba(0,0,0,.08)}
+#captureBtn:active{transform:scale(.92)}
+#captureBtn.ready{border-color:rgba(34,197,94,.7);box-shadow:0 0 0 4px rgba(34,197,94,.2),0 0 20px rgba(34,197,94,.4)}
+#captureBtn.ready::after{background:#22c55e}
+#galleryBtn{width:52px;height:52px;border-radius:12px;
+  background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.25);
+  overflow:hidden;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px}
+#gThumb{width:100%;height:100%;object-fit:cover;display:none}
+#flashFx{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:100;transition:opacity .06s}
 
-/* ── SCANNER VIEW ── */
-#scannerView {
-  position: fixed; inset: 0;
-  display: flex; flex-direction: column;
-}
+/* REVIEW */
+#reviewView{position:fixed;inset:0;background:#0a0a0a;display:none;flex-direction:column}
+#reviewHeader{padding:calc(env(safe-area-inset-top,44px)+8px) 20px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.rbtn{padding:8px 18px;border-radius:20px;border:none;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
+#retakeBtn{background:rgba(255,255,255,.12);color:#fff}
+#sendBtn{background:#007AFF;color:#fff}
+#rvTitle{font-size:17px;font-weight:600}
+#rvWrap{flex:1;display:flex;align-items:center;justify-content:center;padding:12px;overflow:hidden}
+#rvImg{max-width:100%;max-height:100%;border-radius:14px;object-fit:contain}
+#rvFoot{padding:12px 20px calc(env(safe-area-inset-bottom,34px)+12px);text-align:center;font-size:13px;color:rgba(255,255,255,.4);flex-shrink:0}
 
-#videoWrap {
-  position: relative; flex: 1; overflow: hidden; background: #000;
-}
+/* SENDING */
+#sendingView{position:fixed;inset:0;background:rgba(0,0,0,.96);display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:200}
+.si{font-size:50px}.st{font-size:20px;font-weight:700}.sm{font-size:13px;color:rgba(255,255,255,.5);text-align:center;padding:0 30px}
+.pt{width:220px;height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
+.pf{height:100%;background:linear-gradient(90deg,#45f3ff,#7b61ff);border-radius:2px;transition:width .4s}
 
-video {
-  width: 100%; height: 100%; object-fit: cover; display: block;
-}
+/* SUCCESS */
+#successView{position:fixed;inset:0;background:rgba(0,0,0,.97);display:none;flex-direction:column;align-items:center;justify-content:center;padding:28px;z-index:200;gap:8px}
+.sci{font-size:58px}.sct{font-size:22px;font-weight:800;color:#22c55e}.scs{font-size:13px;color:rgba(255,255,255,.5);text-align:center;margin-bottom:8px}
+.rc{width:100%;max-width:360px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:14px;display:grid;gap:8px}
+.rr{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.rl{font-size:12px;color:rgba(255,255,255,.4);flex-shrink:0}.rv{font-size:13px;font-weight:600;text-align:left}
+.nb{margin-top:8px;padding:14px 40px;border-radius:26px;background:linear-gradient(135deg,#45f3ff,#7b61ff);border:none;color:#000;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit}
 
-/* الإطار الكاشف */
-#frameOverlay {
-  position: absolute; inset: 0;
-  pointer-events: none;
-}
-
-/* تأثير اكتشاف المستند */
-#docFrame {
-  position: absolute;
-  border: 2px solid rgba(69,243,255,0.9);
-  border-radius: 8px;
-  box-shadow: 0 0 0 2000px rgba(0,0,0,0.45);
-  transition: all 0.15s ease;
-  display: none;
-}
-
-#docFrame.detected {
-  border-color: #22c55e;
-  box-shadow: 0 0 0 2000px rgba(0,0,0,0.45), 0 0 20px rgba(34,197,94,0.6);
-}
-
-/* خطوط الزوايا */
-.corner {
-  position: absolute; width: 22px; height: 22px;
-}
-.corner-tl { top: -2px; left: -2px; border-top: 3px solid currentColor; border-left: 3px solid currentColor; border-radius: 4px 0 0 0; }
-.corner-tr { top: -2px; right: -2px; border-top: 3px solid currentColor; border-right: 3px solid currentColor; border-radius: 0 4px 0 0; }
-.corner-bl { bottom: -2px; left: -2px; border-bottom: 3px solid currentColor; border-left: 3px solid currentColor; border-radius: 0 0 0 4px; }
-.corner-br { bottom: -2px; right: -2px; border-bottom: 3px solid currentColor; border-right: 3px solid currentColor; border-radius: 0 0 4px 0; }
-
-/* شبكة المساعدة */
-#grid {
-  position: absolute; inset: 0; pointer-events: none; opacity: 0.12;
-}
-
-/* شريط أعلى */
-#topBar {
-  position: absolute; top: 0; left: 0; right: 0;
-  padding: calc(env(safe-area-inset-top, 44px) + 8px) 20px 16px;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
-  display: flex; align-items: center; justify-content: space-between;
-  z-index: 10;
-}
-
-#topTitle {
-  font-size: 17px; font-weight: 600; letter-spacing: 0.3px;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
-}
-
-#flashBtn {
-  width: 38px; height: 38px; border-radius: 50%;
-  background: rgba(255,255,255,0.18); backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.25);
-  color: #fff; font-size: 18px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: background 0.2s;
-}
-#flashBtn.on { background: rgba(255,220,0,0.35); border-color: rgba(255,220,0,0.6); }
-
-/* رسالة الحالة */
-#statusMsg {
-  position: absolute; bottom: 140px; left: 50%; transform: translateX(-50%);
-  background: rgba(0,0,0,0.65); backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 20px; padding: 8px 18px;
-  font-size: 14px; font-weight: 500; white-space: nowrap;
-  transition: all 0.3s; z-index: 10;
-  text-shadow: none;
-}
-#statusMsg.detected { background: rgba(34,197,94,0.3); border-color: rgba(34,197,94,0.5); color: #4ade80; }
-#statusMsg.scanning { color: #45f3ff; }
-
-/* شريط أسفل */
-#bottomBar {
-  padding: 20px 30px calc(env(safe-area-inset-bottom, 34px) + 20px);
-  background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
-  display: flex; align-items: center; justify-content: space-between;
-  z-index: 10; flex-shrink: 0;
-}
-
-/* زر الالتقاط */
-#captureBtn {
-  width: 72px; height: 72px; border-radius: 50%;
-  background: #fff; border: 4px solid rgba(255,255,255,0.4);
-  cursor: pointer; position: relative;
-  transition: transform 0.1s, box-shadow 0.1s;
-  box-shadow: 0 0 0 3px rgba(255,255,255,0.2);
-  flex-shrink: 0;
-}
-#captureBtn::after {
-  content: '';
-  position: absolute; inset: 6px;
-  border-radius: 50%; background: #fff;
-  border: 1px solid rgba(0,0,0,0.1);
-}
-#captureBtn:active { transform: scale(0.93); }
-#captureBtn.auto { background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,0.4), 0 0 20px rgba(34,197,94,0.5); }
-
-/* زر الإغلاق */
-#closeBtn {
-  width: 44px; height: 44px; border-radius: 50%;
-  background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.2);
-  color: #fff; font-size: 20px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-}
-
-/* زر الاستوديو */
-#galleryBtn {
-  width: 54px; height: 54px; border-radius: 12px;
-  background: rgba(255,255,255,0.12); backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.2);
-  overflow: hidden; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px; color: #fff;
-}
-#galleryPreview {
-  width: 100%; height: 100%; object-fit: cover; display: none;
-}
-
-/* مؤشر الالتقاط التلقائي */
-#autoIndicator {
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  width: 60px; height: 60px; border-radius: 50%;
-  border: 3px solid #22c55e;
-  display: none; pointer-events: none;
-  animation: autoCapture 0.6s ease-out forwards;
-}
-@keyframes autoCapture {
-  0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-  100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
-}
-
-/* بريق الالتقاط */
-#flashEffect {
-  position: absolute; inset: 0;
-  background: #fff; opacity: 0;
-  pointer-events: none; z-index: 20;
-  transition: opacity 0.05s;
-}
-
-/* ── REVIEW VIEW ── */
-#reviewView {
-  position: fixed; inset: 0;
-  background: #000;
-  display: none; flex-direction: column;
-}
-
-#reviewHeader {
-  padding: calc(env(safe-area-inset-top, 44px) + 8px) 20px 14px;
-  display: flex; align-items: center; justify-content: space-between;
-  background: rgba(0,0,0,0.8);
-  flex-shrink: 0;
-}
-
-#reviewHeader button {
-  padding: 8px 16px; border-radius: 20px; border: none;
-  font-size: 15px; font-weight: 600; cursor: pointer;
-  font-family: inherit;
-}
-
-#retakeBtn { background: rgba(255,255,255,0.15); color: #fff; }
-#useBtn { background: #007AFF; color: #fff; }
-
-#reviewTitle { font-size: 17px; font-weight: 600; }
-
-#reviewImgWrap {
-  flex: 1; display: flex; align-items: center; justify-content: center;
-  padding: 10px; overflow: hidden;
-}
-
-#reviewImg {
-  max-width: 100%; max-height: 100%;
-  border-radius: 12px; object-fit: contain;
-}
-
-#reviewFooter {
-  padding: 14px 20px calc(env(safe-area-inset-bottom, 34px) + 14px);
-  background: rgba(0,0,0,0.8); text-align: center;
-  font-size: 13px; color: rgba(255,255,255,0.5);
-  flex-shrink: 0;
-}
-
-/* ── SENDING VIEW ── */
-#sendingView {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.95);
-  display: none; flex-direction: column;
-  align-items: center; justify-content: center; gap: 20px;
-  z-index: 50;
-}
-
-.send-icon { font-size: 52px; }
-
-.send-title { font-size: 20px; font-weight: 700; }
-
-.send-msg { font-size: 14px; color: rgba(255,255,255,0.6); text-align: center; padding: 0 30px; }
-
-.progress-track {
-  width: 240px; height: 4px; background: rgba(255,255,255,0.1);
-  border-radius: 2px; overflow: hidden;
-}
-.progress-fill {
-  height: 100%; background: linear-gradient(90deg, #45f3ff, #7b61ff);
-  border-radius: 2px; transition: width 0.3s;
-  width: 0%;
-}
-
-/* ── SUCCESS VIEW ── */
-#successView {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.97);
-  display: none; flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 30px; z-index: 50;
-}
-
-.success-icon { font-size: 60px; margin-bottom: 12px; }
-.success-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; color: #22c55e; }
-.success-sub { font-size: 14px; color: rgba(255,255,255,0.5); margin-bottom: 24px; text-align: center; }
-
-.result-card {
-  width: 100%; background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;
-  padding: 16px; display: grid; gap: 10px;
-  max-width: 380px; margin-bottom: 24px;
-}
-
-.result-row { display: flex; justify-content: space-between; align-items: center; }
-.result-label { font-size: 12px; color: rgba(255,255,255,0.4); }
-.result-val { font-size: 14px; font-weight: 600; color: #e8eaf6; text-align: left; }
-
-.new-scan-btn {
-  padding: 14px 40px; border-radius: 24px;
-  background: linear-gradient(135deg, #45f3ff, #7b61ff);
-  border: none; color: #000; font-size: 16px; font-weight: 800;
-  cursor: pointer; font-family: inherit;
-}
-
-/* خطأ */
-#errorView {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.97);
-  display: none; flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 30px; z-index: 50; gap: 16px;
-}
-.error-icon { font-size: 52px; }
-.error-title { font-size: 20px; font-weight: 700; color: #ef4444; }
-.error-msg { font-size: 13px; color: rgba(255,255,255,0.5); text-align: center; }
-.retry-btn {
-  padding: 12px 32px; border-radius: 20px;
-  background: #ef4444; border: none; color: #fff;
-  font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit;
-}
+/* ERROR */
+#errorView{position:fixed;inset:0;background:rgba(0,0,0,.97);display:none;flex-direction:column;align-items:center;justify-content:center;padding:28px;z-index:200;gap:14px}
+.ei{font-size:52px}.et{font-size:20px;font-weight:700;color:#ef4444}.em{font-size:13px;color:rgba(255,255,255,.5);text-align:center}
+.rtb{padding:13px 36px;border-radius:22px;background:#ef4444;border:none;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+input[type=file]{display:none}
 </style>
 </head>
 <body>
 
-<!-- ── SCANNER VIEW ── -->
+<div id="flashFx"></div>
+
+<!-- SCANNER -->
 <div id="scannerView">
   <div id="videoWrap">
     <video id="video" autoplay playsinline muted></video>
-    <canvas id="grid" id="gridCanvas"></canvas>
-
-    <!-- إطار اكتشاف المستند -->
-    <div id="docFrame">
-      <div class="corner corner-tl"></div>
-      <div class="corner corner-tr"></div>
-      <div class="corner corner-bl"></div>
-      <div class="corner corner-br"></div>
-    </div>
-
-    <div id="autoIndicator"></div>
-    <div id="flashEffect"></div>
-
+    <canvas id="oc"></canvas>
     <div id="topBar">
       <button id="closeBtn" onclick="goBack()">✕</button>
       <div id="topTitle">📷 مسح الجواز</div>
       <button id="flashBtn" onclick="toggleFlash()">⚡</button>
     </div>
-
-    <div id="statusMsg" class="scanning">وجّه الكاميرا نحو الجواز</div>
+    <div id="pill">وجّه الكاميرا نحو الجواز</div>
   </div>
-
   <div id="bottomBar">
-    <div id="galleryBtn" onclick="document.getElementById('galleryInput').click()">
-      <img id="galleryPreview" alt="">
-      <span id="galleryIcon">🖼</span>
-      <input type="file" id="galleryInput" accept="image/*" style="display:none">
+    <div id="galleryBtn" onclick="document.getElementById('gin').click()">
+      <img id="gThumb" alt=""><span id="gIcon">🖼</span>
     </div>
-    <button id="captureBtn" onclick="capture()"></button>
-    <div style="width:54px"></div>
+    <button id="captureBtn" onclick="doCapture()"></button>
+    <button id="flipBtn" onclick="flipCam()" style="font-size:18px">🔄</button>
   </div>
 </div>
 
-<!-- ── REVIEW VIEW ── -->
+<!-- REVIEW -->
 <div id="reviewView">
   <div id="reviewHeader">
-    <button id="retakeBtn" onclick="retake()">إعادة</button>
-    <div id="reviewTitle">مراجعة الصورة</div>
-    <button id="useBtn" onclick="sendImage()">إرسال ✓</button>
+    <button class="rbtn" id="retakeBtn" onclick="retake()">إعادة</button>
+    <div id="rvTitle">مراجعة الصورة</div>
+    <button class="rbtn" id="sendBtn" onclick="sendImage()">إرسال ✓</button>
   </div>
-  <div id="reviewImgWrap">
-    <img id="reviewImg" alt="">
-  </div>
-  <div id="reviewFooter">تأكد أن الجواز واضح قبل الإرسال</div>
+  <div id="rvWrap"><img id="rvImg" alt=""></div>
+  <div id="rvFoot">تأكد أن النص واضح قبل الإرسال</div>
 </div>
 
-<!-- ── SENDING VIEW ── -->
+<!-- SENDING -->
 <div id="sendingView">
-  <div class="send-icon">🔬</div>
-  <div class="send-title">جاري الاستخراج...</div>
-  <div class="send-msg" id="sendMsg">يتم معالجة الصورة وقراءة البيانات</div>
-  <div class="progress-track"><div class="progress-fill" id="progFill"></div></div>
+  <div class="si">🔬</div>
+  <div class="st">جاري الاستخراج...</div>
+  <div class="sm" id="sndMsg">يتم تحليل صورة الجواز</div>
+  <div class="pt"><div class="pf" id="pf" style="width:0%"></div></div>
 </div>
 
-<!-- ── SUCCESS VIEW ── -->
+<!-- SUCCESS -->
 <div id="successView">
-  <div class="success-icon">✅</div>
-  <div class="success-title">تم الاستخراج!</div>
-  <div class="success-sub">تم إرسال البيانات للكمبيوتر تلقائياً</div>
-  <div class="result-card" id="resultCard"></div>
-  <button class="new-scan-btn" onclick="newScan()">📷 مسح جواز جديد</button>
+  <div class="sci">✅</div>
+  <div class="sct">تم الاستخراج!</div>
+  <div class="scs">تم إرسال البيانات للكمبيوتر تلقائياً</div>
+  <div class="rc" id="resCard"></div>
+  <button class="nb" onclick="newScan()">📷 مسح جواز جديد</button>
 </div>
 
-<!-- ── ERROR VIEW ── -->
+<!-- ERROR -->
 <div id="errorView">
-  <div class="error-icon">❌</div>
-  <div class="error-title">فشل الاستخراج</div>
-  <div class="error-msg" id="errorMsg">حدث خطأ أثناء المعالجة</div>
-  <button class="retry-btn" onclick="retake()">حاول مجدداً</button>
+  <div class="ei">❌</div>
+  <div class="et">فشل الاستخراج</div>
+  <div class="em" id="errMsg">حدث خطأ</div>
+  <button class="rtb" onclick="retake()">حاول مجدداً</button>
 </div>
+
+<input type="file" id="gin" accept="image/*">
 
 <script>
 'use strict';
+const N8N = localStorage.getItem('pai_webhook') || 'https://mmnnm19991.app.n8n.cloud/webhook/passport-extract';
+const SID = (()=>{ let id=localStorage.getItem('pai_sid'); if(!id){id='u'+Math.random().toString(36).slice(2,9);localStorage.setItem('pai_sid',id);} return id; })();
+const $ = id => document.getElementById(id);
 
-// ── الإعدادات ──
-const N8N_URL = localStorage.getItem('pai_webhook') || 'https://mmnnm19991.app.n8n.cloud/webhook/passport-extract';
-const SID = (() => { let id = localStorage.getItem('pai_sid'); if (!id) { id = 'u' + Math.random().toString(36).slice(2,9); localStorage.setItem('pai_sid', id); } return id; })();
+let stream=null, vtrack=null, flashOn=false, facing='environment';
+let blob_=null, url_=null;
+let rafId=null, stable=0, autoFired=false;
+const proc=document.createElement('canvas');
+const pctx=proc.getContext('2d',{willReadFrequently:true});
 
-let stream = null;
-let track = null;
-let flashOn = false;
-let capturedBlob = null;
-let capturedDataUrl = null;
-let autoDetecting = false;
-let autoDetectTimer = null;
-let detectionActive = false;
-
-// ── بدء الكاميرا ──
-async function startCamera() {
+// ══ CAMERA ══
+async function startCam() {
   try {
+    if(stream) stream.getTracks().forEach(t=>t.stop());
     stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { ideal: 'environment' },
-        width: { ideal: 1920 },
-        height: { ideal: 1080 },
-        focusMode: 'continuous',
-      },
-      audio: false
+      video:{ facingMode:{ideal:facing}, width:{ideal:1920}, height:{ideal:1080} }, audio:false
     });
-    const video = document.getElementById('video');
-    video.srcObject = stream;
-    track = stream.getVideoTracks()[0];
-
-    video.onloadedmetadata = () => {
-      video.play();
-      drawGrid();
-      startAutoDetect();
-    };
-  } catch(e) {
-    showStatus('لا يمكن الوصول للكاميرا. تحقق من الإذن.');
-  }
+    const v=$('video'); v.srcObject=stream;
+    vtrack=stream.getVideoTracks()[0];
+    await v.play();
+    resize();
+    runDetection();
+  } catch(e){ setPill('لا يمكن الوصول للكاميرا',false); }
 }
 
-// ── شبكة المساعدة ──
-function drawGrid() {
-  const canvas = document.getElementById('grid');
-  const wrap = document.getElementById('videoWrap');
-  canvas.width = wrap.offsetWidth;
-  canvas.height = wrap.offsetHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-  ctx.lineWidth = 0.5;
-  // ثلاثة أثلاث
-  for (let i = 1; i <= 2; i++) {
-    ctx.beginPath(); ctx.moveTo(canvas.width * i/3, 0); ctx.lineTo(canvas.width * i/3, canvas.height); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(0, canvas.height * i/3); ctx.lineTo(canvas.width, canvas.height * i/3); ctx.stroke();
-  }
+function stopCam() {
+  if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; vtrack=null; }
 }
 
-// ── اكتشاف تلقائي بسيط (محاكاة) ──
-function startAutoDetect() {
-  detectionActive = true;
-  let stable = 0;
+function resize() {
+  const c=$('oc'), w=$('videoWrap');
+  c.width=w.offsetWidth; c.height=w.offsetHeight;
+}
 
-  const check = () => {
-    if (!detectionActive) return;
+// ══ DETECTION LOOP ══
+function runDetection() {
+  const v=$('video');
+  if(!v.videoWidth){ rafId=requestAnimationFrame(runDetection); return; }
 
-    // محاكاة اكتشاف مستند بناءً على الضوء والاستقرار
-    const video = document.getElementById('video');
-    const w = video.videoWidth, h = video.videoHeight;
-    if (!w) { requestAnimationFrame(check); return; }
+  // منطقة صغيرة للتحليل السريع
+  const sw=360, sh=Math.round(sw*v.videoHeight/v.videoWidth);
+  proc.width=sw; proc.height=sh;
+  pctx.drawImage(v,0,0,sw,sh);
 
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.min(w, 320);
-    canvas.height = Math.min(h, 240);
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const id=pctx.getImageData(0,0,sw,sh);
+  const gray=toGray(id.data,sw,sh);
+  const edges=sobel(gray,sw,sh);
+  const corners=findCorners(edges,sw,sh);
 
-    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-    let brightness = 0, edgeCount = 0;
+  const canvas=$('oc');
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    // حساب متوسط السطوع
-    for (let i = 0; i < data.length; i += 16) {
-      brightness += (data[i] + data[i+1] + data[i+2]) / 3;
+  if(corners){
+    const sx=canvas.width/sw, sy=canvas.height/sh;
+    const sc=corners.map(p=>({x:p.x*sx, y:p.y*sy}));
+    drawOverlay(ctx, sc, canvas.width, canvas.height, true);
+    setPill('✅ تم اكتشاف الجواز', true);
+    $('captureBtn').classList.add('ready');
+    stable++;
+    if(stable>=15 && !autoFired){ autoFired=true; doCapture(); return; }
+  } else {
+    drawGuide(ctx, canvas.width, canvas.height);
+    setPill('وجّه الكاميرا نحو الجواز', false);
+    $('captureBtn').classList.remove('ready');
+    stable=0;
+  }
+
+  rafId=requestAnimationFrame(runDetection);
+}
+
+// ══ GRAYSCALE ══
+function toGray(d,w,h){
+  const g=new Uint8Array(w*h);
+  for(let i=0,p=0;i<d.length;i+=4,p++) g[p]=(d[i]*77+d[i+1]*150+d[i+2]*29)>>8;
+  return g;
+}
+
+// ══ SOBEL ══
+function sobel(g,w,h){
+  const e=new Uint8Array(w*h);
+  for(let y=1;y<h-1;y++){
+    for(let x=1;x<w-1;x++){
+      const i=y*w+x;
+      const gx=-g[i-w-1]+g[i-w+1]-2*g[i-1]+2*g[i+1]-g[i+w-1]+g[i+w+1];
+      const gy=-g[i-w-1]-2*g[i-w]-g[i-w+1]+g[i+w-1]+2*g[i+w]+g[i+w+1];
+      e[i]=Math.min(255,Math.sqrt(gx*gx+gy*gy));
     }
-    brightness /= (data.length / 16);
+  }
+  return e;
+}
 
-    // حساب الحواف التقريبية
-    for (let y = 1; y < canvas.height - 1; y += 3) {
-      for (let x = 1; x < canvas.width - 1; x += 3) {
-        const idx = (y * canvas.width + x) * 4;
-        const idxR = (y * canvas.width + x + 1) * 4;
-        const idxD = ((y+1) * canvas.width + x) * 4;
-        const gx = Math.abs(data[idx] - data[idxR]);
-        const gy = Math.abs(data[idx] - data[idxD]);
-        if (gx + gy > 30) edgeCount++;
+// ══ CORNER DETECTION ══
+function findCorners(e,w,h){
+  const T=35;
+  const mx=Math.floor(w*.06), my=Math.floor(h*.06);
+
+  // ابحث في كل ربع عن أقوى مجموعة حواف
+  const quads=[
+    {x0:mx,x1:w/2,y0:my,y1:h/2},
+    {x0:w/2,x1:w-mx,y0:my,y1:h/2},
+    {x0:mx,x1:w/2,y0:h/2,y1:h-my},
+    {x0:w/2,x1:w-mx,y0:h/2,y1:h-my},
+  ];
+
+  const pts=quads.map(q=>{
+    // ابحث عن أفضل نقطة
+    let bx=0,by=0,bv=0;
+    const blockSize=8;
+    for(let y=q.y0;y<q.y1;y+=blockSize){
+      for(let x=q.x0;x<q.x1;x+=blockSize){
+        let sum=0;
+        for(let dy=0;dy<blockSize&&y+dy<q.y1;dy++)
+          for(let dx=0;dx<blockSize&&x+dx<q.x1;dx++)
+            sum+=e[(y+dy)*w+(x+dx)];
+        if(sum>bv){bv=sum;bx=x+blockSize/2;by=y+blockSize/2;}
       }
     }
+    const minEdge=T*blockSize*blockSize*0.3;
+    return bv>minEdge?{x:bx,y:by}:null;
+  });
 
-    const edgeRatio = edgeCount / (canvas.width * canvas.height / 9);
-    const isDoc = brightness > 60 && brightness < 230 && edgeRatio > 0.04 && edgeRatio < 0.45;
+  if(pts.some(p=>!p)) return null;
 
-    if (isDoc) {
-      stable++;
-      showDocFrame(true);
-    } else {
-      stable = 0;
-      showDocFrame(false);
-    }
+  // تحقق من منطقية الشكل
+  const [tl,tr,bl,br]=pts;
+  const W=(dist(tl,tr)+dist(bl,br))/2;
+  const H=(dist(tl,bl)+dist(tr,br))/2;
+  if(W<w*.3||H<h*.15) return null;
+  const ratio=W/Math.max(H,1);
+  if(ratio<0.8||ratio>3.5) return null;
 
-    if (stable >= 8) {
-      // مستند مستقر — التقاط تلقائي
-      stable = 0;
-      autoCapture();
-    } else {
-      setTimeout(check, 120);
-    }
-  };
-
-  setTimeout(check, 500);
+  return pts;
 }
 
-function showDocFrame(detected) {
-  const frame = document.getElementById('docFrame');
-  const msg = document.getElementById('statusMsg');
-  const btn = document.getElementById('captureBtn');
+function dist(a,b){ return Math.sqrt((a.x-b.x)**2+(a.y-b.y)**2); }
 
-  if (detected) {
-    const wrap = document.getElementById('videoWrap');
-    const pw = wrap.offsetWidth, ph = wrap.offsetHeight;
-    const margin = 0.08;
-    frame.style.cssText = `
-      display: block;
-      left: ${pw * margin}px;
-      top: ${ph * 0.25}px;
-      width: ${pw * (1 - margin*2)}px;
-      height: ${ph * 0.5}px;
-    `;
-    frame.classList.add('detected');
-    frame.querySelectorAll('.corner').forEach(c => c.style.color = '#22c55e');
-    msg.textContent = '✅ تم اكتشاف الجواز';
-    msg.className = 'detected';
-    btn.classList.add('auto');
-  } else {
-    frame.classList.remove('detected');
-    frame.querySelectorAll('.corner').forEach(c => c.style.color = 'rgba(69,243,255,0.9)');
-    frame.style.display = 'none';
-    msg.textContent = 'وجّه الكاميرا نحو الجواز';
-    msg.className = 'scanning';
-    btn.classList.remove('auto');
+// ══ DRAW OVERLAY (مثل تطبيق Notes) ══
+function drawOverlay(ctx, corners, cw, ch, found) {
+  const [tl,tr,bl,br]=corners;
+  const color=found?'#22c55e':'rgba(69,243,255,0.85)';
+
+  // تعتيم خلف المستند
+  ctx.save();
+  ctx.fillStyle='rgba(0,0,0,0.5)';
+  ctx.fillRect(0,0,cw,ch);
+  ctx.globalCompositeOperation='destination-out';
+  ctx.beginPath();
+  ctx.moveTo(tl.x,tl.y); ctx.lineTo(tr.x,tr.y);
+  ctx.lineTo(br.x,br.y); ctx.lineTo(bl.x,bl.y);
+  ctx.closePath();
+  ctx.fillStyle='rgba(0,0,0,1)';
+  ctx.fill();
+  ctx.restore();
+
+  // تعبئة خضراء شفافة داخل المستند
+  ctx.beginPath();
+  ctx.moveTo(tl.x,tl.y); ctx.lineTo(tr.x,tr.y);
+  ctx.lineTo(br.x,br.y); ctx.lineTo(bl.x,bl.y);
+  ctx.closePath();
+  ctx.fillStyle=found?'rgba(34,197,94,0.1)':'rgba(69,243,255,0.05)';
+  ctx.fill();
+
+  // حدود المستند
+  ctx.beginPath();
+  ctx.moveTo(tl.x,tl.y); ctx.lineTo(tr.x,tr.y);
+  ctx.lineTo(br.x,br.y); ctx.lineTo(bl.x,bl.y);
+  ctx.closePath();
+  ctx.strokeStyle=color; ctx.lineWidth=2.5; ctx.lineJoin='round';
+  ctx.stroke();
+
+  // زوايا سميكة
+  const L=24;
+  ctx.strokeStyle=color; ctx.lineWidth=4; ctx.lineCap='round';
+  // TL
+  ctx.beginPath();ctx.moveTo(tl.x+L,tl.y);ctx.lineTo(tl.x,tl.y);ctx.lineTo(tl.x,tl.y+L);ctx.stroke();
+  // TR
+  ctx.beginPath();ctx.moveTo(tr.x-L,tr.y);ctx.lineTo(tr.x,tr.y);ctx.lineTo(tr.x,tr.y+L);ctx.stroke();
+  // BL
+  ctx.beginPath();ctx.moveTo(bl.x+L,bl.y);ctx.lineTo(bl.x,bl.y);ctx.lineTo(bl.x,bl.y-L);ctx.stroke();
+  // BR
+  ctx.beginPath();ctx.moveTo(br.x-L,br.y);ctx.lineTo(br.x,br.y);ctx.lineTo(br.x,br.y-L);ctx.stroke();
+
+  // نقاط الزوايا
+  [tl,tr,bl,br].forEach(p=>{
+    ctx.beginPath(); ctx.arc(p.x,p.y,5,0,Math.PI*2);
+    ctx.fillStyle=color; ctx.fill();
+    // هالة
+    ctx.beginPath(); ctx.arc(p.x,p.y,9,0,Math.PI*2);
+    ctx.strokeStyle=found?'rgba(34,197,94,0.4)':'rgba(69,243,255,0.3)';
+    ctx.lineWidth=1.5; ctx.stroke();
+  });
+}
+
+// ══ GUIDE (بدون اكتشاف) ══
+function drawGuide(ctx,w,h){
+  const mx=w*.08, my=h*.22, gw=w*.84, gh=h*.55, L=26;
+  ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=1.5;
+  ctx.setLineDash([6,5]); ctx.strokeRect(mx,my,gw,gh); ctx.setLineDash([]);
+  ctx.strokeStyle='rgba(255,255,255,.45)'; ctx.lineWidth=3; ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(mx+L,my);ctx.lineTo(mx,my);ctx.lineTo(mx,my+L);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(mx+gw-L,my);ctx.lineTo(mx+gw,my);ctx.lineTo(mx+gw,my+L);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(mx+L,my+gh);ctx.lineTo(mx,my+gh);ctx.lineTo(mx,my+gh-L);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(mx+gw-L,my+gh);ctx.lineTo(mx+gw,my+gh);ctx.lineTo(mx+gw,my+gh-L);ctx.stroke();
+}
+
+// ══ CAPTURE ══
+function doCapture(){
+  if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
+  const v=$('video');
+  $('flashFx').style.opacity='1';
+  setTimeout(()=>$('flashFx').style.opacity='0',80);
+  const c=document.createElement('canvas');
+  c.width=v.videoWidth||1280; c.height=v.videoHeight||720;
+  const ctx=c.getContext('2d');
+  ctx.drawImage(v,0,0,c.width,c.height);
+  enhance(ctx,c.width,c.height);
+  url_=c.toDataURL('image/jpeg',.95);
+  c.toBlob(b=>{ blob_=b; showReview(); },'image/jpeg',.95);
+}
+
+function enhance(ctx,w,h){
+  const d=ctx.getImageData(0,0,w,h);
+  for(let i=0;i<d.data.length;i+=4){
+    d.data[i]=cl(((d.data[i]-128)*1.15)+132);
+    d.data[i+1]=cl(((d.data[i+1]-128)*1.15)+132);
+    d.data[i+2]=cl(((d.data[i+2]-128)*1.15)+132);
+  }
+  ctx.putImageData(d,0,0);
+}
+function cl(v){ return Math.min(255,Math.max(0,Math.round(v))); }
+
+// ══ REVIEW ══
+function showReview(){
+  stopCam();
+  $('rvImg').src=url_;
+  $('scannerView').style.display='none';
+  $('reviewView').style.display='flex';
+}
+function retake(){
+  blob_=null; url_=null;
+  ['reviewView','sendingView','successView','errorView'].forEach(id=>$(id).style.display='none');
+  $('scannerView').style.display='flex';
+  stable=0; autoFired=false;
+  startCam();
+}
+
+// ══ SEND ══
+async function sendImage(){
+  if(!blob_) return;
+  $('reviewView').style.display='none';
+  $('sendingView').style.display='flex';
+  prog(15); msg('جاري تجهيز الصورة...');
+  try{
+    prog(35); msg('جاري الإرسال...');
+    const fd=new FormData();
+    fd.append('data',blob_,'passport-scan.jpg');
+    fd.append('_sid',SID);
+    const res=await fetch(N8N,{method:'POST',body:fd});
+    prog(70); msg('جاري قراءة البيانات...');
+    const txt=await res.text();
+    let json=null;
+    try{json=JSON.parse(txt);}catch{const m=txt.match(/\{[\s\S]*\}/);if(m)try{json=JSON.parse(m[0]);}catch{}}
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    if(!json) throw new Error('لم يرجع بيانات');
+    if(Array.isArray(json)) json=json[0]||{};
+    if(json.data&&typeof json.data==='object') json=json.data;
+    prog(100); msg('تم!');
+    setTimeout(()=>showSuccess(json),350);
+  }catch(e){
+    $('sendingView').style.display='none';
+    $('errMsg').textContent=e.message||'خطأ غير متوقع';
+    $('errorView').style.display='flex';
   }
 }
+function prog(p){ $('pf').style.width=p+'%'; }
+function msg(m){ $('sndMsg').textContent=m; }
 
-function autoCapture() {
-  // تأثير الاكتشاف التلقائي
-  const ind = document.getElementById('autoIndicator');
-  ind.style.display = 'block';
-  setTimeout(() => { ind.style.display = 'none'; }, 600);
-  capture();
+function showSuccess(d){
+  $('sendingView').style.display='none';
+  const fields=[['الاسم',d.nameEnglish],['رقم الجواز',d.passportNumber||d.passportNo],
+    ['الجنسية',d.nationalityArabic],['الميلاد',d.dateOfBirth],
+    ['الإصدار',d.dateOfIssue],['الانتهاء',d.dateOfExpiry]
+  ].filter(([,v])=>v&&v!=='null');
+  $('resCard').innerHTML=fields.map(([l,v])=>
+    `<div class="rr"><span class="rl">${l}</span><span class="rv">${v}</span></div>`).join('');
+  $('successView').style.display='flex';
 }
 
-// ── الالتقاط ──
-async function capture() {
-  detectionActive = false;
-  const video = document.getElementById('video');
-  const flash = document.getElementById('flashEffect');
-
-  // تأثير الفلاش
-  flash.style.opacity = '1';
-  setTimeout(() => { flash.style.opacity = '0'; }, 100);
-
-  // التقاط الصورة
-  const canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth || 1280;
-  canvas.height = video.videoHeight || 720;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-  // تحسين الصورة
-  enhanceImage(ctx, canvas.width, canvas.height);
-
-  capturedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
-
-  canvas.toBlob(blob => {
-    capturedBlob = blob;
-    showReview();
-  }, 'image/jpeg', 0.95);
+function newScan(){
+  $('successView').style.display='none';
+  $('scannerView').style.display='flex';
+  blob_=null; url_=null; stable=0; autoFired=false;
+  startCam();
 }
 
-function enhanceImage(ctx, w, h) {
-  const d = ctx.getImageData(0, 0, w, h);
-  for (let i = 0; i < d.data.length; i += 4) {
-    d.data[i]   = Math.min(255, Math.max(0, ((d.data[i]   - 128) * 1.14) + 132));
-    d.data[i+1] = Math.min(255, Math.max(0, ((d.data[i+1] - 128) * 1.14) + 132));
-    d.data[i+2] = Math.min(255, Math.max(0, ((d.data[i+2] - 128) * 1.14) + 132));
-  }
-  ctx.putImageData(d, 0, 0);
+// ══ UTILS ══
+function setPill(txt,ok){
+  const p=$('pill');
+  p.textContent=txt; p.className=ok?'ok':'';
 }
 
-// ── عرض المراجعة ──
-function showReview() {
-  stopCamera();
-  document.getElementById('reviewImg').src = capturedDataUrl;
-  document.getElementById('scannerView').style.display = 'none';
-  document.getElementById('reviewView').style.display = 'flex';
+async function toggleFlash(){
+  if(!vtrack) return;
+  flashOn=!flashOn;
+  try{ await vtrack.applyConstraints({advanced:[{torch:flashOn}]}); $('flashBtn').className=flashOn?'on':''; }
+  catch{ $('flashBtn').style.opacity='.3'; }
 }
 
-function retake() {
-  capturedBlob = null;
-  capturedDataUrl = null;
-  document.getElementById('reviewView').style.display = 'none';
-  document.getElementById('sendingView').style.display = 'none';
-  document.getElementById('successView').style.display = 'none';
-  document.getElementById('errorView').style.display = 'none';
-  document.getElementById('scannerView').style.display = 'flex';
-  startCamera();
+async function flipCam(){
+  facing=facing==='environment'?'user':'environment';
+  stopCam(); stable=0; autoFired=false;
+  await startCam();
 }
 
-// ── إرسال الصورة ──
-async function sendImage() {
-  if (!capturedBlob) return;
+function goBack(){ stopCam(); if(window.history.length>1)window.history.back(); else window.location.href='index.html'; }
 
-  document.getElementById('reviewView').style.display = 'none';
-  document.getElementById('sendingView').style.display = 'flex';
-  setProgress(15);
-  setSendMsg('جاري تجهيز الصورة...');
-
-  try {
-    setProgress(35);
-    setSendMsg('جاري إرسال الصورة لاستخراج البيانات...');
-
-    const fd = new FormData();
-    fd.append('data', capturedBlob, 'passport-scan.jpg');
-    fd.append('_sid', SID);
-
-    const res = await fetch(N8N_URL, { method: 'POST', body: fd });
-    setProgress(70);
-    setSendMsg('جاري قراءة البيانات...');
-
-    const text = await res.text();
-    let json = null;
-    try { json = JSON.parse(text); } catch {
-      const m = text.match(/\{[\s\S]*\}/);
-      if (m) try { json = JSON.parse(m[0]); } catch {}
-    }
-
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    if (!json) throw new Error('لم يرجع بيانات');
-    if (Array.isArray(json)) json = json[0] || {};
-    if (json.data && typeof json.data === 'object') json = json.data;
-
-    setProgress(100);
-    setSendMsg('تم!');
-
-    setTimeout(() => showSuccess(json), 300);
-
-  } catch(e) {
-    document.getElementById('sendingView').style.display = 'none';
-    document.getElementById('errorMsg').textContent = e.message || 'حدث خطأ غير متوقع';
-    document.getElementById('errorView').style.display = 'flex';
-  }
-}
-
-function setProgress(p) { document.getElementById('progFill').style.width = p + '%'; }
-function setSendMsg(m) { document.getElementById('sendMsg').textContent = m; }
-
-function showSuccess(d) {
-  document.getElementById('sendingView').style.display = 'none';
-
-  const fields = [
-    ['الاسم', d.nameEnglish],
-    ['رقم الجواز', d.passportNumber || d.passportNo],
-    ['الجنسية', d.nationalityArabic],
-    ['تاريخ الميلاد', d.dateOfBirth],
-    ['تاريخ الإصدار', d.dateOfIssue],
-    ['تاريخ الانتهاء', d.dateOfExpiry],
-    ['مكان الإصدار', d.placeOfIssueEnglishUpper || d.placeOfIssueArabic],
-  ].filter(([,v]) => v && v !== 'null');
-
-  document.getElementById('resultCard').innerHTML = fields.map(([l,v]) =>
-    `<div class="result-row">
-      <span class="result-label">${l}</span>
-      <span class="result-val">${v}</span>
-    </div>`
-  ).join('');
-
-  document.getElementById('successView').style.display = 'flex';
-}
-
-function newScan() {
-  document.getElementById('successView').style.display = 'none';
-  document.getElementById('scannerView').style.display = 'flex';
-  capturedBlob = null;
-  capturedDataUrl = null;
-  startCamera();
-}
-
-// ── الفلاش ──
-async function toggleFlash() {
-  if (!track) return;
-  flashOn = !flashOn;
-  try {
-    await track.applyConstraints({ advanced: [{ torch: flashOn }] });
-    document.getElementById('flashBtn').className = flashOn ? 'on' : '';
-  } catch(e) {
-    document.getElementById('flashBtn').style.opacity = '0.3';
-  }
-}
-
-// ── رفع من الاستوديو ──
-document.getElementById('galleryInput').addEventListener('change', async (e) => {
-  const file = e.target.files[0]; if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = async () => {
-    capturedDataUrl = reader.result;
-
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const s = Math.min(1, 2200 / Math.max(img.width, img.height));
-      canvas.width = Math.round(img.width * s);
-      canvas.height = Math.round(img.height * s);
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      enhanceImage(ctx, canvas.width, canvas.height);
-
-      // تحديث preview الاستوديو
-      const prev = document.getElementById('galleryPreview');
-      prev.src = capturedDataUrl;
-      prev.style.display = 'block';
-      document.getElementById('galleryIcon').style.display = 'none';
-
-      canvas.toBlob(blob => {
-        capturedBlob = blob;
-        capturedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
-        document.getElementById('reviewImg').src = capturedDataUrl;
-        showReview();
-      }, 'image/jpeg', 0.95);
+// ══ GALLERY ══
+$('gin').addEventListener('change',e=>{
+  const file=e.target.files[0]; if(!file) return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    const img=new Image();
+    img.onload=()=>{
+      const s=Math.min(1,2200/Math.max(img.width,img.height));
+      const c=document.createElement('canvas');
+      c.width=Math.round(img.width*s); c.height=Math.round(img.height*s);
+      const ctx=c.getContext('2d'); ctx.drawImage(img,0,0,c.width,c.height);
+      enhance(ctx,c.width,c.height);
+      $('gThumb').src=rd.result; $('gThumb').style.display='block'; $('gIcon').style.display='none';
+      c.toBlob(b=>{ blob_=b; url_=c.toDataURL('image/jpeg',.95); $('rvImg').src=url_; showReview(); },'image/jpeg',.95);
     };
-    img.src = reader.result;
+    img.src=rd.result;
   };
-  reader.readAsDataURL(file);
-  e.target.value = '';
+  rd.readAsDataURL(file);
+  e.target.value='';
 });
 
-// ── إيقاف الكاميرا ──
-function stopCamera() {
-  detectionActive = false;
-  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-}
-
-// ── رسالة حالة ──
-function showStatus(msg) {
-  document.getElementById('statusMsg').textContent = msg;
-  document.getElementById('statusMsg').className = '';
-}
-
-// ── العودة ──
-function goBack() {
-  stopCamera();
-  if (window.history.length > 1) window.history.back();
-  else window.location.href = 'index.html';
-}
-
-// ── البدء ──
-startCamera();
-
-// إيقاف الكاميرا عند إخفاء الصفحة
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) stopCamera();
-  else if (document.getElementById('scannerView').style.display !== 'none') startCamera();
+window.addEventListener('resize',resize);
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden) stopCam();
+  else if($('scannerView').style.display!=='none'){ stable=0; autoFired=false; startCam(); }
 });
+
+startCam();
 </script>
 </body>
 </html>
