@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0b0d12">
 <title>Passport Scan Pro</title>
-<script async src="https://docs.opencv.org/4.7.0/opencv.js" onload="onCvLoad()"></script>
+<script async data-opencv src="https://docs.opencv.org/4.7.0/opencv.js"></script>
 <style>
 :root{
   --bg:#07090d;
@@ -418,6 +418,20 @@ function onCvLoad() {
     }
   };
   waitForCv();
+}
+
+function bindOpenCvLoader() {
+  const opencvScript = document.querySelector('script[data-opencv]');
+  if (typeof cv !== 'undefined') {
+    onCvLoad();
+    return;
+  }
+  if (opencvScript) {
+    opencvScript.addEventListener('load', onCvLoad, { once: true });
+    opencvScript.addEventListener('error', () => {
+      setStatus('فشل تحميل محرك المسح', 'تعذر تحميل OpenCV من المصدر الخارجي', 'تحقق من الاتصال أو جرّب إعادة فتح الصفحة.', 0);
+    }, { once: true });
+  }
 }
 
 async function startCamera() {
@@ -1170,6 +1184,7 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+bindOpenCvLoader();
 startCamera();
 </script>
 </body>
