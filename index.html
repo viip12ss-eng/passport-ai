@@ -90,7 +90,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Cairo', sans-ser
 
   <div class="webhook-bar">
     <div class="dot"></div>
-    <div class="webhook-url" id="urlDisplay">http://76.13.180.201:5678/webhook/passport-extract1</div>
+    <div class="webhook-url" id="urlDisplay">76.13.180.201:5678/webhook/passport-extract1</div>
   </div>
 
   <div class="action-grid">
@@ -147,13 +147,13 @@ function getSessionId() {
 const SESSION_ID = getSessionId();
 document.getElementById('urlDisplay').textContent += ' · ' + SESSION_ID.slice(0,8);
 
-const N8N_URL = 'http://76.13.180.201:5678/webhook/passport-extract1';
+const API_BASE = localStorage.getItem('pai_api_base') || 'http://76.13.180.201:5678';
+const EXTRACT_URL = localStorage.getItem('pai_extract_url') || `${API_BASE}/webhook/passport-extract1`;
 let file = null, dataUrl = null, sending = false;
 let history = JSON.parse(localStorage.getItem('pai_hist') || '[]');
 
 renderHistory();
 
-document.getElementById('cameraIn').onchange = e => selectFile(e.target.files[0]);
 document.getElementById('galleryIn').onchange = e => selectFile(e.target.files[0]);
 
 function selectFile(f) {
@@ -176,7 +176,6 @@ function clearFile() {
   document.getElementById('previewCard').classList.remove('show');
   document.getElementById('sendBtn').disabled = true;
   document.getElementById('sendBtn').textContent = 'اختر صورة أولاً';
-  document.getElementById('cameraIn').value = '';
   document.getElementById('galleryIn').value = '';
 }
 
@@ -202,7 +201,7 @@ async function send() {
     fd.append('data', blob, file.name.replace(/\.[^.]+$/, '') + '-enhanced.jpg');
     fd.append('_sid', SESSION_ID);
 
-    const res = await fetch(N8N_URL, { method: 'POST', body: fd });
+    const res = await fetch(EXTRACT_URL, { method: 'POST', body: fd });
     setProgress(80);
 
     const text = await res.text();
