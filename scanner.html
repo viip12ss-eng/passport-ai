@@ -379,6 +379,12 @@ let autoDetecting = false;
 let autoDetectTimer = null;
 let detectionActive = false;
 
+function ensureReachableWebhook(url) {
+  if (window.location.protocol === 'https:' && /^http:\/\//i.test(url)) {
+    throw new Error('رابط الويبهوك غير آمن HTTP بينما التطبيق مفتوح عبر HTTPS. لازم الويبهوك يكون HTTPS.');
+  }
+}
+
 // ── بدء الكاميرا ──
 async function startCamera() {
   try {
@@ -597,6 +603,7 @@ async function sendImage() {
     fd.append('data', capturedBlob, 'passport-scan.jpg');
     fd.append('_sid', SID);
 
+    ensureReachableWebhook(EXTRACT_URL);
     const res = await fetch(EXTRACT_URL, { method: 'POST', body: fd });
     setProgress(70);
     setSendMsg('جاري قراءة البيانات...');
