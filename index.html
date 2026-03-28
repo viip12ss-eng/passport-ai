@@ -90,7 +90,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Cairo', sans-ser
 
   <div class="webhook-bar">
     <div class="dot"></div>
-    <div class="webhook-url" id="urlDisplay">mmnnm19991.app.n8n.cloud/webhook/passport-extract</div>
+    <div class="webhook-url" id="urlDisplay">http://76.13.180.201:5678/webhook/passport-extract1</div>
   </div>
 
   <div class="action-grid">
@@ -147,7 +147,7 @@ function getSessionId() {
 const SESSION_ID = getSessionId();
 document.getElementById('urlDisplay').textContent += ' · ' + SESSION_ID.slice(0,8);
 
-const N8N_URL = 'https://mmnnm19991.app.n8n.cloud/webhook/passport-extract';
+const N8N_URL = 'http://76.13.180.201:5678/webhook/passport-extract1';
 let file = null, dataUrl = null, sending = false;
 let history = JSON.parse(localStorage.getItem('pai_hist') || '[]');
 
