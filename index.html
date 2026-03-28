@@ -156,6 +156,12 @@ renderHistory();
 
 document.getElementById('galleryIn').onchange = e => selectFile(e.target.files[0]);
 
+function ensureReachableWebhook(url) {
+  if (window.location.protocol === 'https:' && /^http:\/\//i.test(url)) {
+    throw new Error('رابط الويبهوك غير آمن HTTP بينما التطبيق مفتوح عبر HTTPS. استخدم رابط HTTPS للويبهوك.');
+  }
+}
+
 function selectFile(f) {
   if (!f) return;
   file = f;
@@ -201,6 +207,7 @@ async function send() {
     fd.append('data', blob, file.name.replace(/\.[^.]+$/, '') + '-enhanced.jpg');
     fd.append('_sid', SESSION_ID);
 
+    ensureReachableWebhook(EXTRACT_URL);
     const res = await fetch(EXTRACT_URL, { method: 'POST', body: fd });
     setProgress(80);
 
