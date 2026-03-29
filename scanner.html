@@ -193,8 +193,10 @@ video {
 #reviewTitle { font-size: 17px; font-weight: 600; }
 
 #reviewImgWrap {
+  position: relative;
   flex: 1; display: flex; align-items: center; justify-content: center;
   padding: 10px; overflow: hidden;
+  touch-action: none;
 }
 
 #reviewImg {
@@ -202,11 +204,60 @@ video {
   border-radius: 12px; object-fit: contain;
 }
 
+#cropBox {
+  position: absolute;
+  border: 2px solid #45f3ff;
+  border-radius: 16px;
+  box-shadow: 0 0 0 2000px rgba(0,0,0,0.52);
+  display: none;
+  touch-action: none;
+}
+
+.crop-handle {
+  position: absolute;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: #45f3ff;
+  border: 2px solid rgba(0,0,0,0.45);
+  box-shadow: 0 4px 12px rgba(69,243,255,0.35);
+}
+.crop-handle.tl { top: -12px; left: -12px; cursor: nwse-resize; }
+.crop-handle.tr { top: -12px; right: -12px; cursor: nesw-resize; }
+.crop-handle.bl { bottom: -12px; left: -12px; cursor: nesw-resize; }
+.crop-handle.br { bottom: -12px; right: -12px; cursor: nwse-resize; }
+
+#cropHint {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.68);
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 18px;
+  padding: 8px 16px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.72);
+  white-space: nowrap;
+}
+
 #reviewFooter {
   padding: 14px 20px calc(env(safe-area-inset-bottom, 34px) + 14px);
   background: rgba(0,0,0,0.8); text-align: center;
   font-size: 13px; color: rgba(255,255,255,0.5);
   flex-shrink: 0;
+}
+
+#reviewActions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+#resetCropBtn {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.18);
 }
 
 /* ── SENDING VIEW ── */
@@ -331,8 +382,20 @@ video {
   </div>
   <div id="reviewImgWrap">
     <img id="reviewImg" alt="">
+    <div id="cropBox">
+      <span class="crop-handle tl" data-handle="tl"></span>
+      <span class="crop-handle tr" data-handle="tr"></span>
+      <span class="crop-handle bl" data-handle="bl"></span>
+      <span class="crop-handle br" data-handle="br"></span>
+    </div>
+    <div id="cropHint">حرّك الإطار أو اسحب الزوايا لقص الصورة</div>
   </div>
-  <div id="reviewFooter">تأكد أن الجواز واضح قبل الإرسال</div>
+  <div id="reviewFooter">
+    تأكد أن الجواز واضح قبل الإرسال
+    <div id="reviewActions">
+      <button id="resetCropBtn" onclick="resetCrop()">إعادة القص</button>
+    </div>
+  </div>
 </div>
 
 <!-- ── SENDING VIEW ── -->
@@ -378,11 +441,18 @@ let capturedDataUrl = null;
 let autoDetecting = false;
 let autoDetectTimer = null;
 let detectionActive = false;
+let cropRect = null;
+let cropBounds = null;
+let cropPointer = null;
 
 function ensureReachableWebhook(url) {
   if (window.location.protocol === 'https:' && /^http:\/\//i.test(url)) {
     throw new Error('رابط الويبهوك غير آمن HTTP بينما التطبيق مفتوح عبر HTTPS. لازم الويبهوك يكون HTTPS.');
   }
+}
+
+function clamp(v, min, max) {
+  return Math.min(max, Math.max(min, v));
 }
 
 // ── بدء الكاميرا ──
@@ -570,7 +640,9 @@ function enhanceImage(ctx, w, h) {
 // ── عرض المراجعة ──
 function showReview() {
   stopCamera();
-  document.getElementById('reviewImg').src = capturedDataUrl;
+  const reviewImg = document.getElementById('reviewImg');
+  reviewImg.onload = () => requestAnimationFrame(initCropper);
+  reviewImg.src = capturedDataUrl;
   document.getElementById('scannerView').style.display = 'none';
   document.getElementById('reviewView').style.display = 'flex';
 }
@@ -578,12 +650,141 @@ function showReview() {
 function retake() {
   capturedBlob = null;
   capturedDataUrl = null;
+  cropRect = null;
+  cropBounds = null;
+  cropPointer = null;
   document.getElementById('reviewView').style.display = 'none';
   document.getElementById('sendingView').style.display = 'none';
   document.getElementById('successView').style.display = 'none';
   document.getElementById('errorView').style.display = 'none';
   document.getElementById('scannerView').style.display = 'flex';
   startCamera();
+}
+
+function initCropper() {
+  const wrap = document.getElementById('reviewImgWrap');
+  const img = document.getElementById('reviewImg');
+  const box = document.getElementById('cropBox');
+  const wrapRect = wrap.getBoundingClientRect();
+  const imgRect = img.getBoundingClientRect();
+
+  cropBounds = {
+    left: imgRect.left - wrapRect.left,
+    top: imgRect.top - wrapRect.top,
+    width: imgRect.width,
+    height: imgRect.height,
+  };
+
+  const marginX = cropBounds.width * 0.08;
+  const marginY = cropBounds.height * 0.12;
+  cropRect = {
+    x: cropBounds.left + marginX,
+    y: cropBounds.top + marginY,
+    width: cropBounds.width - marginX * 2,
+    height: cropBounds.height - marginY * 2,
+  };
+  renderCropBox();
+  box.style.display = 'block';
+}
+
+function renderCropBox() {
+  if (!cropRect) return;
+  const box = document.getElementById('cropBox');
+  box.style.left = `${cropRect.x}px`;
+  box.style.top = `${cropRect.y}px`;
+  box.style.width = `${cropRect.width}px`;
+  box.style.height = `${cropRect.height}px`;
+}
+
+function resetCrop() {
+  initCropper();
+}
+
+function pointerPos(e) {
+  const wrapRect = document.getElementById('reviewImgWrap').getBoundingClientRect();
+  return {
+    x: e.clientX - wrapRect.left,
+    y: e.clientY - wrapRect.top,
+  };
+}
+
+function startCropDrag(e, mode) {
+  if (!cropRect || !cropBounds) return;
+  e.preventDefault();
+  const p = pointerPos(e);
+  cropPointer = {
+    mode,
+    startX: p.x,
+    startY: p.y,
+    rect: { ...cropRect },
+  };
+}
+
+function applyCropDrag(e) {
+  if (!cropPointer || !cropRect || !cropBounds) return;
+  e.preventDefault();
+  const p = pointerPos(e);
+  const dx = p.x - cropPointer.startX;
+  const dy = p.y - cropPointer.startY;
+  const minSize = 90;
+  const next = { ...cropPointer.rect };
+
+  if (cropPointer.mode === 'move') {
+    next.x = clamp(cropPointer.rect.x + dx, cropBounds.left, cropBounds.left + cropBounds.width - cropPointer.rect.width);
+    next.y = clamp(cropPointer.rect.y + dy, cropBounds.top, cropBounds.top + cropBounds.height - cropPointer.rect.height);
+  } else if (cropPointer.mode === 'tl') {
+    const right = cropPointer.rect.x + cropPointer.rect.width;
+    const bottom = cropPointer.rect.y + cropPointer.rect.height;
+    next.x = clamp(cropPointer.rect.x + dx, cropBounds.left, right - minSize);
+    next.y = clamp(cropPointer.rect.y + dy, cropBounds.top, bottom - minSize);
+    next.width = right - next.x;
+    next.height = bottom - next.y;
+  } else if (cropPointer.mode === 'tr') {
+    const bottom = cropPointer.rect.y + cropPointer.rect.height;
+    next.y = clamp(cropPointer.rect.y + dy, cropBounds.top, bottom - minSize);
+    next.width = clamp(cropPointer.rect.width + dx, minSize, cropBounds.left + cropBounds.width - cropPointer.rect.x);
+    next.height = bottom - next.y;
+  } else if (cropPointer.mode === 'bl') {
+    const right = cropPointer.rect.x + cropPointer.rect.width;
+    next.x = clamp(cropPointer.rect.x + dx, cropBounds.left, right - minSize);
+    next.width = right - next.x;
+    next.height = clamp(cropPointer.rect.height + dy, minSize, cropBounds.top + cropBounds.height - cropPointer.rect.y);
+  } else if (cropPointer.mode === 'br') {
+    next.width = clamp(cropPointer.rect.width + dx, minSize, cropBounds.left + cropBounds.width - cropPointer.rect.x);
+    next.height = clamp(cropPointer.rect.height + dy, minSize, cropBounds.top + cropBounds.height - cropPointer.rect.y);
+  }
+
+  cropRect = next;
+  renderCropBox();
+}
+
+function endCropDrag() {
+  cropPointer = null;
+}
+
+async function getProcessedBlob() {
+  if (!capturedDataUrl || !cropRect || !cropBounds) return capturedBlob;
+  const img = new Image();
+  img.src = capturedDataUrl;
+  await img.decode();
+
+  const scaleX = img.naturalWidth / cropBounds.width;
+  const scaleY = img.naturalHeight / cropBounds.height;
+  const sx = Math.round((cropRect.x - cropBounds.left) * scaleX);
+  const sy = Math.round((cropRect.y - cropBounds.top) * scaleY);
+  const sw = Math.round(cropRect.width * scaleX);
+  const sh = Math.round(cropRect.height * scaleY);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = sw;
+  canvas.height = sh;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+  enhanceImage(ctx, sw, sh);
+
+  return await new Promise((resolve, reject) => {
+    canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('تعذر قص الصورة')), 'image/jpeg', 0.95);
+  });
 }
 
 // ── إرسال الصورة ──
@@ -596,11 +797,12 @@ async function sendImage() {
   setSendMsg('جاري تجهيز الصورة...');
 
   try {
+    const processedBlob = await getProcessedBlob();
     setProgress(35);
     setSendMsg('جاري إرسال الصورة لاستخراج البيانات...');
 
     const fd = new FormData();
-    fd.append('data', capturedBlob, 'passport-scan.jpg');
+    fd.append('data', processedBlob, 'passport-scan.jpg');
     fd.append('_sid', SID);
 
     ensureReachableWebhook(EXTRACT_URL);
@@ -705,7 +907,6 @@ document.getElementById('galleryInput').addEventListener('change', async (e) => 
       canvas.toBlob(blob => {
         capturedBlob = blob;
         capturedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
-        document.getElementById('reviewImg').src = capturedDataUrl;
         showReview();
       }, 'image/jpeg', 0.95);
     };
@@ -736,6 +937,19 @@ function goBack() {
 
 // ── البدء ──
 startCamera();
+
+const cropBox = document.getElementById('cropBox');
+cropBox.addEventListener('pointerdown', e => {
+  const handle = e.target.dataset.handle;
+  startCropDrag(e, handle || 'move');
+});
+window.addEventListener('pointermove', applyCropDrag, { passive: false });
+window.addEventListener('pointerup', endCropDrag);
+window.addEventListener('resize', () => {
+  if (document.getElementById('reviewView').style.display === 'flex' && capturedDataUrl) {
+    requestAnimationFrame(initCropper);
+  }
+});
 
 // إيقاف الكاميرا عند إخفاء الصفحة
 document.addEventListener('visibilitychange', () => {
