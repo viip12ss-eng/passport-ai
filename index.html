@@ -1,1 +1,317 @@
-1
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Passport AI">
+<meta name="theme-color" content="#0a0b14">
+<title>Passport AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0b14; --surface: #111320; --border: rgba(255,255,255,0.08);
+  --accent: #45f3ff; --purple: #7b61ff; --text: #e8eaf6; --dim: #6b7280;
+  --green: #22c55e; --red: #ef4444;
+  --safe-top: env(safe-area-inset-top, 44px);
+  --safe-bottom: env(safe-area-inset-bottom, 34px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { background: var(--bg); color: var(--text); font-family: 'Cairo', sans-serif; min-height: 100vh; }
+
+.app { max-width: 430px; margin: 0 auto; padding: calc(var(--safe-top) + 12px) 16px calc(var(--safe-bottom) + 20px); }
+
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.logo { font-size: 20px; font-weight: 900; }
+.logo span { color: var(--accent); }
+.badge { font-size: 11px; color: var(--accent); background: rgba(69,243,255,0.1); border: 1px solid rgba(69,243,255,0.25); border-radius: 20px; padding: 4px 10px; }
+
+.webhook-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: blink 2s infinite; flex-shrink: 0; }
+@keyframes blink { 50% { opacity: 0.3; } }
+.webhook-url { font-size: 11px; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; direction: ltr; text-align: left; }
+
+.action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.action-btn { border-radius: 18px; padding: 20px 14px; border: none; cursor: pointer; font-family: 'Cairo', sans-serif; display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; overflow: hidden; transition: transform .15s; }
+.action-btn:active { transform: scale(0.96); }
+.action-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.btn-camera { background: linear-gradient(135deg, #1a1f3a, #252a48); border: 1px solid rgba(69,243,255,0.2); }
+.btn-gallery { background: linear-gradient(135deg, #1f1a3a, #2a2048); border: 1px solid rgba(123,97,255,0.2); }
+.btn-icon { font-size: 34px; }
+.btn-label { font-size: 14px; font-weight: 700; color: var(--text); }
+.btn-sub { font-size: 11px; color: var(--dim); }
+
+.preview-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 16px; display: none; }
+.preview-card.show { display: block; }
+.preview-img { width: 100%; max-height: 220px; object-fit: contain; display: block; background: #000; }
+.preview-info { padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; }
+.preview-name { font-size: 12px; color: var(--dim); }
+.preview-remove { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: var(--red); border-radius: 8px; padding: 4px 10px; font-size: 12px; cursor: pointer; font-family: 'Cairo', sans-serif; }
+
+.send-btn { width: 100%; border: none; border-radius: 18px; padding: 18px; font-family: 'Cairo', sans-serif; font-size: 16px; font-weight: 900; cursor: pointer; background: linear-gradient(135deg, var(--purple), var(--accent)); color: #0a0b14; margin-bottom: 14px; transition: all .25s; box-shadow: 0 8px 30px rgba(69,243,255,0.2); }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+.send-btn:not(:disabled):active { transform: scale(0.98); }
+
+.status-box { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 14px; display: none; }
+.status-box.show { display: block; }
+.status-box.loading { border-color: rgba(69,243,255,0.2); }
+.status-box.success { border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.05); }
+.status-box.error { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.05); }
+.status-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.status-msg { font-size: 12px; color: var(--dim); line-height: 1.6; }
+.progress { height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+.progress-bar { height: 100%; background: linear-gradient(90deg, var(--purple), var(--accent)); border-radius: 2px; transition: width .4s; }
+
+.history-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+.history-head { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.history-title { font-size: 13px; font-weight: 700; }
+.clear-btn { font-size: 11px; color: var(--red); background: none; border: none; cursor: pointer; font-family: 'Cairo', sans-serif; }
+.history-body { padding: 8px 0; }
+.history-item { display: flex; align-items: center; gap: 10px; padding: 8px 14px; }
+.history-thumb { width: 44px; height: 32px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border); flex-shrink: 0; }
+.history-name { font-size: 12px; font-weight: 600; }
+.history-date { font-size: 11px; color: var(--dim); }
+.history-badge { margin-right: auto; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.badge-ok { background: rgba(34,197,94,0.15); color: var(--green); }
+.badge-fail { background: rgba(239,68,68,0.15); color: var(--red); }
+.empty-hist { text-align: center; padding: 20px; font-size: 12px; color: var(--dim); }
+
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(10,11,20,0.3); border-top-color: #0a0b14; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-left: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="logo">Passport <span>AI</span></div>
+    <div class="badge">OMN · ROP</div>
+  </div>
+
+  <div class="webhook-bar">
+    <div class="dot"></div>
+    <div class="webhook-url" id="urlDisplay">phd-considering-aaa-despite.trycloudflare.com/webhook/passport-extract1</div>
+  </div>
+
+  <div class="action-grid">
+    <div class="action-btn btn-camera" onclick="window.location.href='scanner.html'" style="cursor:pointer">
+      <span class="btn-icon">📷</span>
+      <span class="btn-label">كاميرا</span>
+      <span class="btn-sub">ماسح ضوئي</span>
+    </div>
+    <label class="action-btn btn-gallery">
+      <input type="file" accept="image/*" id="galleryIn">
+      <span class="btn-icon">🖼️</span>
+      <span class="btn-label">استوديو</span>
+      <span class="btn-sub">من المكتبة</span>
+    </label>
+  </div>
+
+  <div class="preview-card" id="previewCard">
+    <img class="preview-img" id="previewImg" src="" alt="">
+    <div class="preview-info">
+      <span class="preview-name" id="previewName">—</span>
+      <button class="preview-remove" onclick="clearFile()">إزالة</button>
+    </div>
+  </div>
+
+  <button class="send-btn" id="sendBtn" disabled onclick="send()">اختر صورة أولاً</button>
+
+  <div class="status-box" id="statusBox">
+    <div class="status-title" id="statusTitle"></div>
+    <div class="status-msg" id="statusMsg"></div>
+    <div class="progress" id="progressWrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+  </div>
+
+  <div class="history-card">
+    <div class="history-head">
+      <span class="history-title">السجل</span>
+      <button class="clear-btn" onclick="clearHistory()">مسح الكل</button>
+    </div>
+    <div class="history-body" id="historyList"><div class="empty-hist">لا يوجد سجل</div></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// معرّف جلسة خاص بكل مستخدم
+function getSessionId() {
+  let id = localStorage.getItem('pai_sid');
+  if (!id) {
+    id = 'u_' + Math.random().toString(36).slice(2,10) + '_' + Date.now().toString(36);
+    localStorage.setItem('pai_sid', id);
+  }
+  return id;
+}
+const SESSION_ID = getSessionId();
+document.getElementById('urlDisplay').textContent += ' · ' + SESSION_ID.slice(0,8);
+
+const API_BASE = localStorage.getItem('pai_api_base') || 'https://phd-considering-aaa-despite.trycloudflare.com';
+const EXTRACT_URL = localStorage.getItem('pai_extract_url') || `${API_BASE}/webhook/passport-extract1`;
+let file = null, dataUrl = null, sending = false;
+let history = JSON.parse(localStorage.getItem('pai_hist') || '[]');
+
+renderHistory();
+
+document.getElementById('galleryIn').onchange = e => selectFile(e.target.files[0]);
+
+function ensureReachableWebhook(url) {
+  if (window.location.protocol === 'https:' && /^http:\/\//i.test(url)) {
+    throw new Error('رابط الويبهوك غير آمن HTTP بينما التطبيق مفتوح عبر HTTPS. استخدم رابط HTTPS للويبهوك.');
+  }
+}
+
+function selectFile(f) {
+  if (!f) return;
+  file = f;
+  const r = new FileReader();
+  r.onload = () => {
+    dataUrl = r.result;
+    document.getElementById('previewImg').src = dataUrl;
+    document.getElementById('previewName').textContent = f.name.length > 28 ? f.name.slice(0,28)+'…' : f.name;
+    document.getElementById('previewCard').classList.add('show');
+    document.getElementById('sendBtn').disabled = false;
+    document.getElementById('sendBtn').textContent = '🚀 إرسال واستخراج';
+  };
+  r.readAsDataURL(f);
+}
+
+function clearFile() {
+  file = null; dataUrl = null;
+  document.getElementById('previewCard').classList.remove('show');
+  document.getElementById('sendBtn').disabled = true;
+  document.getElementById('sendBtn').textContent = 'اختر صورة أولاً';
+  document.getElementById('galleryIn').value = '';
+}
+
+async function send() {
+  if (!file || sending) return;
+  sending = true;
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+  btn.innerHTML = 'جاري الإرسال... <span class="spinner"></span>';
+
+  showStatus('loading', '⏳ جاري الإرسال...', 'يتم رفع الصورة ومعالجتها', 20);
+
+  try {
+    // Process image
+    setProgress(30);
+    setMsg('جاري تجهيز الصورة...');
+    const blob = await processImage(file);
+
+    setProgress(50);
+    setMsg('جاري الإرسال لـ n8n...');
+
+    const fd = new FormData();
+    fd.append('data', blob, file.name.replace(/\.[^.]+$/, '') + '-enhanced.jpg');
+    fd.append('_sid', SESSION_ID);
+
+    ensureReachableWebhook(EXTRACT_URL);
+    const res = await fetch(EXTRACT_URL, { method: 'POST', body: fd });
+    setProgress(80);
+
+    const text = await res.text();
+    let json = null;
+    try { json = JSON.parse(text); } catch { const m = text.match(/\{[\s\S]*\}/); if(m) try{json=JSON.parse(m[0]);}catch{} }
+
+    if (!res.ok) throw new Error('HTTP ' + res.status + ': ' + text.slice(0,100));
+    if (!json || typeof json !== 'object') throw new Error('لم يُرجع n8n بيانات صحيحة');
+    if (Array.isArray(json)) json = json[0] || {};
+    if (json.data && typeof json.data === 'object') json = json.data;
+
+    setProgress(100);
+    showSuccess(json);
+    addHistory(file.name, dataUrl, true);
+
+  } catch(e) {
+    showStatus('error', '❌ فشل الإرسال', e.message || String(e), 0);
+    addHistory(file.name, dataUrl, false);
+  }
+
+  sending = false;
+  btn.disabled = false;
+  btn.textContent = '🚀 إرسال واستخراج';
+}
+
+function showStatus(type, title, msg, prog) {
+  const box = document.getElementById('statusBox');
+  box.className = 'status-box show ' + type;
+  document.getElementById('statusTitle').textContent = title;
+  document.getElementById('statusMsg').textContent = msg;
+  document.getElementById('progressWrap').style.display = type === 'loading' ? 'block' : 'none';
+  setProgress(prog);
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function setProgress(p) { document.getElementById('progressBar').style.width = p + '%'; }
+function setMsg(m) { document.getElementById('statusMsg').textContent = m; }
+
+function showSuccess(d) {
+  const fields = [
+    ['الاسم', d.nameEnglish || d.nameArabic],
+    ['رقم الجواز', d.passportNumber || d.passportNo],
+    ['الجنسية', d.nationalityArabic],
+    ['تاريخ الميلاد', d.dateOfBirth],
+    ['تاريخ الإصدار', d.dateOfIssue],
+    ['تاريخ الانتهاء', d.dateOfExpiry],
+  ].filter(([,v]) => v && v !== 'null');
+
+  const box = document.getElementById('statusBox');
+  box.className = 'status-box show success';
+  document.getElementById('statusTitle').textContent = '✅ تم الاستخراج وإرسال البيانات للكمبيوتر';
+  document.getElementById('statusMsg').innerHTML = fields.map(([l,v]) => `<b>${l}:</b> ${v}`).join(' &nbsp;·&nbsp; ');
+  document.getElementById('progressWrap').style.display = 'none';
+}
+
+async function processImage(f) {
+  return new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const s = Math.min(1, 2200 / Math.max(img.width, img.height));
+        const w = Math.round(img.width * s), h = Math.round(img.height * s);
+        const c = document.createElement('canvas'); c.width = w; c.height = h;
+        const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
+        const d = ctx.getImageData(0,0,w,h);
+        for(let i=0;i<d.data.length;i+=4){
+          d.data[i]=Math.min(255,Math.max(0,((d.data[i]-128)*1.12)+130));
+          d.data[i+1]=Math.min(255,Math.max(0,((d.data[i+1]-128)*1.12)+130));
+          d.data[i+2]=Math.min(255,Math.max(0,((d.data[i+2]-128)*1.12)+130));
+        }
+        ctx.putImageData(d,0,0);
+        c.toBlob(b => b ? res(b) : rej(new Error('blob failed')), 'image/jpeg', 0.95);
+      };
+      img.onerror = () => rej(new Error('image load failed'));
+      img.src = reader.result;
+    };
+    reader.onerror = () => rej(new Error('file read failed'));
+    reader.readAsDataURL(f);
+  });
+}
+
+function addHistory(name, thumb, ok) {
+  history.unshift({ name, thumb, ok, ts: Date.now() });
+  if (history.length > 15) history = history.slice(0, 15);
+  localStorage.setItem('pai_hist', JSON.stringify(history));
+  renderHistory();
+}
+
+function renderHistory() {
+  const el = document.getElementById('historyList');
+  if (!history.length) { el.innerHTML = '<div class="empty-hist">لا يوجد سجل</div>'; return; }
+  el.innerHTML = history.map(h => {
+    const d = new Date(h.ts).toLocaleString('ar', { hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit' });
+    const t = h.thumb ? `<img class="history-thumb" src="${h.thumb}" alt="">` : '<div class="history-thumb" style="background:#1a1a2e"></div>';
+    return `<div class="history-item">${t}<div><div class="history-name">${(h.name||'').slice(0,22)}</div><div class="history-date">${d}</div></div><span class="history-badge ${h.ok?'badge-ok':'badge-fail'}">${h.ok?'✓ نجح':'✗ فشل'}</span></div>`;
+  }).join('');
+}
+
+function clearHistory() {
+  history = [];
+  localStorage.removeItem('pai_hist');
+  renderHistory();
+}
+</script>
+</body>
+</html>
