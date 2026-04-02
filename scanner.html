@@ -427,17 +427,11 @@ video {
 'use strict';
 
 // ── الإعدادات ──
-const SEARCH = new URLSearchParams(location.search);
-const MODE = SEARCH.get('mode') === 'attachment' ? 'attachment' : 'passport';
 const API_BASE = localStorage.getItem('pai_api_base') || 'https://phd-considering-aaa-despite.trycloudflare.com';
-const STORE_URL = SEARCH.get('store_url')
-  || localStorage.getItem('pai_store_url')
-  || `${API_BASE}/webhook/passport-store`;
 const EXTRACT_URL = localStorage.getItem('pai_extract_url')
   || localStorage.getItem('pai_webhook')
   || `${API_BASE}/webhook/passport-extract1`;
-const ATTACHMENT_LABEL = SEARCH.get('label') || 'مرفق';
-const SID = SEARCH.get('sid') || (() => { let id = localStorage.getItem('pai_sid'); if (!id) { id = 'u' + Math.random().toString(36).slice(2,9); localStorage.setItem('pai_sid', id); } return id; })();
+const SID = (() => { let id = localStorage.getItem('pai_sid'); if (!id) { id = 'u' + Math.random().toString(36).slice(2,9); localStorage.setItem('pai_sid', id); } return id; })();
 
 let stream = null;
 let track = null;
@@ -459,31 +453,6 @@ function ensureReachableWebhook(url) {
 
 function clamp(v, min, max) {
   return Math.min(max, Math.max(min, v));
-}
-
-async function blobToBase64(blob) {
-  return await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = String(reader.result || '');
-      resolve(dataUrl.split('base64,')[1] || '');
-    };
-    reader.onerror = () => reject(new Error('تعذر قراءة الصورة'));
-    reader.readAsDataURL(blob);
-  });
-}
-
-function updateModeUi() {
-  if (MODE !== 'attachment') return;
-  document.getElementById('topTitle').textContent = '📎 تصوير مرفق';
-  document.getElementById('statusMsg').textContent = 'وجّه الكاميرا نحو المرفق';
-  document.getElementById('reviewTitle').textContent = 'مراجعة المرفق';
-  document.getElementById('cropHint').textContent = 'عدّل الإطار حتى يظهر المرفق بالكامل';
-  document.getElementById('sendMsg').textContent = 'يتم تجهيز الصورة ورفعها';
-  document.querySelector('#sendingView .send-title').textContent = 'جاري رفع المرفق...';
-  document.querySelector('#successView .success-title').textContent = 'تم إرسال المرفق!';
-  document.querySelector('#successView .success-sub').textContent = 'يمكنك الآن الرجوع للكمبيوتر وسيظهر المرفق تلقائياً';
-  document.querySelector('#successView .new-scan-btn').textContent = '📎 تصوير مرفق جديد';
 }
 
 // ── بدء الكاميرا ──
@@ -617,7 +586,6 @@ function showDocFrame(detected) {
     frame.querySelectorAll('.corner').forEach(c => c.style.color = 'rgba(69,243,255,0.9)');
     frame.style.display = 'none';
     msg.textContent = 'وجّه الكاميرا نحو الجواز';
-    if (MODE === 'attachment') msg.textContent = 'وجّه الكاميرا نحو المرفق';
     msg.className = 'scanning';
     btn.classList.remove('auto');
   }
@@ -831,33 +799,7 @@ async function sendImage() {
   try {
     const processedBlob = await getProcessedBlob();
     setProgress(35);
-    setSendMsg(MODE === 'attachment' ? 'جاري رفع الصورة للكمبيوتر...' : 'جاري إرسال الصورة لاستخراج البيانات...');
-
-    if (MODE === 'attachment') {
-      const payload = {
-        sid: SID,
-        mode: 'attachment',
-        label: ATTACHMENT_LABEL,
-        fileName: `attachment-${Date.now()}.jpg`,
-        mimeType: 'image/jpeg',
-        contentBase64: await blobToBase64(processedBlob),
-        receivedAt: Date.now(),
-        source: 'mobile-attachment'
-      };
-
-      ensureReachableWebhook(STORE_URL);
-      const res = await fetch(STORE_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-
-      setProgress(100);
-      setSendMsg('تم رفع المرفق');
-      setTimeout(() => showSuccess(payload), 300);
-      return;
-    }
+    setSendMsg('جاري إرسال الصورة لاستخراج البيانات...');
 
     const fd = new FormData();
     fd.append('data', processedBlob, 'passport-scan.jpg');
@@ -897,25 +839,6 @@ function setSendMsg(m) { document.getElementById('sendMsg').textContent = m; }
 
 function showSuccess(d) {
   document.getElementById('sendingView').style.display = 'none';
-
-  if (MODE === 'attachment') {
-    document.getElementById('resultCard').innerHTML = `
-      <div class="result-row">
-        <span class="result-label">نوع الإرسال</span>
-        <span class="result-val">مرفق من الجوال</span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">اسم المرفق</span>
-        <span class="result-val">${ATTACHMENT_LABEL}</span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">معرف الجلسة</span>
-        <span class="result-val">${SID}</span>
-      </div>
-    `;
-    document.getElementById('successView').style.display = 'flex';
-    return;
-  }
 
   const fields = [
     ['الاسم', d.nameEnglish],
@@ -1013,7 +936,6 @@ function goBack() {
 }
 
 // ── البدء ──
-updateModeUi();
 startCamera();
 
 const cropBox = document.getElementById('cropBox');
