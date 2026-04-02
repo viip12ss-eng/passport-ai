@@ -26,11 +26,21 @@ body { background: var(--bg); color: var(--text); font-family: 'Cairo', sans-ser
 .logo { font-size: 20px; font-weight: 900; }
 .logo span { color: var(--accent); }
 .badge { font-size: 11px; color: var(--accent); background: rgba(69,243,255,0.1); border: 1px solid rgba(69,243,255,0.25); border-radius: 20px; padding: 4px 10px; }
+.mode-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.mode-btn { border: 1px solid var(--border); border-radius: 14px; background: rgba(255,255,255,0.04); color: var(--text); padding: 12px 10px; font-family: 'Cairo', sans-serif; font-size: 13px; font-weight: 800; cursor: pointer; }
+.mode-btn small { display: block; font-size: 10px; color: var(--dim); font-weight: 600; margin-top: 3px; }
+.mode-btn.active { border-color: rgba(69,243,255,0.45); background: linear-gradient(135deg, rgba(69,243,255,0.14), rgba(123,97,255,0.18)); color: #fff; box-shadow: 0 8px 20px rgba(69,243,255,0.12); }
 
 .webhook-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: blink 2s infinite; flex-shrink: 0; }
 @keyframes blink { 50% { opacity: 0.3; } }
 .webhook-url { font-size: 11px; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; direction: ltr; text-align: left; }
+.link-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin-bottom: 16px; display: grid; gap: 10px; }
+.link-title { font-size: 12px; font-weight: 800; color: var(--accent); }
+.link-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.field-label { display: block; font-size: 11px; color: var(--dim); margin-bottom: 5px; }
+.field-input { width: 100%; border-radius: 10px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text); padding: 10px 12px; font-family: 'Cairo', sans-serif; font-size: 13px; }
+.link-hint { font-size: 11px; color: var(--dim); line-height: 1.7; }
 
 .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
 .action-btn { border-radius: 18px; padding: 20px 14px; border: none; cursor: pointer; font-family: 'Cairo', sans-serif; display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; overflow: hidden; transition: transform .15s; }
@@ -88,22 +98,42 @@ body { background: var(--bg); color: var(--text); font-family: 'Cairo', sans-ser
     <div class="badge">OMN · ROP</div>
   </div>
 
+  <div class="mode-switch">
+    <button class="mode-btn active" id="passportModeBtn" type="button" onclick="setAppMode('passport')">الجواز<small>تعبئة البيانات</small></button>
+    <button class="mode-btn" id="documentModeBtn" type="button" onclick="setAppMode('document')">المستندات<small>مرفقات من الجوال</small></button>
+  </div>
+
   <div class="webhook-bar">
     <div class="dot"></div>
     <div class="webhook-url" id="urlDisplay">phd-considering-aaa-despite.trycloudflare.com/webhook/passport-extract1</div>
   </div>
 
+  <div class="link-card">
+    <div class="link-title" id="linkTitle">ربط الجلسة</div>
+    <div class="link-grid">
+      <label>
+        <span class="field-label">معرف المشترك</span>
+        <input class="field-input" id="ownerKeyInput" placeholder="مثال: alfarsi0">
+      </label>
+      <label>
+        <span class="field-label">رمز الصفحة</span>
+        <input class="field-input" id="claimCodeInput" inputmode="numeric" maxlength="6" placeholder="مثال: 123456">
+      </label>
+    </div>
+    <div class="link-hint" id="linkHint">استخدم نفس معرف المشترك الموجود في الكمبيوتر، ثم اكتب رمز الصفحة الذي يظهر بعد الضغط على جلب من الجوال.</div>
+  </div>
+
   <div class="action-grid">
-    <div class="action-btn btn-camera" onclick="window.location.href='scanner.html'" style="cursor:pointer">
+    <div class="action-btn btn-camera" id="cameraAction" style="cursor:pointer">
       <span class="btn-icon">📷</span>
-      <span class="btn-label">كاميرا</span>
-      <span class="btn-sub">ماسح ضوئي</span>
+      <span class="btn-label" id="cameraLabel">كاميرا</span>
+      <span class="btn-sub" id="cameraSub">ماسح ضوئي</span>
     </div>
     <label class="action-btn btn-gallery">
       <input type="file" accept="image/*" id="galleryIn">
       <span class="btn-icon">🖼️</span>
-      <span class="btn-label">استوديو</span>
-      <span class="btn-sub">من المكتبة</span>
+      <span class="btn-label" id="galleryLabel">استوديو</span>
+      <span class="btn-sub" id="gallerySub">من المكتبة</span>
     </label>
   </div>
 
@@ -149,10 +179,23 @@ document.getElementById('urlDisplay').textContent += ' · ' + SESSION_ID.slice(0
 
 const API_BASE = localStorage.getItem('pai_api_base') || 'https://phd-considering-aaa-despite.trycloudflare.com';
 const EXTRACT_URL = localStorage.getItem('pai_extract_url') || `${API_BASE}/webhook/passport-extract1`;
+const STORE_URL = localStorage.getItem('pai_store_url') || `${API_BASE}/webhook/passport-store`;
+const ownerKeyInput = document.getElementById('ownerKeyInput');
+const claimCodeInput = document.getElementById('claimCodeInput');
 let file = null, dataUrl = null, sending = false;
 let history = JSON.parse(localStorage.getItem('pai_hist') || '[]');
+let appMode = localStorage.getItem('pai_mobile_mode') || 'passport';
+
+ownerKeyInput.value = localStorage.getItem('pai_owner_key') || '';
+claimCodeInput.value = sessionStorage.getItem('pai_claim_code') || '';
+ownerKeyInput.addEventListener('input', () => localStorage.setItem('pai_owner_key', ownerKeyInput.value.trim()));
+claimCodeInput.addEventListener('input', () => sessionStorage.setItem('pai_claim_code', claimCodeInput.value.trim()));
+document.getElementById('cameraAction').addEventListener('click', () => {
+  window.location.href = `scanner.html?mode=${encodeURIComponent(appMode)}`;
+});
 
 renderHistory();
+setAppMode(appMode);
 
 document.getElementById('galleryIn').onchange = e => selectFile(e.target.files[0]);
 
@@ -160,6 +203,30 @@ function ensureReachableWebhook(url) {
   if (window.location.protocol === 'https:' && /^http:\/\//i.test(url)) {
     throw new Error('رابط الويبهوك غير آمن HTTP بينما التطبيق مفتوح عبر HTTPS. استخدم رابط HTTPS للويبهوك.');
   }
+}
+
+function getOwnerKey() {
+  return ownerKeyInput.value.trim();
+}
+
+function getClaimCode() {
+  return claimCodeInput.value.trim();
+}
+
+function setAppMode(mode) {
+  appMode = mode === 'document' ? 'document' : 'passport';
+  localStorage.setItem('pai_mobile_mode', appMode);
+  document.getElementById('passportModeBtn').classList.toggle('active', appMode === 'passport');
+  document.getElementById('documentModeBtn').classList.toggle('active', appMode === 'document');
+  document.getElementById('linkTitle').textContent = appMode === 'document' ? 'ربط المستند' : 'ربط الجلسة';
+  document.getElementById('linkHint').textContent = appMode === 'document'
+    ? 'افتح الكمبيوتر ثم اضغط زر من الجوال عند المرفق المطلوب، وبعدها اكتب نفس معرف المشترك ورمز الربط هنا.'
+    : 'استخدم نفس معرف المشترك الموجود في الكمبيوتر، ثم اكتب رمز الصفحة الذي يظهر بعد الضغط على جلب من الجوال.';
+  document.getElementById('cameraLabel').textContent = 'كاميرا';
+  document.getElementById('cameraSub').textContent = appMode === 'document' ? 'تصوير مستند' : 'ماسح ضوئي';
+  document.getElementById('galleryLabel').textContent = 'استوديو';
+  document.getElementById('gallerySub').textContent = appMode === 'document' ? 'اختيار مرفق' : 'من المكتبة';
+  document.getElementById('sendBtn').textContent = file ? (appMode === 'document' ? '📎 إرسال المستند' : '🚀 إرسال واستخراج') : 'اختر صورة أولاً';
 }
 
 function selectFile(f) {
@@ -187,6 +254,16 @@ function clearFile() {
 
 async function send() {
   if (!file || sending) return;
+  if (!getOwnerKey()) {
+    showStatus('error', '❌ يلزم الربط', 'اكتب معرف المشترك أولاً.', 0);
+    ownerKeyInput.focus();
+    return;
+  }
+  if (!getClaimCode()) {
+    showStatus('error', '❌ يلزم رمز الصفحة', 'اكتب رمز الصفحة الظاهر في الكمبيوتر.', 0);
+    claimCodeInput.focus();
+    return;
+  }
   sending = true;
   const btn = document.getElementById('sendBtn');
   btn.disabled = true;
@@ -201,11 +278,40 @@ async function send() {
     const blob = await processImage(file);
 
     setProgress(50);
-    setMsg('جاري الإرسال لـ n8n...');
+    setMsg(appMode === 'document' ? 'جاري إرسال المستند لـ n8n...' : 'جاري الإرسال لـ n8n...');
+
+    if (appMode === 'document') {
+      const payload = {
+        _owner: getOwnerKey(),
+        _claim: getClaimCode(),
+        _mode: 'attachment',
+        _source: 'mobile-document-app',
+        _ts: Date.now(),
+        fileName: file.name.replace(/\.[^.]+$/, '') + '-document.jpg',
+        mimeType: 'image/jpeg',
+        contentBase64: await blobToBase64(blob)
+      };
+
+      ensureReachableWebhook(STORE_URL);
+      const res = await fetch(STORE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const text = await res.text();
+      if (!res.ok) throw new Error('HTTP ' + res.status + ': ' + text.slice(0,100));
+      setProgress(100);
+      showDocumentSuccess();
+      addHistory(file.name, dataUrl, true);
+      return;
+    }
 
     const fd = new FormData();
     fd.append('data', blob, file.name.replace(/\.[^.]+$/, '') + '-enhanced.jpg');
     fd.append('_sid', SESSION_ID);
+    fd.append('_owner', getOwnerKey());
+    fd.append('_claim', getClaimCode());
+    fd.append('_source', 'mobile-app');
 
     ensureReachableWebhook(EXTRACT_URL);
     const res = await fetch(EXTRACT_URL, { method: 'POST', body: fd });
@@ -231,7 +337,7 @@ async function send() {
 
   sending = false;
   btn.disabled = false;
-  btn.textContent = '🚀 إرسال واستخراج';
+  btn.textContent = appMode === 'document' ? '📎 إرسال المستند' : '🚀 إرسال واستخراج';
 }
 
 function showStatus(type, title, msg, prog) {
@@ -261,6 +367,26 @@ function showSuccess(d) {
   document.getElementById('statusTitle').textContent = '✅ تم الاستخراج وإرسال البيانات للكمبيوتر';
   document.getElementById('statusMsg').innerHTML = fields.map(([l,v]) => `<b>${l}:</b> ${v}`).join(' &nbsp;·&nbsp; ');
   document.getElementById('progressWrap').style.display = 'none';
+}
+
+function showDocumentSuccess() {
+  const box = document.getElementById('statusBox');
+  box.className = 'status-box show success';
+  document.getElementById('statusTitle').textContent = '✅ تم إرسال المستند';
+  document.getElementById('statusMsg').innerHTML = '<b>تم رفع المرفق</b> وسيصل للكمبيوتر تلقائياً إذا كان في وضع الانتظار.';
+  document.getElementById('progressWrap').style.display = 'none';
+}
+
+async function blobToBase64(blob) {
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result || '');
+      resolve(dataUrl.split('base64,')[1] || '');
+    };
+    reader.onerror = () => reject(new Error('file read failed'));
+    reader.readAsDataURL(blob);
+  });
 }
 
 async function processImage(f) {
