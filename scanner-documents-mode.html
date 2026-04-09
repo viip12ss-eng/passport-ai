@@ -5,1046 +5,615 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Passport Scanner">
-<meta name="theme-color" content="#000">
-<title>Passport Scanner</title>
+<meta name="apple-mobile-web-app-title" content="Passport AI">
+<meta name="theme-color" content="#0a0b14">
+<title>Passport AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
+:root {
+  --bg: #0a0b14; --surface: #111320; --border: rgba(255,255,255,0.08);
+  --accent: #45f3ff; --purple: #7b61ff; --text: #e8eaf6; --dim: #6b7280;
+  --green: #22c55e; --red: #ef4444;
+  --safe-top: env(safe-area-inset-top, 44px);
+  --safe-bottom: env(safe-area-inset-bottom, 34px);
+}
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: -apple-system, 'Helvetica Neue', sans-serif; color: #fff; }
+body { background: var(--bg); color: var(--text); font-family: 'Cairo', sans-serif; min-height: 100vh; }
+.app { max-width: 430px; margin: 0 auto; padding: calc(var(--safe-top) + 12px) 16px calc(var(--safe-bottom) + 20px); }
 
-/* ── SCANNER VIEW ── */
-#scannerView {
-  position: fixed; inset: 0;
-  display: flex; flex-direction: column;
+/* ── Header ── */
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.logo { font-size: 20px; font-weight: 900; }
+.logo span { color: var(--accent); }
+.badge { font-size: 11px; color: var(--accent); background: rgba(69,243,255,0.1); border: 1px solid rgba(69,243,255,0.25); border-radius: 20px; padding: 4px 10px; }
+
+/* ── Mode Switch ── */
+.mode-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.mode-btn { border: 1px solid var(--border); border-radius: 14px; background: rgba(255,255,255,0.04); color: var(--text); padding: 12px 10px; font-family: 'Cairo', sans-serif; font-size: 13px; font-weight: 800; cursor: pointer; }
+.mode-btn small { display: block; font-size: 10px; color: var(--dim); font-weight: 600; margin-top: 3px; }
+.mode-btn.active { border-color: rgba(69,243,255,0.45); background: linear-gradient(135deg, rgba(69,243,255,0.14), rgba(123,97,255,0.18)); color: #fff; box-shadow: 0 8px 20px rgba(69,243,255,0.12); }
+
+/* ── Webhook Bar ── */
+.webhook-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: blink 2s infinite; flex-shrink: 0; }
+@keyframes blink { 50% { opacity: 0.3; } }
+.webhook-url { font-size: 11px; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; direction: ltr; text-align: left; }
+
+/* ── Owner Input Card ── */
+.owner-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin-bottom: 16px; display: grid; gap: 10px; }
+.owner-title { font-size: 12px; font-weight: 800; color: var(--accent); }
+.field-label { display: block; font-size: 11px; color: var(--dim); margin-bottom: 5px; }
+.field-input { width: 100%; border-radius: 10px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text); padding: 10px 12px; font-family: 'Cairo', sans-serif; font-size: 13px; }
+.owner-hint { font-size: 11px; color: var(--dim); line-height: 1.7; }
+
+/* ── Passport: Claim Row (hidden in doc mode) ── */
+#claimRow { }
+
+/* ── Passport: Action Grid ── */
+.action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.action-btn { border-radius: 18px; padding: 20px 14px; border: none; cursor: pointer; font-family: 'Cairo', sans-serif; display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; overflow: hidden; transition: transform .15s; }
+.action-btn:active { transform: scale(0.96); }
+.action-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.btn-camera  { background: linear-gradient(135deg, #1a1f3a, #252a48); border: 1px solid rgba(69,243,255,0.2); }
+.btn-gallery { background: linear-gradient(135deg, #1f1a3a, #2a2048); border: 1px solid rgba(123,97,255,0.2); }
+.btn-icon  { font-size: 34px; }
+.btn-label { font-size: 14px; font-weight: 700; color: var(--text); }
+.btn-sub   { font-size: 11px; color: var(--dim); }
+
+/* ── Preview ── */
+.preview-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 16px; display: none; }
+.preview-card.show { display: block; }
+.preview-img  { width: 100%; max-height: 220px; object-fit: contain; display: block; background: #000; }
+.preview-info { padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; }
+.preview-name { font-size: 12px; color: var(--dim); }
+.preview-remove { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: var(--red); border-radius: 8px; padding: 4px 10px; font-size: 12px; cursor: pointer; font-family: 'Cairo', sans-serif; }
+
+/* ── Send Btn ── */
+.send-btn { width: 100%; border: none; border-radius: 18px; padding: 18px; font-family: 'Cairo', sans-serif; font-size: 16px; font-weight: 900; cursor: pointer; background: linear-gradient(135deg, var(--purple), var(--accent)); color: #0a0b14; margin-bottom: 14px; transition: all .25s; box-shadow: 0 8px 30px rgba(69,243,255,0.2); }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+.send-btn:not(:disabled):active { transform: scale(0.98); }
+
+/* ── Status Box ── */
+.status-box { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 14px; display: none; }
+.status-box.show    { display: block; }
+.status-box.loading { border-color: rgba(69,243,255,0.2); }
+.status-box.success { border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.05); }
+.status-box.error   { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.05); }
+.status-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.status-msg   { font-size: 12px; color: var(--dim); line-height: 1.6; }
+.progress     { height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+.progress-bar { height: 100%; background: linear-gradient(90deg, var(--purple), var(--accent)); border-radius: 2px; transition: width .4s; }
+
+/* ── History ── */
+.history-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+.history-head { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.history-title { font-size: 13px; font-weight: 700; }
+.clear-btn  { font-size: 11px; color: var(--red); background: none; border: none; cursor: pointer; font-family: 'Cairo', sans-serif; }
+.history-body { padding: 8px 0; }
+.history-item { display: flex; align-items: center; gap: 10px; padding: 8px 14px; }
+.history-thumb { width: 44px; height: 32px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border); flex-shrink: 0; background: #1a1f3a; display: flex; align-items: center; justify-content: center; font-size: 16px; overflow: hidden; }
+.history-name  { font-size: 12px; font-weight: 600; }
+.history-date  { font-size: 11px; color: var(--dim); }
+.history-badge { margin-right: auto; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.badge-ok   { background: rgba(34,197,94,0.15); color: var(--green); }
+.badge-fail { background: rgba(239,68,68,0.15); color: var(--red); }
+.empty-hist { text-align: center; padding: 20px; font-size: 12px; color: var(--dim); }
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(10,11,20,0.3); border-top-color: #0a0b14; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-left: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ════════════════════════════════════════════
+   DOCUMENT MODE — Field Cards
+   ════════════════════════════════════════════ */
+.doc-wrap { display: none; }
+.doc-wrap.show { display: block; }
+
+.doc-header {
+  font-size: 12px; font-weight: 800; color: var(--accent);
+  margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+  letter-spacing: 0.3px;
 }
 
-#videoWrap {
-  position: relative; flex: 1; overflow: hidden; background: #000;
+.doc-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 13px 14px;
+  margin-bottom: 9px;
+  display: flex; align-items: center; gap: 12px;
+  transition: border-color 0.25s, background 0.25s;
+  position: relative; overflow: hidden;
 }
-
-video {
-  width: 100%; height: 100%; object-fit: cover; display: block;
-}
-
-/* الإطار الكاشف */
-#frameOverlay {
-  position: absolute; inset: 0;
-  pointer-events: none;
-}
-
-/* تأثير اكتشاف المستند */
-#docFrame {
-  position: absolute;
-  border: 2px solid rgba(69,243,255,0.9);
-  border-radius: 8px;
-  box-shadow: 0 0 0 2000px rgba(0,0,0,0.45);
-  transition: all 0.15s ease;
-  display: none;
-}
-
-#docFrame.detected {
-  border-color: #22c55e;
-  box-shadow: 0 0 0 2000px rgba(0,0,0,0.45), 0 0 20px rgba(34,197,94,0.6);
-}
-
-/* خطوط الزوايا */
-.corner {
-  position: absolute; width: 22px; height: 22px;
-}
-.corner-tl { top: -2px; left: -2px; border-top: 3px solid currentColor; border-left: 3px solid currentColor; border-radius: 4px 0 0 0; }
-.corner-tr { top: -2px; right: -2px; border-top: 3px solid currentColor; border-right: 3px solid currentColor; border-radius: 0 4px 0 0; }
-.corner-bl { bottom: -2px; left: -2px; border-bottom: 3px solid currentColor; border-left: 3px solid currentColor; border-radius: 0 0 0 4px; }
-.corner-br { bottom: -2px; right: -2px; border-bottom: 3px solid currentColor; border-right: 3px solid currentColor; border-radius: 0 0 4px 0; }
-
-/* شبكة المساعدة */
-#grid {
-  position: absolute; inset: 0; pointer-events: none; opacity: 0.12;
-}
-
-/* شريط أعلى */
-#topBar {
-  position: absolute; top: 0; left: 0; right: 0;
-  padding: calc(env(safe-area-inset-top, 44px) + 8px) 20px 16px;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
-  display: flex; align-items: center; justify-content: space-between;
-  z-index: 10;
-}
-
-#topTitle {
-  font-size: 17px; font-weight: 600; letter-spacing: 0.3px;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
-}
-
-#flashBtn {
-  width: 38px; height: 38px; border-radius: 50%;
-  background: rgba(255,255,255,0.18); backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.25);
-  color: #fff; font-size: 18px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: background 0.2s;
-}
-#flashBtn.on { background: rgba(255,220,0,0.35); border-color: rgba(255,220,0,0.6); }
-
-/* رسالة الحالة */
-#statusMsg {
-  position: absolute; bottom: 140px; left: 50%; transform: translateX(-50%);
-  background: rgba(0,0,0,0.65); backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 20px; padding: 8px 18px;
-  font-size: 14px; font-weight: 500; white-space: nowrap;
-  transition: all 0.3s; z-index: 10;
-  text-shadow: none;
-}
-#statusMsg.detected { background: rgba(34,197,94,0.3); border-color: rgba(34,197,94,0.5); color: #4ade80; }
-#statusMsg.scanning { color: #45f3ff; }
-
-/* شريط أسفل */
-#bottomBar {
-  padding: 20px 30px calc(env(safe-area-inset-bottom, 34px) + 20px);
-  background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
-  display: flex; align-items: center; justify-content: space-between;
-  z-index: 10; flex-shrink: 0;
-}
-
-/* زر الالتقاط */
-#captureBtn {
-  width: 72px; height: 72px; border-radius: 50%;
-  background: #fff; border: 4px solid rgba(255,255,255,0.4);
-  cursor: pointer; position: relative;
-  transition: transform 0.1s, box-shadow 0.1s;
-  box-shadow: 0 0 0 3px rgba(255,255,255,0.2);
-  flex-shrink: 0;
-}
-#captureBtn::after {
+/* شريط جانبي ملوّن */
+.doc-card::before {
   content: '';
-  position: absolute; inset: 6px;
-  border-radius: 50%; background: #fff;
-  border: 1px solid rgba(0,0,0,0.1);
+  position: absolute; right: 0; top: 0; bottom: 0; width: 3px;
+  background: transparent; transition: background 0.25s;
 }
-#captureBtn:active { transform: scale(0.93); }
-#captureBtn.auto { background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,0.4), 0 0 20px rgba(34,197,94,0.5); }
+.doc-card.sending             { border-color: rgba(69,243,255,0.45); }
+.doc-card.sending::before     { background: var(--accent); }
+.doc-card.done                { border-color: rgba(34,197,94,0.5); background: rgba(34,197,94,0.035); }
+.doc-card.done::before        { background: var(--green); }
+.doc-card.fail                { border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.03); }
+.doc-card.fail::before        { background: var(--red); }
 
-/* زر الإغلاق */
-#closeBtn {
-  width: 44px; height: 44px; border-radius: 50%;
-  background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.2);
-  color: #fff; font-size: 20px; cursor: pointer;
+.doc-num {
+  width: 26px; height: 26px; flex-shrink: 0;
+  border-radius: 8px; background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border); font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; color: var(--dim);
+}
+
+.doc-card-body { flex: 1; min-width: 0; }
+.doc-card-name {
+  font-size: 13px; font-weight: 700; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.doc-card-status {
+  font-size: 11px; color: var(--dim); margin-top: 3px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.doc-card-status.ok   { color: var(--green); }
+.doc-card-status.err  { color: var(--red); }
+.doc-card-status.wait { color: var(--accent); }
+
+.doc-card-btns { display: flex; gap: 8px; flex-shrink: 0; }
+
+.doc-btn {
+  width: 44px; height: 44px; border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
   display: flex; align-items: center; justify-content: center;
+  font-size: 20px; cursor: pointer;
+  transition: transform 0.12s, background 0.12s;
+  flex-shrink: 0; user-select: none;
 }
+.doc-btn:active    { transform: scale(0.86); background: rgba(255,255,255,0.13); }
+.doc-btn.cam-btn   { border-color: rgba(69,243,255,0.25); }
+.doc-btn.gal-btn   { border-color: rgba(123,97,255,0.25); }
+.doc-btn input     { display: none; }
 
-/* زر الاستوديو */
-#galleryBtn {
-  width: 54px; height: 54px; border-radius: 12px;
-  background: rgba(255,255,255,0.12); backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.2);
-  overflow: hidden; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px; color: #fff;
-}
-#galleryPreview {
-  width: 100%; height: 100%; object-fit: cover; display: none;
-}
-
-/* مؤشر الالتقاط التلقائي */
-#autoIndicator {
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  width: 60px; height: 60px; border-radius: 50%;
-  border: 3px solid #22c55e;
-  display: none; pointer-events: none;
-  animation: autoCapture 0.6s ease-out forwards;
-}
-@keyframes autoCapture {
-  0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-  100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
-}
-
-/* بريق الالتقاط */
-#flashEffect {
-  position: absolute; inset: 0;
-  background: #fff; opacity: 0;
-  pointer-events: none; z-index: 20;
-  transition: opacity 0.05s;
-}
-
-/* ── REVIEW VIEW ── */
-#reviewView {
-  position: fixed; inset: 0;
-  background: #000;
-  display: none; flex-direction: column;
-}
-
-#reviewHeader {
-  padding: calc(env(safe-area-inset-top, 44px) + 8px) 20px 14px;
-  display: flex; align-items: center; justify-content: space-between;
-  background: rgba(0,0,0,0.8);
-  flex-shrink: 0;
-}
-
-#reviewHeader button {
-  padding: 8px 16px; border-radius: 20px; border: none;
-  font-size: 15px; font-weight: 600; cursor: pointer;
-  font-family: inherit;
-}
-
-#retakeBtn { background: rgba(255,255,255,0.15); color: #fff; }
-#useBtn { background: #007AFF; color: #fff; }
-
-#reviewTitle { font-size: 17px; font-weight: 600; }
-
-#reviewImgWrap {
-  position: relative;
-  flex: 1; display: flex; align-items: center; justify-content: center;
-  padding: 10px; overflow: hidden;
-  touch-action: none;
-}
-
-#reviewImg {
-  max-width: 100%; max-height: 100%;
-  border-radius: 12px; object-fit: contain;
-}
-
-#cropBox {
-  position: absolute;
-  border: 2px solid #45f3ff;
-  border-radius: 16px;
-  box-shadow: 0 0 0 2000px rgba(0,0,0,0.52);
-  display: none;
-  touch-action: none;
-}
-
-.crop-handle {
-  position: absolute;
-  width: 24px; height: 24px;
-  border-radius: 50%;
-  background: #45f3ff;
-  border: 2px solid rgba(0,0,0,0.45);
-  box-shadow: 0 4px 12px rgba(69,243,255,0.35);
-}
-.crop-handle.tl { top: -12px; left: -12px; cursor: nwse-resize; }
-.crop-handle.tr { top: -12px; right: -12px; cursor: nesw-resize; }
-.crop-handle.bl { bottom: -12px; left: -12px; cursor: nesw-resize; }
-.crop-handle.br { bottom: -12px; right: -12px; cursor: nwse-resize; }
-
-#cropHint {
-  position: absolute;
-  left: 50%;
-  bottom: 22px;
-  transform: translateX(-50%);
-  background: rgba(0,0,0,0.68);
-  border: 1px solid rgba(255,255,255,0.16);
-  border-radius: 18px;
-  padding: 8px 16px;
-  font-size: 12px;
-  color: rgba(255,255,255,0.72);
-  white-space: nowrap;
-}
-
-#reviewFooter {
-  padding: 14px 20px calc(env(safe-area-inset-bottom, 34px) + 14px);
-  background: rgba(0,0,0,0.8); text-align: center;
-  font-size: 13px; color: rgba(255,255,255,0.5);
-  flex-shrink: 0;
-}
-
-#reviewActions {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  margin-top: 10px;
-}
-
-#resetCropBtn {
-  background: rgba(255,255,255,0.08);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.18);
-}
-
-/* ── SENDING VIEW ── */
-#sendingView {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.95);
-  display: none; flex-direction: column;
-  align-items: center; justify-content: center; gap: 20px;
-  z-index: 50;
-}
-
-.send-icon { font-size: 52px; }
-
-.send-title { font-size: 20px; font-weight: 700; }
-
-.send-msg { font-size: 14px; color: rgba(255,255,255,0.6); text-align: center; padding: 0 30px; }
-
-.progress-track {
-  width: 240px; height: 4px; background: rgba(255,255,255,0.1);
-  border-radius: 2px; overflow: hidden;
-}
-.progress-fill {
-  height: 100%; background: linear-gradient(90deg, #45f3ff, #7b61ff);
-  border-radius: 2px; transition: width 0.3s;
-  width: 0%;
-}
-
-/* ── SUCCESS VIEW ── */
-#successView {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.97);
-  display: none; flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 30px; z-index: 50;
-}
-
-.success-icon { font-size: 60px; margin-bottom: 12px; }
-.success-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; color: #22c55e; }
-.success-sub { font-size: 14px; color: rgba(255,255,255,0.5); margin-bottom: 24px; text-align: center; }
-
-.result-card {
-  width: 100%; background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;
-  padding: 16px; display: grid; gap: 10px;
-  max-width: 380px; margin-bottom: 24px;
-}
-
-.result-row { display: flex; justify-content: space-between; align-items: center; }
-.result-label { font-size: 12px; color: rgba(255,255,255,0.4); }
-.result-val { font-size: 14px; font-weight: 600; color: #e8eaf6; text-align: left; }
-
-.new-scan-btn {
-  padding: 14px 40px; border-radius: 24px;
-  background: linear-gradient(135deg, #45f3ff, #7b61ff);
-  border: none; color: #000; font-size: 16px; font-weight: 800;
-  cursor: pointer; font-family: inherit;
-}
-
-/* خطأ */
-#errorView {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.97);
-  display: none; flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 30px; z-index: 50; gap: 16px;
-}
-.error-icon { font-size: 52px; }
-.error-title { font-size: 20px; font-weight: 700; color: #ef4444; }
-.error-msg { font-size: 13px; color: rgba(255,255,255,0.5); text-align: center; }
-.retry-btn {
-  padding: 12px 32px; border-radius: 20px;
-  background: #ef4444; border: none; color: #fff;
-  font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit;
-}
+@keyframes doc-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+.doc-card.sending .doc-btn { animation: doc-pulse 0.85s infinite; pointer-events: none; }
 </style>
 </head>
 <body>
+<div class="app">
 
-<!-- ── SCANNER VIEW ── -->
-<div id="scannerView">
-  <div id="videoWrap">
-    <video id="video" autoplay playsinline muted></video>
-    <canvas id="grid" id="gridCanvas"></canvas>
-
-    <!-- إطار اكتشاف المستند -->
-    <div id="docFrame">
-      <div class="corner corner-tl"></div>
-      <div class="corner corner-tr"></div>
-      <div class="corner corner-bl"></div>
-      <div class="corner corner-br"></div>
-    </div>
-
-    <div id="autoIndicator"></div>
-    <div id="flashEffect"></div>
-
-    <div id="topBar">
-      <button id="closeBtn" onclick="goBack()">✕</button>
-      <div id="topTitle">📷 مسح الجواز</div>
-      <button id="flashBtn" onclick="toggleFlash()">⚡</button>
-    </div>
-
-    <div id="statusMsg" class="scanning">وجّه الكاميرا نحو الجواز</div>
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">Passport <span>AI</span></div>
+    <div class="badge">OMN · ROP</div>
   </div>
 
-  <div id="bottomBar">
-    <div id="galleryBtn" onclick="document.getElementById('galleryInput').click()">
-      <img id="galleryPreview" alt="">
-      <span id="galleryIcon">🖼</span>
-      <input type="file" id="galleryInput" accept="image/*" style="display:none">
+  <!-- Mode Switch -->
+  <div class="mode-switch">
+    <button class="mode-btn active" id="passportModeBtn" type="button" onclick="setAppMode('passport')">
+      الجواز<small>تعبئة البيانات</small>
+    </button>
+    <button class="mode-btn" id="documentModeBtn" type="button" onclick="setAppMode('document')">
+      المستندات<small>مرفقات من الجوال</small>
+    </button>
+  </div>
+
+  <!-- Webhook Bar -->
+  <div class="webhook-bar">
+    <div class="dot"></div>
+    <div class="webhook-url" id="urlDisplay">mmnnm19991.app.n8n.cloud · doc-system</div>
+  </div>
+
+  <!-- Owner Card -->
+  <div class="owner-card">
+    <div class="owner-title" id="ownerTitle">ربط الجلسة</div>
+    <label>
+      <span class="field-label">معرف المشترك</span>
+      <input class="field-input" id="ownerKeyInput" placeholder="مثال: alfarsi0">
+    </label>
+    <!-- رمز الصفحة (جواز فقط) -->
+    <div id="claimRow">
+      <label>
+        <span class="field-label">رمز الصفحة</span>
+        <input class="field-input" id="claimCodeInput" inputmode="numeric" maxlength="6" placeholder="مثال: 123456">
+      </label>
     </div>
-    <button id="captureBtn" onclick="capture()"></button>
-    <div style="width:54px"></div>
-  </div>
-</div>
-
-<!-- ── REVIEW VIEW ── -->
-<div id="reviewView">
-  <div id="reviewHeader">
-    <button id="retakeBtn" onclick="retake()">إعادة</button>
-    <div id="reviewTitle">مراجعة الصورة</div>
-    <button id="useBtn" onclick="sendImage()">إرسال ✓</button>
-  </div>
-  <div id="reviewImgWrap">
-    <img id="reviewImg" alt="">
-    <div id="cropBox">
-      <span class="crop-handle tl" data-handle="tl"></span>
-      <span class="crop-handle tr" data-handle="tr"></span>
-      <span class="crop-handle bl" data-handle="bl"></span>
-      <span class="crop-handle br" data-handle="br"></span>
-    </div>
-    <div id="cropHint">حرّك الإطار أو اسحب الزوايا لقص الصورة</div>
-  </div>
-  <div id="reviewFooter">
-    تأكد أن الجواز واضح قبل الإرسال
-    <div id="reviewActions">
-      <button id="resetCropBtn" onclick="resetCrop()">إعادة القص</button>
+    <div class="owner-hint" id="ownerHint">
+      استخدم نفس معرف المشترك الموجود في الكمبيوتر، ثم اكتب رمز الصفحة.
     </div>
   </div>
-</div>
 
-<!-- ── SENDING VIEW ── -->
-<div id="sendingView">
-  <div class="send-icon">🔬</div>
-  <div class="send-title">جاري الاستخراج...</div>
-  <div class="send-msg" id="sendMsg">يتم معالجة الصورة وقراءة البيانات</div>
-  <div class="progress-track"><div class="progress-fill" id="progFill"></div></div>
-</div>
+  <!-- ══ PASSPORT MODE ══ -->
+  <div id="passportActions">
+    <div class="action-grid">
+      <div class="action-btn btn-camera" id="cameraAction" style="cursor:pointer">
+        <span class="btn-icon">📷</span>
+        <span class="btn-label">كاميرا</span>
+        <span class="btn-sub">ماسح ضوئي</span>
+      </div>
+      <label class="action-btn btn-gallery">
+        <input type="file" accept="image/*" id="galleryIn">
+        <span class="btn-icon">🖼️</span>
+        <span class="btn-label">استوديو</span>
+        <span class="btn-sub">من المكتبة</span>
+      </label>
+    </div>
 
-<!-- ── SUCCESS VIEW ── -->
-<div id="successView">
-  <div class="success-icon">✅</div>
-  <div class="success-title">تم الاستخراج!</div>
-  <div class="success-sub">تم إرسال البيانات للكمبيوتر تلقائياً</div>
-  <div class="result-card" id="resultCard"></div>
-  <button class="new-scan-btn" onclick="newScan()">📷 مسح جواز جديد</button>
-</div>
+    <div class="preview-card" id="previewCard">
+      <img class="preview-img" id="previewImg" src="" alt="">
+      <div class="preview-info">
+        <span class="preview-name" id="previewName">—</span>
+        <button class="preview-remove" onclick="clearFile()">إزالة</button>
+      </div>
+    </div>
 
-<!-- ── ERROR VIEW ── -->
-<div id="errorView">
-  <div class="error-icon">❌</div>
-  <div class="error-title">فشل الاستخراج</div>
-  <div class="error-msg" id="errorMsg">حدث خطأ أثناء المعالجة</div>
-  <button class="retry-btn" onclick="retake()">حاول مجدداً</button>
-</div>
+    <button class="send-btn" id="sendBtn" disabled onclick="send()">اختر صورة أولاً</button>
+
+    <div class="status-box" id="statusBox">
+      <div class="status-title" id="statusTitle"></div>
+      <div class="status-msg"   id="statusMsg"></div>
+      <div class="progress" id="progressWrap">
+        <div class="progress-bar" id="progressBar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ DOCUMENT MODE ══ -->
+  <div class="doc-wrap" id="docWrap">
+    <div class="doc-header">📎 المستندات المطلوبة — اضغط على الحقل لإرساله</div>
+    <div id="docCardsList"></div>
+  </div>
+
+  <!-- History -->
+  <div class="history-card">
+    <div class="history-head">
+      <span class="history-title">السجل</span>
+      <button class="clear-btn" onclick="clearHistory()">مسح الكل</button>
+    </div>
+    <div class="history-body" id="historyList">
+      <div class="empty-hist">لا يوجد سجل</div>
+    </div>
+  </div>
+
+</div><!-- /app -->
 
 <script>
 'use strict';
 
-// ── الإعدادات ──
-const SEARCH = new URLSearchParams(location.search);
-const APP_MODE = SEARCH.get('mode') === 'document' || localStorage.getItem('pai_mobile_mode') === 'document' ? 'document' : 'passport';
-const API_BASE = localStorage.getItem('pai_api_base') || 'https://phd-considering-aaa-despite.trycloudflare.com';
-const STORE_URL = localStorage.getItem('pai_store_url') || `${API_BASE}/webhook/passport-store`;
-const EXTRACT_URL = localStorage.getItem('pai_extract_url')
-  || localStorage.getItem('pai_webhook')
-  || `${API_BASE}/webhook/passport-extract1`;
-const SID = (() => { let id = localStorage.getItem('pai_sid'); if (!id) { id = 'u' + Math.random().toString(36).slice(2,9); localStorage.setItem('pai_sid', id); } return id; })();
+// ═══════════════════════════════════════
+// الإعدادات
+// ═══════════════════════════════════════
 
-let stream = null;
-let track = null;
-let flashOn = false;
-let capturedBlob = null;
-let capturedDataUrl = null;
-let autoDetecting = false;
-let autoDetectTimer = null;
-let detectionActive = false;
-let cropRect = null;
-let cropBounds = null;
-let cropPointer = null;
+// حقول صفحة الشرطة (نفس الـ IDs في سكربت الكمبيوتر)
+const DOC_FIELDS = [
+  { id: 'CC8041AE-9685-30FD-E053-6F64260A27D1', label: 'عقد العمل',                     icon: '📄' },
+  { id: 'BB8FA3FE-286B-4253-AD7C-090F9B271A02', label: 'صورة جواز السفر لصاحب الطلب',   icon: '🛂' },
+  { id: 'BB8FA3FE-286B-4253-AD7C-090F9B271A03', label: 'صورة جواز السفر للملتحق به',     icon: '🛂' },
+  { id: 'BB8FA3FE-286B-4253-AD7C-090F9B271A01', label: 'صورة شخصية لصاحب الطلب',        icon: '🤳' },
+  { id: 'BB8FA3FE-286B-4253-AD7C-090F9B271A11', label: 'اثبات صلة قرابة',                icon: '👨‍👩‍👦' },
+  { id: 'BB8FA3FE-286B-4253-AD7C-090F9B271A04', label: 'صورة بطاقة الإقامة للملتحق به', icon: '🪪' },
+  { id: 'BB8FA3FE-286B-4253-AD7C-090F9B271A17', label: 'رسالة صاحب العمل (تعهد)',        icon: '📝' },
+];
 
-function ensureReachableWebhook(url) {
-  if (window.location.protocol === 'https:' && /^http:\/\//i.test(url)) {
-    throw new Error('رابط الويبهوك غير آمن HTTP بينما التطبيق مفتوح عبر HTTPS. لازم الويبهوك يكون HTTPS.');
-  }
+// رابط n8n - تجريبي حالياً
+const N8N_DOC_URL = localStorage.getItem('pai_doc_url')
+  || 'https://mmnnm19991.app.n8n.cloud/webhook-test/doc-system';
+
+// جواز
+const API_BASE    = localStorage.getItem('pai_api_base') || 'https://phd-considering-aaa-despite.trycloudflare.com';
+const EXTRACT_URL = localStorage.getItem('pai_extract_url') || `${API_BASE}/webhook/passport-extract1`;
+
+// ═══════════════════════════════════════
+// Init
+// ═══════════════════════════════════════
+const ownerKeyInput  = document.getElementById('ownerKeyInput');
+const claimCodeInput = document.getElementById('claimCodeInput');
+let file = null, dataUrl = null, sending = false;
+let appHistory = JSON.parse(localStorage.getItem('pai_hist') || '[]');
+let appMode = localStorage.getItem('pai_mobile_mode') || 'passport';
+
+ownerKeyInput.value  = localStorage.getItem('pai_owner_key')    || '';
+claimCodeInput.value = sessionStorage.getItem('pai_claim_code') || '';
+ownerKeyInput.addEventListener('input',  () => localStorage.setItem('pai_owner_key', ownerKeyInput.value.trim()));
+claimCodeInput.addEventListener('input', () => sessionStorage.setItem('pai_claim_code', claimCodeInput.value.trim()));
+
+document.getElementById('cameraAction').addEventListener('click', () => {
+  window.location.href = `scanner.html?mode=${encodeURIComponent(appMode)}`;
+});
+document.getElementById('galleryIn').onchange = e => selectFile(e.target.files[0]);
+
+buildDocCards();
+renderHistory();
+setAppMode(appMode);
+
+// ═══════════════════════════════════════
+// Mode Switch
+// ═══════════════════════════════════════
+function setAppMode(mode) {
+  appMode = mode === 'document' ? 'document' : 'passport';
+  localStorage.setItem('pai_mobile_mode', appMode);
+
+  document.getElementById('passportModeBtn').classList.toggle('active', appMode === 'passport');
+  document.getElementById('documentModeBtn').classList.toggle('active', appMode === 'document');
+
+  const isDoc = appMode === 'document';
+  document.getElementById('passportActions').style.display = isDoc ? 'none' : '';
+  document.getElementById('claimRow').style.display        = isDoc ? 'none' : '';
+  document.getElementById('docWrap').classList.toggle('show', isDoc);
+
+  document.getElementById('ownerTitle').textContent = isDoc ? 'معرف المشترك' : 'ربط الجلسة';
+  document.getElementById('ownerHint').textContent  = isDoc
+    ? 'أدخل نفس معرف المشترك المضبوط في الكمبيوتر، ثم اضغط على الحقل المطلوب.'
+    : 'استخدم نفس معرف المشترك الموجود في الكمبيوتر، ثم اكتب رمز الصفحة الذي يظهر بعد الضغط على جلب من الجوال.';
 }
 
-function getOwnerKey() {
-  return (localStorage.getItem('pai_owner_key') || '').trim();
-}
-
-function getClaimCode() {
-  return (sessionStorage.getItem('pai_claim_code') || '').trim();
-}
-
-function clamp(v, min, max) {
-  return Math.min(max, Math.max(min, v));
-}
-
-async function blobToBase64(blob) {
-  return await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = String(reader.result || '');
-      resolve(dataUrl.split('base64,')[1] || '');
-    };
-    reader.onerror = () => reject(new Error('تعذر قراءة الصورة'));
-    reader.readAsDataURL(blob);
+// ═══════════════════════════════════════
+// Document Field Cards
+// ═══════════════════════════════════════
+function buildDocCards() {
+  const list = document.getElementById('docCardsList');
+  DOC_FIELDS.forEach((f, i) => {
+    const card = document.createElement('div');
+    card.className = 'doc-card';
+    card.id = `dc-${f.id}`;
+    card.innerHTML = `
+      <div class="doc-num">${i + 1}</div>
+      <div class="doc-card-body">
+        <div class="doc-card-name">${f.label}</div>
+        <div class="doc-card-status" id="ds-${f.id}">اضغط للتصوير أو الاختيار</div>
+      </div>
+      <div class="doc-card-btns">
+        <div class="doc-btn cam-btn" id="cam-${f.id}" onclick="openCamera('${f.id}')">📷</div>
+        <label class="doc-btn gal-btn">
+          🖼️
+          <input type="file" accept="image/*" onchange="handleFile('${f.id}', this)">
+        </label>
+      </div>`;
+    list.appendChild(card);
   });
 }
 
-function updateModeUi() {
-  if (APP_MODE !== 'document') return;
-  document.title = 'Document Scanner';
-  document.getElementById('topTitle').textContent = '📎 تصوير مستند';
-  document.getElementById('statusMsg').textContent = 'وجّه الكاميرا نحو المستند';
-  document.getElementById('reviewTitle').textContent = 'مراجعة المستند';
-  document.getElementById('cropHint').textContent = 'تأكد أن كامل المستند داخل الإطار';
-  document.querySelector('#sendingView .send-title').textContent = 'جاري رفع المستند...';
-  document.getElementById('sendMsg').textContent = 'يتم تجهيز المستند وإرساله';
-  document.querySelector('#successView .success-title').textContent = 'تم إرسال المستند!';
-  document.querySelector('#successView .success-sub').textContent = 'سيصل المرفق للكمبيوتر تلقائياً';
-  document.querySelector('#successView .new-scan-btn').textContent = '📎 تصوير مستند جديد';
-  document.querySelector('#reviewFooter').childNodes[0].textContent = 'تأكد أن المستند واضح قبل الإرسال';
+function openCamera(fieldId) {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*'; inp.capture = 'environment';
+  inp.onchange = () => handleFile(fieldId, inp);
+  inp.click();
 }
 
-// ── بدء الكاميرا ──
-async function startCamera() {
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { ideal: 'environment' },
-        width: { ideal: 1920 },
-        height: { ideal: 1080 },
-        focusMode: 'continuous',
-      },
-      audio: false
-    });
-    const video = document.getElementById('video');
-    video.srcObject = stream;
-    track = stream.getVideoTracks()[0];
+async function handleFile(fieldId, inputEl) {
+  const f = inputEl.files && inputEl.files[0];
+  if (!f) return;
 
-    video.onloadedmetadata = () => {
-      video.play();
-      drawGrid();
-      startAutoDetect();
-    };
-  } catch(e) {
-    showStatus('لا يمكن الوصول للكاميرا. تحقق من الإذن.');
-  }
-}
-
-// ── شبكة المساعدة ──
-function drawGrid() {
-  const canvas = document.getElementById('grid');
-  const wrap = document.getElementById('videoWrap');
-  canvas.width = wrap.offsetWidth;
-  canvas.height = wrap.offsetHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-  ctx.lineWidth = 0.5;
-  // ثلاثة أثلاث
-  for (let i = 1; i <= 2; i++) {
-    ctx.beginPath(); ctx.moveTo(canvas.width * i/3, 0); ctx.lineTo(canvas.width * i/3, canvas.height); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(0, canvas.height * i/3); ctx.lineTo(canvas.width, canvas.height * i/3); ctx.stroke();
-  }
-}
-
-// ── اكتشاف تلقائي بسيط (محاكاة) ──
-function startAutoDetect() {
-  detectionActive = true;
-  let stable = 0;
-
-  const check = () => {
-    if (!detectionActive) return;
-
-    // محاكاة اكتشاف مستند بناءً على الضوء والاستقرار
-    const video = document.getElementById('video');
-    const w = video.videoWidth, h = video.videoHeight;
-    if (!w) { requestAnimationFrame(check); return; }
-
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.min(w, 320);
-    canvas.height = Math.min(h, 240);
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-    let brightness = 0, edgeCount = 0;
-
-    // حساب متوسط السطوع
-    for (let i = 0; i < data.length; i += 16) {
-      brightness += (data[i] + data[i+1] + data[i+2]) / 3;
-    }
-    brightness /= (data.length / 16);
-
-    // حساب الحواف التقريبية
-    for (let y = 1; y < canvas.height - 1; y += 3) {
-      for (let x = 1; x < canvas.width - 1; x += 3) {
-        const idx = (y * canvas.width + x) * 4;
-        const idxR = (y * canvas.width + x + 1) * 4;
-        const idxD = ((y+1) * canvas.width + x) * 4;
-        const gx = Math.abs(data[idx] - data[idxR]);
-        const gy = Math.abs(data[idx] - data[idxD]);
-        if (gx + gy > 30) edgeCount++;
-      }
-    }
-
-    const edgeRatio = edgeCount / (canvas.width * canvas.height / 9);
-    const isDoc = brightness > 60 && brightness < 230 && edgeRatio > 0.04 && edgeRatio < 0.45;
-
-    if (isDoc) {
-      stable++;
-      showDocFrame(true);
-    } else {
-      stable = 0;
-      showDocFrame(false);
-    }
-
-    if (stable >= 8) {
-      // مستند مستقر — التقاط تلقائي
-      stable = 0;
-      autoCapture();
-    } else {
-      setTimeout(check, 120);
-    }
-  };
-
-  setTimeout(check, 500);
-}
-
-function showDocFrame(detected) {
-  const frame = document.getElementById('docFrame');
-  const msg = document.getElementById('statusMsg');
-  const btn = document.getElementById('captureBtn');
-
-  if (detected) {
-    const wrap = document.getElementById('videoWrap');
-    const pw = wrap.offsetWidth, ph = wrap.offsetHeight;
-    const margin = 0.08;
-    frame.style.cssText = `
-      display: block;
-      left: ${pw * margin}px;
-      top: ${ph * 0.25}px;
-      width: ${pw * (1 - margin*2)}px;
-      height: ${ph * 0.5}px;
-    `;
-    frame.classList.add('detected');
-    frame.querySelectorAll('.corner').forEach(c => c.style.color = '#22c55e');
-    msg.textContent = APP_MODE === 'document' ? '✅ تم اكتشاف المستند' : '✅ تم اكتشاف الجواز';
-    msg.className = 'detected';
-    btn.classList.add('auto');
-  } else {
-    frame.classList.remove('detected');
-    frame.querySelectorAll('.corner').forEach(c => c.style.color = 'rgba(69,243,255,0.9)');
-    frame.style.display = 'none';
-    msg.textContent = APP_MODE === 'document' ? 'وجّه الكاميرا نحو المستند' : 'وجّه الكاميرا نحو الجواز';
-    msg.className = 'scanning';
-    btn.classList.remove('auto');
-  }
-}
-
-function autoCapture() {
-  // تأثير الاكتشاف التلقائي
-  const ind = document.getElementById('autoIndicator');
-  ind.style.display = 'block';
-  setTimeout(() => { ind.style.display = 'none'; }, 600);
-  capture();
-}
-
-// ── الالتقاط ──
-async function capture() {
-  detectionActive = false;
-  const video = document.getElementById('video');
-  const flash = document.getElementById('flashEffect');
-
-  // تأثير الفلاش
-  flash.style.opacity = '1';
-  setTimeout(() => { flash.style.opacity = '0'; }, 100);
-
-  // التقاط الصورة
-  const canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth || 1280;
-  canvas.height = video.videoHeight || 720;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-  // تحسين الصورة
-  enhanceImage(ctx, canvas.width, canvas.height);
-
-  capturedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
-
-  canvas.toBlob(blob => {
-    capturedBlob = blob;
-    showReview();
-  }, 'image/jpeg', 0.95);
-}
-
-function enhanceImage(ctx, w, h) {
-  const d = ctx.getImageData(0, 0, w, h);
-  for (let i = 0; i < d.data.length; i += 4) {
-    d.data[i]   = Math.min(255, Math.max(0, ((d.data[i]   - 128) * 1.14) + 132));
-    d.data[i+1] = Math.min(255, Math.max(0, ((d.data[i+1] - 128) * 1.14) + 132));
-    d.data[i+2] = Math.min(255, Math.max(0, ((d.data[i+2] - 128) * 1.14) + 132));
-  }
-  ctx.putImageData(d, 0, 0);
-}
-
-// ── عرض المراجعة ──
-function showReview() {
-  stopCamera();
-  const reviewImg = document.getElementById('reviewImg');
-  reviewImg.onload = () => requestAnimationFrame(initCropper);
-  reviewImg.src = capturedDataUrl;
-  document.getElementById('scannerView').style.display = 'none';
-  document.getElementById('reviewView').style.display = 'flex';
-}
-
-function retake() {
-  capturedBlob = null;
-  capturedDataUrl = null;
-  cropRect = null;
-  cropBounds = null;
-  cropPointer = null;
-  document.getElementById('reviewView').style.display = 'none';
-  document.getElementById('sendingView').style.display = 'none';
-  document.getElementById('successView').style.display = 'none';
-  document.getElementById('errorView').style.display = 'none';
-  document.getElementById('scannerView').style.display = 'flex';
-  startCamera();
-}
-
-function initCropper() {
-  const wrap = document.getElementById('reviewImgWrap');
-  const img = document.getElementById('reviewImg');
-  const box = document.getElementById('cropBox');
-  const wrapRect = wrap.getBoundingClientRect();
-  const imgRect = img.getBoundingClientRect();
-
-  cropBounds = {
-    left: imgRect.left - wrapRect.left,
-    top: imgRect.top - wrapRect.top,
-    width: imgRect.width,
-    height: imgRect.height,
-  };
-
-  const marginX = cropBounds.width * 0.08;
-  const marginY = cropBounds.height * 0.12;
-  cropRect = {
-    x: cropBounds.left + marginX,
-    y: cropBounds.top + marginY,
-    width: cropBounds.width - marginX * 2,
-    height: cropBounds.height - marginY * 2,
-  };
-  renderCropBox();
-  box.style.display = 'block';
-}
-
-function renderCropBox() {
-  if (!cropRect) return;
-  const box = document.getElementById('cropBox');
-  box.style.left = `${cropRect.x}px`;
-  box.style.top = `${cropRect.y}px`;
-  box.style.width = `${cropRect.width}px`;
-  box.style.height = `${cropRect.height}px`;
-}
-
-function resetCrop() {
-  initCropper();
-}
-
-function pointerPos(e) {
-  const wrapRect = document.getElementById('reviewImgWrap').getBoundingClientRect();
-  return {
-    x: e.clientX - wrapRect.left,
-    y: e.clientY - wrapRect.top,
-  };
-}
-
-function startCropDrag(e, mode) {
-  if (!cropRect || !cropBounds) return;
-  e.preventDefault();
-  const p = pointerPos(e);
-  cropPointer = {
-    mode,
-    startX: p.x,
-    startY: p.y,
-    rect: { ...cropRect },
-  };
-}
-
-function applyCropDrag(e) {
-  if (!cropPointer || !cropRect || !cropBounds) return;
-  e.preventDefault();
-  const p = pointerPos(e);
-  const dx = p.x - cropPointer.startX;
-  const dy = p.y - cropPointer.startY;
-  const minSize = 90;
-  const next = { ...cropPointer.rect };
-
-  if (cropPointer.mode === 'move') {
-    next.x = clamp(cropPointer.rect.x + dx, cropBounds.left, cropBounds.left + cropBounds.width - cropPointer.rect.width);
-    next.y = clamp(cropPointer.rect.y + dy, cropBounds.top, cropBounds.top + cropBounds.height - cropPointer.rect.height);
-  } else if (cropPointer.mode === 'tl') {
-    const right = cropPointer.rect.x + cropPointer.rect.width;
-    const bottom = cropPointer.rect.y + cropPointer.rect.height;
-    next.x = clamp(cropPointer.rect.x + dx, cropBounds.left, right - minSize);
-    next.y = clamp(cropPointer.rect.y + dy, cropBounds.top, bottom - minSize);
-    next.width = right - next.x;
-    next.height = bottom - next.y;
-  } else if (cropPointer.mode === 'tr') {
-    const bottom = cropPointer.rect.y + cropPointer.rect.height;
-    next.y = clamp(cropPointer.rect.y + dy, cropBounds.top, bottom - minSize);
-    next.width = clamp(cropPointer.rect.width + dx, minSize, cropBounds.left + cropBounds.width - cropPointer.rect.x);
-    next.height = bottom - next.y;
-  } else if (cropPointer.mode === 'bl') {
-    const right = cropPointer.rect.x + cropPointer.rect.width;
-    next.x = clamp(cropPointer.rect.x + dx, cropBounds.left, right - minSize);
-    next.width = right - next.x;
-    next.height = clamp(cropPointer.rect.height + dy, minSize, cropBounds.top + cropBounds.height - cropPointer.rect.y);
-  } else if (cropPointer.mode === 'br') {
-    next.width = clamp(cropPointer.rect.width + dx, minSize, cropBounds.left + cropBounds.width - cropPointer.rect.x);
-    next.height = clamp(cropPointer.rect.height + dy, minSize, cropBounds.top + cropBounds.height - cropPointer.rect.y);
-  }
-
-  cropRect = next;
-  renderCropBox();
-}
-
-function endCropDrag() {
-  cropPointer = null;
-}
-
-async function getProcessedBlob() {
-  if (!capturedDataUrl || !cropRect || !cropBounds) return capturedBlob;
-  const img = new Image();
-  img.src = capturedDataUrl;
-  await img.decode();
-
-  const scaleX = img.naturalWidth / cropBounds.width;
-  const scaleY = img.naturalHeight / cropBounds.height;
-  const sx = Math.round((cropRect.x - cropBounds.left) * scaleX);
-  const sy = Math.round((cropRect.y - cropBounds.top) * scaleY);
-  const sw = Math.round(cropRect.width * scaleX);
-  const sh = Math.round(cropRect.height * scaleY);
-
-  const canvas = document.createElement('canvas');
-  canvas.width = sw;
-  canvas.height = sh;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
-  enhanceImage(ctx, sw, sh);
-
-  return await new Promise((resolve, reject) => {
-    canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('تعذر قص الصورة')), 'image/jpeg', 0.95);
-  });
-}
-
-// ── إرسال الصورة ──
-async function sendImage() {
-  if (!capturedBlob) return;
-
-  document.getElementById('reviewView').style.display = 'none';
-  document.getElementById('sendingView').style.display = 'flex';
-  setProgress(15);
-  setSendMsg('جاري تجهيز الصورة...');
-
-  try {
-    if (!getOwnerKey()) throw new Error('معرف المشترك غير مضبوط في التطبيق.');
-    if (!getClaimCode()) throw new Error('رمز الصفحة غير مضبوط في التطبيق.');
-    const processedBlob = await getProcessedBlob();
-    setProgress(35);
-    setSendMsg(APP_MODE === 'document' ? 'جاري إرسال المستند...' : 'جاري إرسال الصورة لاستخراج البيانات...');
-
-    if (APP_MODE === 'document') {
-      const payload = {
-        _owner: getOwnerKey(),
-        _claim: getClaimCode(),
-        _mode: 'attachment',
-        _source: 'mobile-document-scanner',
-        _ts: Date.now(),
-        fileName: `document-scan-${Date.now()}.jpg`,
-        mimeType: 'image/jpeg',
-        contentBase64: await blobToBase64(processedBlob)
-      };
-
-      ensureReachableWebhook(STORE_URL);
-      const res = await fetch(STORE_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const text = await res.text();
-      if (!res.ok) throw new Error('HTTP ' + res.status + ': ' + text.slice(0,100));
-      setProgress(100);
-      setSendMsg('تم إرسال المستند');
-      setTimeout(() => showSuccess(payload), 300);
-      return;
-    }
-
-    const fd = new FormData();
-    fd.append('data', processedBlob, 'passport-scan.jpg');
-    fd.append('_sid', SID);
-    fd.append('_owner', getOwnerKey());
-    fd.append('_claim', getClaimCode());
-    fd.append('_source', 'mobile-scanner');
-
-    ensureReachableWebhook(EXTRACT_URL);
-    const res = await fetch(EXTRACT_URL, { method: 'POST', body: fd });
-    setProgress(70);
-    setSendMsg('جاري قراءة البيانات...');
-
-    const text = await res.text();
-    let json = null;
-    try { json = JSON.parse(text); } catch {
-      const m = text.match(/\{[\s\S]*\}/);
-      if (m) try { json = JSON.parse(m[0]); } catch {}
-    }
-
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    if (!json) throw new Error('لم يرجع بيانات');
-    if (Array.isArray(json)) json = json[0] || {};
-    if (json.data && typeof json.data === 'object') json = json.data;
-
-    setProgress(100);
-    setSendMsg('تم!');
-
-    setTimeout(() => showSuccess(json), 300);
-
-  } catch(e) {
-    document.getElementById('sendingView').style.display = 'none';
-    document.getElementById('errorMsg').textContent = e.message || 'حدث خطأ غير متوقع';
-    document.getElementById('errorView').style.display = 'flex';
-  }
-}
-
-function setProgress(p) { document.getElementById('progFill').style.width = p + '%'; }
-function setSendMsg(m) { document.getElementById('sendMsg').textContent = m; }
-
-function showSuccess(d) {
-  document.getElementById('sendingView').style.display = 'none';
-
-  if (APP_MODE === 'document') {
-    document.getElementById('resultCard').innerHTML = `
-      <div class="result-row">
-        <span class="result-label">النوع</span>
-        <span class="result-val">مرفق / مستند</span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">حالة الإرسال</span>
-        <span class="result-val">تم الرفع إلى الكمبيوتر</span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">رمز الربط</span>
-        <span class="result-val">${getClaimCode() || '---'}</span>
-      </div>
-    `;
-    document.getElementById('successView').style.display = 'flex';
+  const owner = ownerKeyInput.value.trim();
+  if (!owner) {
+    alert('⚠️ أدخل معرف المشترك أولاً');
+    ownerKeyInput.focus();
+    if (inputEl.value !== undefined) inputEl.value = '';
     return;
   }
 
-  const fields = [
-    ['الاسم', d.nameEnglish],
-    ['رقم الجواز', d.passportNumber || d.passportNo],
-    ['الجنسية', d.nationalityArabic],
-    ['تاريخ الميلاد', d.dateOfBirth],
-    ['تاريخ الإصدار', d.dateOfIssue],
-    ['تاريخ الانتهاء', d.dateOfExpiry],
-    ['مكان الإصدار', d.placeOfIssueEnglishUpper || d.placeOfIssueArabic],
-  ].filter(([,v]) => v && v !== 'null');
+  const field = DOC_FIELDS.find(d => d.id === fieldId);
+  if (!field) return;
 
-  document.getElementById('resultCard').innerHTML = fields.map(([l,v]) =>
-    `<div class="result-row">
-      <span class="result-label">${l}</span>
-      <span class="result-val">${v}</span>
-    </div>`
-  ).join('');
+  setCardState(fieldId, 'sending', 'جاري تجهيز الصورة...');
 
-  document.getElementById('successView').style.display = 'flex';
-}
-
-function newScan() {
-  document.getElementById('successView').style.display = 'none';
-  document.getElementById('scannerView').style.display = 'flex';
-  capturedBlob = null;
-  capturedDataUrl = null;
-  startCamera();
-}
-
-// ── الفلاش ──
-async function toggleFlash() {
-  if (!track) return;
-  flashOn = !flashOn;
   try {
-    await track.applyConstraints({ advanced: [{ torch: flashOn }] });
-    document.getElementById('flashBtn').className = flashOn ? 'on' : '';
-  } catch(e) {
-    document.getElementById('flashBtn').style.opacity = '0.3';
-  }
-}
+    const blob   = await compressImage(f);
+    const sizeKB = Math.round(blob.size / 1024);
+    setCardState(fieldId, 'sending', `جاري الإرسال... (${sizeKB} KB)`);
 
-// ── رفع من الاستوديو ──
-document.getElementById('galleryInput').addEventListener('change', async (e) => {
-  const file = e.target.files[0]; if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = async () => {
-    capturedDataUrl = reader.result;
-
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const s = Math.min(1, 2200 / Math.max(img.width, img.height));
-      canvas.width = Math.round(img.width * s);
-      canvas.height = Math.round(img.height * s);
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      enhanceImage(ctx, canvas.width, canvas.height);
-
-      // تحديث preview الاستوديو
-      const prev = document.getElementById('galleryPreview');
-      prev.src = capturedDataUrl;
-      prev.style.display = 'block';
-      document.getElementById('galleryIcon').style.display = 'none';
-
-      canvas.toBlob(blob => {
-        capturedBlob = blob;
-        capturedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
-        showReview();
-      }, 'image/jpeg', 0.95);
+    const base64  = await blobToBase64(blob);
+    const payload = {
+      _mode:         'attachment',
+      _owner:        owner,
+      _field_id:     fieldId,
+      _field_label:  field.label,
+      _ts:           Date.now(),
+      fileName:      field.label + '.jpg',
+      mimeType:      'image/jpeg',
+      contentBase64: base64,
     };
-    img.src = reader.result;
-  };
-  reader.readAsDataURL(file);
-  e.target.value = '';
-});
 
-// ── إيقاف الكاميرا ──
-function stopCamera() {
-  detectionActive = false;
-  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-}
+    const res = await fetch(N8N_DOC_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
 
-// ── رسالة حالة ──
-function showStatus(msg) {
-  document.getElementById('statusMsg').textContent = msg;
-  document.getElementById('statusMsg').className = '';
-}
+    setCardState(fieldId, 'done', `✅ تم الإرسال (${sizeKB} KB)`);
+    addHistory(field.icon + ' ' + field.label, null, true);
 
-// ── العودة ──
-function goBack() {
-  stopCamera();
-  if (window.history.length > 1) window.history.back();
-  else window.location.href = 'index.html';
-}
+    // إعادة الحالة بعد 5 ثواني
+    setTimeout(() => setCardState(fieldId, '', 'اضغط لإرسال صورة جديدة'), 5000);
 
-// ── البدء ──
-updateModeUi();
-startCamera();
-
-const cropBox = document.getElementById('cropBox');
-cropBox.addEventListener('pointerdown', e => {
-  const handle = e.target.dataset.handle;
-  startCropDrag(e, handle || 'move');
-});
-window.addEventListener('pointermove', applyCropDrag, { passive: false });
-window.addEventListener('pointerup', endCropDrag);
-window.addEventListener('resize', () => {
-  if (document.getElementById('reviewView').style.display === 'flex' && capturedDataUrl) {
-    requestAnimationFrame(initCropper);
+  } catch (err) {
+    setCardState(fieldId, 'fail', '❌ ' + err.message);
+    addHistory(DOC_FIELDS.find(d => d.id === fieldId)?.label || fieldId, null, false);
   }
-});
 
-// إيقاف الكاميرا عند إخفاء الصفحة
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) stopCamera();
-  else if (document.getElementById('scannerView').style.display !== 'none') startCamera();
-});
+  if (inputEl.value !== undefined) inputEl.value = '';
+}
+
+function setCardState(fieldId, state, statusText) {
+  const card   = document.getElementById(`dc-${fieldId}`);
+  const status = document.getElementById(`ds-${fieldId}`);
+  if (!card || !status) return;
+  card.classList.remove('sending', 'done', 'fail');
+  status.classList.remove('ok', 'err', 'wait');
+  if (state === 'sending') { card.classList.add('sending'); status.classList.add('wait'); }
+  else if (state === 'done') { card.classList.add('done'); status.classList.add('ok'); }
+  else if (state === 'fail') { card.classList.add('fail'); status.classList.add('err'); }
+  status.textContent = statusText;
+}
+
+// ═══════════════════════════════════════
+// Image Processing
+// ═══════════════════════════════════════
+function compressImage(f) {
+  return new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 1400;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h / w * MAX); w = MAX; }
+          else        { w = Math.round(w / h * MAX); h = MAX; }
+        }
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        // تحسين
+        const d = ctx.getImageData(0, 0, w, h);
+        for (let i = 0; i < d.data.length; i += 4) {
+          d.data[i]   = clamp((d.data[i]   - 128) * 1.12 + 130);
+          d.data[i+1] = clamp((d.data[i+1] - 128) * 1.12 + 130);
+          d.data[i+2] = clamp((d.data[i+2] - 128) * 1.12 + 130);
+        }
+        ctx.putImageData(d, 0, 0);
+        // ضغط تدريجي ≤ 450KB
+        const max = 450 * 1024;
+        let q = 0.92;
+        function tryBlob() {
+          c.toBlob(blob => {
+            if (!blob) return rej(new Error('blob failed'));
+            if (blob.size <= max || q <= 0.2) return res(blob);
+            q -= 0.1; tryBlob();
+          }, 'image/jpeg', q);
+        }
+        tryBlob();
+      };
+      img.onerror = () => rej(new Error('image load failed'));
+      img.src = reader.result;
+    };
+    reader.onerror = () => rej(new Error('file read failed'));
+    reader.readAsDataURL(f);
+  });
+}
+
+function clamp(v) { return Math.min(255, Math.max(0, Math.round(v))); }
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload  = () => resolve(String(r.result || '').split('base64,')[1] || '');
+    r.onerror = () => reject(new Error('read failed'));
+    r.readAsDataURL(blob);
+  });
+}
+
+// ═══════════════════════════════════════
+// Passport Mode (unchanged)
+// ═══════════════════════════════════════
+function ensureReachableWebhook(url) {
+  if (window.location.protocol === 'https:' && /^http:\/\//i.test(url))
+    throw new Error('رابط HTTP غير آمن مع HTTPS');
+}
+function selectFile(f) {
+  if (!f) return;
+  file = f;
+  const r = new FileReader();
+  r.onload = () => {
+    dataUrl = r.result;
+    document.getElementById('previewImg').src = dataUrl;
+    document.getElementById('previewName').textContent = f.name.length > 28 ? f.name.slice(0,28)+'…' : f.name;
+    document.getElementById('previewCard').classList.add('show');
+    document.getElementById('sendBtn').disabled = false;
+    document.getElementById('sendBtn').textContent = '🚀 إرسال واستخراج';
+  };
+  r.readAsDataURL(f);
+}
+function clearFile() {
+  file = null; dataUrl = null;
+  document.getElementById('previewCard').classList.remove('show');
+  document.getElementById('sendBtn').disabled = true;
+  document.getElementById('sendBtn').textContent = 'اختر صورة أولاً';
+  document.getElementById('galleryIn').value = '';
+}
+async function send() {
+  if (!file || sending) return;
+  const owner = ownerKeyInput.value.trim();
+  const claim = claimCodeInput.value.trim();
+  if (!owner) { showStatus('error','❌ يلزم المعرف','اكتب معرف المشترك أولاً.',0); ownerKeyInput.focus(); return; }
+  if (!claim) { showStatus('error','❌ يلزم رمز الصفحة','اكتب رمز الصفحة الظاهر في الكمبيوتر.',0); claimCodeInput.focus(); return; }
+  sending = true;
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true; btn.innerHTML = 'جاري الإرسال... <span class="spinner"></span>';
+  showStatus('loading','⏳ جاري الإرسال...','يتم رفع الصورة ومعالجتها',20);
+  try {
+    setProgress(30); setMsg('جاري تجهيز الصورة...');
+    const blob = await compressImage(file);
+    setProgress(50); setMsg('جاري الإرسال...');
+    const fd = new FormData();
+    fd.append('data', blob, file.name.replace(/\.[^.]+$/,'')+'-enhanced.jpg');
+    fd.append('_owner', owner); fd.append('_claim', claim); fd.append('_source','mobile-app');
+    ensureReachableWebhook(EXTRACT_URL);
+    const res  = await fetch(EXTRACT_URL, { method:'POST', body:fd });
+    setProgress(80);
+    const text = await res.text();
+    let json = null;
+    try { json = JSON.parse(text); } catch { const m = text.match(/\{[\s\S]*\}/); if(m) try{json=JSON.parse(m[0]);}catch{} }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    if (!json || typeof json !== 'object') throw new Error('لم يُرجع بيانات صحيحة');
+    if (Array.isArray(json)) json = json[0] || {};
+    if (json.data && typeof json.data === 'object') json = json.data;
+    setProgress(100); showSuccess(json);
+    addHistory(file.name, dataUrl, true);
+  } catch(e) {
+    showStatus('error','❌ فشل الإرسال', e.message||String(e), 0);
+    addHistory(file.name, dataUrl, false);
+  }
+  sending = false; btn.disabled = false; btn.textContent = '🚀 إرسال واستخراج';
+}
+function showStatus(type,title,msg,prog) {
+  const box = document.getElementById('statusBox');
+  box.className = 'status-box show ' + type;
+  document.getElementById('statusTitle').textContent = title;
+  document.getElementById('statusMsg').textContent   = msg;
+  document.getElementById('progressWrap').style.display = type==='loading'?'block':'none';
+  setProgress(prog);
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function setProgress(p) { document.getElementById('progressBar').style.width = p+'%'; }
+function setMsg(m) { document.getElementById('statusMsg').textContent = m; }
+function showSuccess(d) {
+  const rows = [['الاسم',d.nameEnglish||d.nameArabic],['رقم الجواز',d.passportNumber||d.passportNo],
+    ['الجنسية',d.nationalityArabic],['تاريخ الميلاد',d.dateOfBirth],
+    ['تاريخ الإصدار',d.dateOfIssue],['تاريخ الانتهاء',d.dateOfExpiry]
+  ].filter(([,v])=>v&&v!=='null');
+  const box = document.getElementById('statusBox');
+  box.className = 'status-box show success';
+  document.getElementById('statusTitle').textContent = '✅ تم الاستخراج وإرسال البيانات للكمبيوتر';
+  document.getElementById('statusMsg').innerHTML = rows.map(([l,v])=>`<b>${l}:</b> ${v}`).join(' &nbsp;·&nbsp; ');
+  document.getElementById('progressWrap').style.display = 'none';
+}
+
+// ═══════════════════════════════════════
+// History
+// ═══════════════════════════════════════
+function addHistory(name, thumb, ok) {
+  appHistory.unshift({ name, thumb, ok, ts: Date.now() });
+  if (appHistory.length > 20) appHistory = appHistory.slice(0, 20);
+  localStorage.setItem('pai_hist', JSON.stringify(appHistory));
+  renderHistory();
+}
+function renderHistory() {
+  const el = document.getElementById('historyList');
+  if (!appHistory.length) { el.innerHTML = '<div class="empty-hist">لا يوجد سجل</div>'; return; }
+  el.innerHTML = appHistory.map(h => {
+    const d = new Date(h.ts).toLocaleString('ar',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'});
+    const t = h.thumb
+      ? `<img class="history-thumb" src="${h.thumb}" alt="" style="display:block">`
+      : `<div class="history-thumb">📄</div>`;
+    return `<div class="history-item">${t}<div><div class="history-name">${(h.name||'').slice(0,26)}</div><div class="history-date">${d}</div></div><span class="history-badge ${h.ok?'badge-ok':'badge-fail'}">${h.ok?'✓':'✗'}</span></div>`;
+  }).join('');
+}
+function clearHistory() {
+  appHistory = [];
+  localStorage.removeItem('pai_hist');
+  renderHistory();
+}
 </script>
 </body>
 </html>
