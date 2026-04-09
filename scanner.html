@@ -427,7 +427,10 @@ video {
 'use strict';
 
 // ── الإعدادات ──
+const SEARCH = new URLSearchParams(location.search);
+const APP_MODE = SEARCH.get('mode') === 'document' || localStorage.getItem('pai_mobile_mode') === 'document' ? 'document' : 'passport';
 const API_BASE = localStorage.getItem('pai_api_base') || 'https://phd-considering-aaa-despite.trycloudflare.com';
+const STORE_URL = localStorage.getItem('pai_store_url') || `${API_BASE}/webhook/passport-store`;
 const EXTRACT_URL = localStorage.getItem('pai_extract_url')
   || localStorage.getItem('pai_webhook')
   || `${API_BASE}/webhook/passport-extract1`;
@@ -451,8 +454,43 @@ function ensureReachableWebhook(url) {
   }
 }
 
+function getOwnerKey() {
+  return (localStorage.getItem('pai_owner_key') || '').trim();
+}
+
+function getClaimCode() {
+  return (sessionStorage.getItem('pai_claim_code') || '').trim();
+}
+
 function clamp(v, min, max) {
   return Math.min(max, Math.max(min, v));
+}
+
+async function blobToBase64(blob) {
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result || '');
+      resolve(dataUrl.split('base64,')[1] || '');
+    };
+    reader.onerror = () => reject(new Error('تعذر قراءة الصورة'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+function updateModeUi() {
+  if (APP_MODE !== 'document') return;
+  document.title = 'Document Scanner';
+  document.getElementById('topTitle').textContent = '📎 تصوير مستند';
+  document.getElementById('statusMsg').textContent = 'وجّه الكاميرا نحو المستند';
+  document.getElementById('reviewTitle').textContent = 'مراجعة المستند';
+  document.getElementById('cropHint').textContent = 'تأكد أن كامل المستند داخل الإطار';
+  document.querySelector('#sendingView .send-title').textContent = 'جاري رفع المستند...';
+  document.getElementById('sendMsg').textContent = 'يتم تجهيز المستند وإرساله';
+  document.querySelector('#successView .success-title').textContent = 'تم إرسال المستند!';
+  document.querySelector('#successView .success-sub').textContent = 'سيصل المرفق للكمبيوتر تلقائياً';
+  document.querySelector('#successView .new-scan-btn').textContent = '📎 تصوير مستند جديد';
+  document.querySelector('#reviewFooter').childNodes[0].textContent = 'تأكد أن المستند واضح قبل الإرسال';
 }
 
 // ── بدء الكاميرا ──
@@ -578,14 +616,14 @@ function showDocFrame(detected) {
     `;
     frame.classList.add('detected');
     frame.querySelectorAll('.corner').forEach(c => c.style.color = '#22c55e');
-    msg.textContent = '✅ تم اكتشاف الجواز';
+    msg.textContent = APP_MODE === 'document' ? '✅ تم اكتشاف المستند' : '✅ تم اكتشاف الجواز';
     msg.className = 'detected';
     btn.classList.add('auto');
   } else {
     frame.classList.remove('detected');
     frame.querySelectorAll('.corner').forEach(c => c.style.color = 'rgba(69,243,255,0.9)');
     frame.style.display = 'none';
-    msg.textContent = 'وجّه الكاميرا نحو الجواز';
+    msg.textContent = APP_MODE === 'document' ? 'وجّه الكاميرا نحو المستند' : 'وجّه الكاميرا نحو الجواز';
     msg.className = 'scanning';
     btn.classList.remove('auto');
   }
@@ -797,13 +835,44 @@ async function sendImage() {
   setSendMsg('جاري تجهيز الصورة...');
 
   try {
+    if (!getOwnerKey()) throw new Error('معرف المشترك غير مضبوط في التطبيق.');
+    if (!getClaimCode()) throw new Error('رمز الصفحة غير مضبوط في التطبيق.');
     const processedBlob = await getProcessedBlob();
     setProgress(35);
-    setSendMsg('جاري إرسال الصورة لاستخراج البيانات...');
+    setSendMsg(APP_MODE === 'document' ? 'جاري إرسال المستند...' : 'جاري إرسال الصورة لاستخراج البيانات...');
+
+    if (APP_MODE === 'document') {
+      const payload = {
+        _owner: getOwnerKey(),
+        _claim: getClaimCode(),
+        _mode: 'attachment',
+        _source: 'mobile-document-scanner',
+        _ts: Date.now(),
+        fileName: `document-scan-${Date.now()}.jpg`,
+        mimeType: 'image/jpeg',
+        contentBase64: await blobToBase64(processedBlob)
+      };
+
+      ensureReachableWebhook(STORE_URL);
+      const res = await fetch(STORE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const text = await res.text();
+      if (!res.ok) throw new Error('HTTP ' + res.status + ': ' + text.slice(0,100));
+      setProgress(100);
+      setSendMsg('تم إرسال المستند');
+      setTimeout(() => showSuccess(payload), 300);
+      return;
+    }
 
     const fd = new FormData();
     fd.append('data', processedBlob, 'passport-scan.jpg');
     fd.append('_sid', SID);
+    fd.append('_owner', getOwnerKey());
+    fd.append('_claim', getClaimCode());
+    fd.append('_source', 'mobile-scanner');
 
     ensureReachableWebhook(EXTRACT_URL);
     const res = await fetch(EXTRACT_URL, { method: 'POST', body: fd });
@@ -839,6 +908,25 @@ function setSendMsg(m) { document.getElementById('sendMsg').textContent = m; }
 
 function showSuccess(d) {
   document.getElementById('sendingView').style.display = 'none';
+
+  if (APP_MODE === 'document') {
+    document.getElementById('resultCard').innerHTML = `
+      <div class="result-row">
+        <span class="result-label">النوع</span>
+        <span class="result-val">مرفق / مستند</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">حالة الإرسال</span>
+        <span class="result-val">تم الرفع إلى الكمبيوتر</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">رمز الربط</span>
+        <span class="result-val">${getClaimCode() || '---'}</span>
+      </div>
+    `;
+    document.getElementById('successView').style.display = 'flex';
+    return;
+  }
 
   const fields = [
     ['الاسم', d.nameEnglish],
@@ -936,6 +1024,7 @@ function goBack() {
 }
 
 // ── البدء ──
+updateModeUi();
 startCamera();
 
 const cropBox = document.getElementById('cropBox');
