@@ -4,439 +4,595 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Passport AI">
-<meta name="theme-color" content="#0a0b14">
-<title>Passport AI</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg: #0a0b14; --surface: #111320; --border: rgba(255,255,255,0.08);
-  --accent: #45f3ff; --purple: #7b61ff; --text: #e8eaf6; --dim: #6b7280;
-  --green: #22c55e; --red: #ef4444;
-  --safe-top: env(safe-area-inset-top, 44px);
-  --safe-bottom: env(safe-area-inset-bottom, 34px);
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Sovereign">
+<meta name="theme-color" content="#f7f9fb">
+<title>Sovereign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@700;800&family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        "primary-fixed-dim":"#b2c5ff","secondary-container":"#b3c5fd",
+        "on-primary-container":"#ccd8ff","inverse-surface":"#2d3133",
+        "on-secondary":"#ffffff","on-secondary-container":"#3e5181",
+        "surface-bright":"#f7f9fb","surface-variant":"#e0e3e5",
+        "on-primary-fixed":"#001847","secondary-fixed-dim":"#b3c5fd",
+        "primary-fixed":"#dae2ff","on-tertiary":"#ffffff",
+        "surface":"#f7f9fb","on-primary":"#ffffff",
+        "inverse-on-surface":"#eff1f3","secondary-fixed":"#dae2ff",
+        "tertiary-container":"#a93802","surface-container-lowest":"#ffffff",
+        "outline-variant":"#c3c6d6","background":"#f7f9fb",
+        "inverse-primary":"#b2c5ff","on-surface":"#191c1e",
+        "surface-container-high":"#e6e8ea","surface-container-low":"#f2f4f6",
+        "on-surface-variant":"#424654","primary":"#0040a1",
+        "on-primary-fixed-variant":"#0040a1","outline":"#737785",
+        "surface-dim":"#d8dadc","secondary":"#4a5d8e",
+        "tertiary":"#822800","on-error":"#ffffff",
+        "on-background":"#191c1e","surface-tint":"#0056d2",
+        "error":"#ba1a1a","surface-container":"#eceef0",
+        "on-tertiary-container":"#ffcebd","surface-container-highest":"#e0e3e5",
+        "tertiary-fixed":"#ffdbcf","error-container":"#ffdad6",
+        "primary-container":"#0056d2"
+      },
+      borderRadius: {
+        "DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem",
+        "2xl":"1rem","3xl":"1.5rem","full":"9999px"
+      },
+      fontFamily: {
+        "headline":["Noto Sans Arabic","Manrope"],
+        "body":["Noto Sans Arabic","Inter"],
+        "label":["Noto Sans Arabic","Inter"]
+      }
+    }
+  }
 }
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-body { background: var(--bg); color: var(--text); font-family: 'Cairo', sans-serif; min-height: 100vh; }
-
-.app { max-width: 430px; margin: 0 auto; padding: calc(var(--safe-top) + 12px) 16px calc(var(--safe-bottom) + 20px); }
-
-.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-.logo { font-size: 20px; font-weight: 900; }
-.logo span { color: var(--accent); }
-.badge { font-size: 11px; color: var(--accent); background: rgba(69,243,255,0.1); border: 1px solid rgba(69,243,255,0.25); border-radius: 20px; padding: 4px 10px; }
-.mode-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
-.mode-btn { border: 1px solid var(--border); border-radius: 14px; background: rgba(255,255,255,0.04); color: var(--text); padding: 12px 10px; font-family: 'Cairo', sans-serif; font-size: 13px; font-weight: 800; cursor: pointer; }
-.mode-btn small { display: block; font-size: 10px; color: var(--dim); font-weight: 600; margin-top: 3px; }
-.mode-btn.active { border-color: rgba(69,243,255,0.45); background: linear-gradient(135deg, rgba(69,243,255,0.14), rgba(123,97,255,0.18)); color: #fff; box-shadow: 0 8px 20px rgba(69,243,255,0.12); }
-
-.webhook-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
-.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: blink 2s infinite; flex-shrink: 0; }
-@keyframes blink { 50% { opacity: 0.3; } }
-.webhook-url { font-size: 11px; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; direction: ltr; text-align: left; }
-.link-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin-bottom: 16px; display: grid; gap: 10px; }
-.link-title { font-size: 12px; font-weight: 800; color: var(--accent); }
-.link-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.field-label { display: block; font-size: 11px; color: var(--dim); margin-bottom: 5px; }
-.field-input { width: 100%; border-radius: 10px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text); padding: 10px 12px; font-family: 'Cairo', sans-serif; font-size: 13px; }
-.link-hint { font-size: 11px; color: var(--dim); line-height: 1.7; }
-
-.action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-.action-btn { border-radius: 18px; padding: 20px 14px; border: none; cursor: pointer; font-family: 'Cairo', sans-serif; display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; overflow: hidden; transition: transform .15s; }
-.action-btn:active { transform: scale(0.96); }
-.action-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-.btn-camera { background: linear-gradient(135deg, #1a1f3a, #252a48); border: 1px solid rgba(69,243,255,0.2); }
-.btn-gallery { background: linear-gradient(135deg, #1f1a3a, #2a2048); border: 1px solid rgba(123,97,255,0.2); }
-.btn-icon { font-size: 34px; }
-.btn-label { font-size: 14px; font-weight: 700; color: var(--text); }
-.btn-sub { font-size: 11px; color: var(--dim); }
-
-.preview-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 16px; display: none; }
-.preview-card.show { display: block; }
-.preview-img { width: 100%; max-height: 220px; object-fit: contain; display: block; background: #000; }
-.preview-info { padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; }
-.preview-name { font-size: 12px; color: var(--dim); }
-.preview-remove { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: var(--red); border-radius: 8px; padding: 4px 10px; font-size: 12px; cursor: pointer; font-family: 'Cairo', sans-serif; }
-
-.send-btn { width: 100%; border: none; border-radius: 18px; padding: 18px; font-family: 'Cairo', sans-serif; font-size: 16px; font-weight: 900; cursor: pointer; background: linear-gradient(135deg, var(--purple), var(--accent)); color: #0a0b14; margin-bottom: 14px; transition: all .25s; box-shadow: 0 8px 30px rgba(69,243,255,0.2); }
-.send-btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
-.send-btn:not(:disabled):active { transform: scale(0.98); }
-
-.status-box { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 14px; display: none; }
-.status-box.show { display: block; }
-.status-box.loading { border-color: rgba(69,243,255,0.2); }
-.status-box.success { border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.05); }
-.status-box.error { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.05); }
-.status-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
-.status-msg { font-size: 12px; color: var(--dim); line-height: 1.6; }
-.progress { height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 10px; overflow: hidden; }
-.progress-bar { height: 100%; background: linear-gradient(90deg, var(--purple), var(--accent)); border-radius: 2px; transition: width .4s; }
-
-.history-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
-.history-head { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-.history-title { font-size: 13px; font-weight: 700; }
-.clear-btn { font-size: 11px; color: var(--red); background: none; border: none; cursor: pointer; font-family: 'Cairo', sans-serif; }
-.history-body { padding: 8px 0; }
-.history-item { display: flex; align-items: center; gap: 10px; padding: 8px 14px; }
-.history-thumb { width: 44px; height: 32px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border); flex-shrink: 0; }
-.history-name { font-size: 12px; font-weight: 600; }
-.history-date { font-size: 11px; color: var(--dim); }
-.history-badge { margin-right: auto; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
-.badge-ok { background: rgba(34,197,94,0.15); color: var(--green); }
-.badge-fail { background: rgba(239,68,68,0.15); color: var(--red); }
-.empty-hist { text-align: center; padding: 20px; font-size: 12px; color: var(--dim); }
-
-.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(10,11,20,0.3); border-top-color: #0a0b14; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-left: 6px; }
-@keyframes spin { to { transform: rotate(360deg); } }
+</script>
+<style>
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  display:inline-block; line-height:1; text-transform:none;
+  letter-spacing:normal; word-wrap:normal; white-space:nowrap; direction:ltr;
+}
+.editorial-shadow { box-shadow: 0 8px 24px rgba(0,64,161,0.08); }
+.glass-panel {
+  background: rgba(247,249,251,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.card-uploading { animation: pulse-border 1.4s ease-in-out infinite; }
+@keyframes pulse-border {
+  0%,100% { box-shadow: 0 8px 24px rgba(0,64,161,0.08); }
+  50% { box-shadow: 0 8px 24px rgba(0,86,210,0.3); }
+}
+.safe-top    { padding-top:    env(safe-area-inset-top,    44px); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 34px); }
 </style>
 </head>
-<body>
-<div class="app">
-  <div class="header">
-    <div class="logo">Passport <span>AI</span></div>
-    <div class="badge">OMN · ROP</div>
+<body class="bg-surface font-body text-on-surface antialiased min-h-screen" style="padding-bottom:100px">
+
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 glass-panel flex justify-between items-center px-6 py-3 safe-top">
+  <div class="flex items-center gap-2">
+    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-container flex items-center justify-center">
+      <span class="material-symbols-outlined text-white text-sm" style="font-variation-settings:'FILL' 1">menu_book</span>
+    </div>
+    <span class="font-headline font-extrabold text-lg text-on-surface tracking-tight">Sovereign</span>
+  </div>
+  <!-- حالة الاتصال -->
+  <div id="connectionBadge" class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-xs font-bold text-on-surface-variant">
+    <span class="w-2 h-2 rounded-full bg-surface-container-highest inline-block" id="connDot"></span>
+    <span id="connLabel">غير متصل</span>
+  </div>
+</header>
+
+<!-- Main -->
+<main class="px-5 pt-24">
+
+  <!-- الوضع: جواز / مستندات -->
+  <div class="flex gap-2 mb-6">
+    <button onclick="setMode('docs')" id="btnDocs"
+      class="flex-1 py-3 rounded-3xl font-headline font-bold text-sm transition-all active:scale-95 bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-lg">
+      المستندات
+    </button>
+    <button onclick="setMode('passport')" id="btnPassport"
+      class="flex-1 py-3 rounded-3xl font-headline font-bold text-sm transition-all active:scale-95 bg-surface-container text-on-surface-variant">
+      الجواز
+    </button>
   </div>
 
-  <div class="mode-switch">
-    <button class="mode-btn active" id="passportModeBtn" type="button" onclick="setAppMode('passport')">الجواز<small>تعبئة البيانات</small></button>
-    <button class="mode-btn" id="documentModeBtn" type="button" onclick="setAppMode('document')">المستندات<small>مرفقات من الجوال</small></button>
+  <!-- ═══ وضع المستندات ═══ -->
+  <div id="docsView">
+
+    <!-- بانر الانتظار -->
+    <div id="waitingBanner" class="hidden mb-5 p-4 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-2xl animate-spin" style="animation-duration:2s">sync</span>
+        <div>
+          <p class="font-bold text-sm" id="waitingTitle">في انتظار المستند...</p>
+          <p class="text-xs opacity-80 mt-0.5" id="waitingSlotName">—</p>
+        </div>
+        <button onclick="stopAll()" class="mr-auto w-8 h-8 rounded-full bg-white/20 flex items-center justify-center active:scale-90">
+          <span class="material-symbols-outlined text-sm">close</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- قائمة المستندات المطلوبة -->
+    <section class="mb-8">
+      <div class="flex justify-between items-end mb-4">
+        <div>
+          <h3 class="text-lg font-headline font-bold text-on-surface">المستندات المطلوبة</h3>
+          <p class="text-[11px] text-on-surface-variant mt-0.5">Required Documents</p>
+        </div>
+      </div>
+      <div class="space-y-3" id="requiredList"></div>
+    </section>
+
+    <!-- قائمة المستندات الاختيارية -->
+    <section class="mb-8">
+      <div class="mb-4">
+        <h3 class="text-lg font-headline font-bold text-on-surface">المستندات الاختيارية</h3>
+        <p class="text-[11px] text-on-surface-variant mt-0.5">Optional Documents</p>
+      </div>
+      <div class="space-y-3" id="optionalList"></div>
+    </section>
+
   </div>
 
-  <div class="webhook-bar">
-    <div class="dot"></div>
-    <div class="webhook-url" id="urlDisplay">phd-considering-aaa-despite.trycloudflare.com/webhook/passport-extract1</div>
-  </div>
+  <!-- ═══ وضع الجواز ═══ -->
+  <div id="passportView" class="hidden">
+    <!-- بطاقة الماسح -->
+    <div class="bg-gradient-to-br from-primary to-primary-container p-6 rounded-3xl text-on-primary mb-6 relative overflow-hidden editorial-shadow">
+      <div class="relative z-10">
+        <span class="text-xs font-bold uppercase tracking-widest opacity-80">تعبئة تلقائية</span>
+        <h2 class="text-2xl font-headline font-bold mt-1">مسح الجواز</h2>
+        <p class="text-sm opacity-80 mt-2">صوّر الجواز واستخرج البيانات تلقائياً</p>
+      </div>
+      <div class="absolute -left-8 -bottom-8 w-36 h-36 bg-white/10 rounded-full blur-3xl"></div>
+    </div>
 
-  <div class="link-card">
-    <div class="link-title" id="linkTitle">ربط الجلسة</div>
-    <div class="link-grid">
-      <label>
-        <span class="field-label">معرف المشترك</span>
-        <input class="field-input" id="ownerKeyInput" placeholder="مثال: alfarsi0">
+    <div class="grid grid-cols-2 gap-4 mb-5">
+      <button onclick="openCamera()" class="bg-surface-container-lowest p-6 rounded-3xl editorial-shadow flex flex-col items-center gap-3 active:scale-95 transition-all">
+        <div class="w-12 h-12 rounded-2xl bg-secondary-container flex items-center justify-center text-primary">
+          <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1">photo_camera</span>
+        </div>
+        <span class="font-headline font-bold text-sm text-on-surface">كاميرا</span>
+      </button>
+      <label class="bg-surface-container-lowest p-6 rounded-3xl editorial-shadow flex flex-col items-center gap-3 active:scale-95 transition-all cursor-pointer">
+        <input type="file" accept="image/*" id="passportGallery" class="hidden">
+        <div class="w-12 h-12 rounded-2xl bg-primary-fixed flex items-center justify-center text-primary">
+          <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1">image</span>
+        </div>
+        <span class="font-headline font-bold text-sm text-on-surface">المكتبة</span>
       </label>
-      <label>
-        <span class="field-label">رمز الصفحة</span>
-        <input class="field-input" id="claimCodeInput" inputmode="numeric" maxlength="6" placeholder="مثال: 123456">
-      </label>
     </div>
-    <div class="link-hint" id="linkHint">استخدم نفس معرف المشترك الموجود في الكمبيوتر، ثم اكتب رمز الصفحة الذي يظهر بعد الضغط على جلب من الجوال.</div>
-  </div>
 
-  <div class="action-grid">
-    <div class="action-btn btn-camera" id="cameraAction" style="cursor:pointer">
-      <span class="btn-icon">📷</span>
-      <span class="btn-label" id="cameraLabel">كاميرا</span>
-      <span class="btn-sub" id="cameraSub">ماسح ضوئي</span>
+    <!-- معاينة الجواز -->
+    <div id="passportPreview" class="hidden bg-surface-container-lowest rounded-3xl overflow-hidden editorial-shadow mb-5">
+      <img id="passportImg" class="w-full max-h-56 object-contain bg-black block" src="" alt="">
+      <div class="p-4 flex justify-between items-center">
+        <span class="text-xs text-on-surface-variant" id="passportFileName">—</span>
+        <button onclick="clearPassport()" class="text-xs text-error font-bold">إزالة</button>
+      </div>
     </div>
-    <label class="action-btn btn-gallery">
-      <input type="file" accept="image/*" id="galleryIn">
-      <span class="btn-icon">🖼️</span>
-      <span class="btn-label" id="galleryLabel">استوديو</span>
-      <span class="btn-sub" id="gallerySub">من المكتبة</span>
-    </label>
-  </div>
 
-  <div class="preview-card" id="previewCard">
-    <img class="preview-img" id="previewImg" src="" alt="">
-    <div class="preview-info">
-      <span class="preview-name" id="previewName">—</span>
-      <button class="preview-remove" onclick="clearFile()">إزالة</button>
+    <button id="passportSendBtn" disabled onclick="sendPassport()"
+      class="w-full py-4 rounded-3xl font-headline font-bold text-base bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-lg disabled:opacity-40 disabled:shadow-none active:scale-98 transition-all">
+      اختر صورة أولاً
+    </button>
+
+    <!-- نتيجة الاستخراج -->
+    <div id="passportResult" class="hidden mt-5 bg-surface-container-lowest rounded-3xl p-5 editorial-shadow">
+      <p class="font-headline font-bold text-sm mb-3 text-on-surface">البيانات المستخرجة</p>
+      <div id="passportFields" class="space-y-2"></div>
     </div>
   </div>
 
-  <button class="send-btn" id="sendBtn" disabled onclick="send()">اختر صورة أولاً</button>
-
-  <div class="status-box" id="statusBox">
-    <div class="status-title" id="statusTitle"></div>
-    <div class="status-msg" id="statusMsg"></div>
-    <div class="progress" id="progressWrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
-  </div>
-
-  <div class="history-card">
-    <div class="history-head">
-      <span class="history-title">السجل</span>
-      <button class="clear-btn" onclick="clearHistory()">مسح الكل</button>
+  <!-- سجل الإرسال -->
+  <section class="mt-4">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="text-base font-headline font-bold text-on-surface">السجل</h3>
+      <button onclick="clearHistory()" class="text-xs text-error font-bold">مسح</button>
     </div>
-    <div class="history-body" id="historyList"><div class="empty-hist">لا يوجد سجل</div></div>
-  </div>
-</div>
+    <div id="historyList" class="space-y-2">
+      <p class="text-sm text-on-surface-variant text-center py-4">لا يوجد سجل</p>
+    </div>
+  </section>
+
+</main>
+
+<!-- Bottom Nav -->
+<nav class="fixed bottom-0 left-0 w-full z-50 glass-panel flex justify-around items-center px-4 pb-safe pt-3 rounded-t-3xl safe-bottom"
+     style="box-shadow:0 -8px 24px rgba(0,64,161,0.12);">
+  <button onclick="setMode('docs')" id="navDocs" class="flex flex-col items-center gap-1 px-4 py-2 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary">
+    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">description</span>
+    <span class="text-[11px] font-bold">المستندات</span>
+  </button>
+  <button onclick="setMode('passport')" id="navPassport" class="flex flex-col items-center gap-1 px-4 py-2 text-on-surface-variant">
+    <span class="material-symbols-outlined">menu_book</span>
+    <span class="text-[11px] font-medium">الجواز</span>
+  </button>
+</nav>
+
+<!-- Hidden file inputs for document slots -->
+<div id="hiddenInputs" class="hidden"></div>
 
 <script>
 'use strict';
 
-// معرّف جلسة خاص بكل مستخدم
-function getSessionId() {
-  let id = localStorage.getItem('pai_sid');
-  if (!id) {
-    id = 'u_' + Math.random().toString(36).slice(2,10) + '_' + Date.now().toString(36);
-    localStorage.setItem('pai_sid', id);
-  }
-  return id;
-}
-const SESSION_ID = getSessionId();
-document.getElementById('urlDisplay').textContent += ' · ' + SESSION_ID.slice(0,8);
-
-const API_BASE = localStorage.getItem('pai_api_base') || 'https://phd-considering-aaa-despite.trycloudflare.com';
-const EXTRACT_URL = localStorage.getItem('pai_extract_url') || `${API_BASE}/webhook/passport-extract1`;
+/* ─── Config ─── */
+const API_BASE  = localStorage.getItem('pai_api_base')  || 'https://phd-considering-aaa-despite.trycloudflare.com';
 const STORE_URL = localStorage.getItem('pai_store_url') || `${API_BASE}/webhook/passport-store`;
-const ownerKeyInput = document.getElementById('ownerKeyInput');
-const claimCodeInput = document.getElementById('claimCodeInput');
-let file = null, dataUrl = null, sending = false;
+const EXTRACT_URL = localStorage.getItem('pai_extract_url') || `${API_BASE}/webhook/passport-extract1`;
+
+/* ─── المستندات المطلوبة (مطابقة لترتيب الكمبيوتر) ─── */
+const REQUIRED_DOCS = [
+  { slot:1, ar:'عقد العمل',                       en:'Employment Contract',        icon:'work'          },
+  { slot:2, ar:'صورة جواز السفر لصاحب الطلب',     en:'Passport Copy (Applicant)',  icon:'credit_card'   },
+  { slot:3, ar:'صورة جواز السفر للمتلحق به',       en:'Passport Copy (Dependent)',  icon:'credit_card'   },
+  { slot:4, ar:'صورة شخصية لصاحب الطلب',          en:'Personal Photo (Applicant)', icon:'account_circle'},
+  { slot:5, ar:'إثبات صلة قرابة',                  en:'Proof of Relationship',      icon:'family_history'},
+  { slot:6, ar:'صورة بطاقة الإقامة للمتلحق به',    en:'Residence Card (Dependent)', icon:'badge'         },
+  { slot:7, ar:'رسالة صاحب العمل (تعهد)',           en:'Employer\'s Letter',         icon:'business'      },
+];
+
+const OPTIONAL_DOCS = [
+  { slot:101, ar:'مستندات اختيارية 1', en:'Optional Document 1', icon:'attach_file' },
+  { slot:102, ar:'مستندات اختيارية 2', en:'Optional Document 2', icon:'attach_file' },
+  { slot:103, ar:'مستندات اختيارية 3', en:'Optional Document 3', icon:'attach_file' },
+  { slot:104, ar:'مستندات اختيارية 4', en:'Optional Document 4', icon:'attach_file' },
+  { slot:105, ar:'مستندات اختيارية 5', en:'Optional Document 5', icon:'attach_file' },
+  { slot:106, ar:'مستندات اختيارية 6', en:'Optional Document 6', icon:'attach_file' },
+];
+
+/* ─── State ─── */
+let appMode = localStorage.getItem('pai_mode') || 'docs';
+let slotStatus = {}; // slot -> 'idle'|'uploading'|'sent'|'error'
+let passportFile = null, passportDataUrl = null, sending = false;
 let history = JSON.parse(localStorage.getItem('pai_hist') || '[]');
-let appMode = localStorage.getItem('pai_mobile_mode') || 'passport';
 
-ownerKeyInput.value = localStorage.getItem('pai_owner_key') || '';
-claimCodeInput.value = sessionStorage.getItem('pai_claim_code') || '';
-ownerKeyInput.addEventListener('input', () => localStorage.setItem('pai_owner_key', ownerKeyInput.value.trim()));
-claimCodeInput.addEventListener('input', () => sessionStorage.setItem('pai_claim_code', claimCodeInput.value.trim()));
-document.getElementById('cameraAction').addEventListener('click', () => {
-  window.location.href = `scanner.html?mode=${encodeURIComponent(appMode)}`;
-});
-
+/* ─── Init ─── */
+renderDocumentList(REQUIRED_DOCS, 'requiredList');
+renderDocumentList(OPTIONAL_DOCS, 'optionalList');
+setMode(appMode);
 renderHistory();
-setAppMode(appMode);
+document.getElementById('passportGallery').onchange = e => selectPassportFile(e.target.files[0]);
 
-document.getElementById('galleryIn').onchange = e => selectFile(e.target.files[0]);
+/* ─── Mode switch ─── */
+function setMode(mode) {
+  appMode = mode;
+  localStorage.setItem('pai_mode', mode);
+  document.getElementById('docsView').classList.toggle('hidden', mode !== 'docs');
+  document.getElementById('passportView').classList.toggle('hidden', mode !== 'passport');
+  // top btns
+  document.getElementById('btnDocs').className    = 'flex-1 py-3 rounded-3xl font-headline font-bold text-sm transition-all active:scale-95 ' + (mode==='docs' ? 'bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-lg' : 'bg-surface-container text-on-surface-variant');
+  document.getElementById('btnPassport').className = 'flex-1 py-3 rounded-3xl font-headline font-bold text-sm transition-all active:scale-95 ' + (mode==='passport' ? 'bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-lg' : 'bg-surface-container text-on-surface-variant');
+  // nav
+  const navBase = 'flex flex-col items-center gap-1 px-4 py-2 ';
+  document.getElementById('navDocs').className    = navBase + (mode==='docs'     ? 'rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary' : 'text-on-surface-variant');
+  document.getElementById('navPassport').className = navBase + (mode==='passport' ? 'rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary' : 'text-on-surface-variant');
+}
 
-function ensureReachableWebhook(url) {
-  if (window.location.protocol === 'https:' && /^http:\/\//i.test(url)) {
-    throw new Error('رابط الويبهوك غير آمن HTTP بينما التطبيق مفتوح عبر HTTPS. استخدم رابط HTTPS للويبهوك.');
+/* ─── بناء قائمة المستندات ─── */
+function renderDocumentList(docs, containerId) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = docs.map(doc => `
+    <div class="bg-surface-container-lowest p-4 rounded-2xl editorial-shadow border border-outline-variant/20 flex items-center gap-3" id="card_${doc.slot}">
+      <!-- أزرار الرفع -->
+      <div class="flex flex-col gap-1.5 shrink-0">
+        <button onclick="uploadSlot(${doc.slot},'camera')"
+          class="w-10 h-10 rounded-xl bg-surface-container hover:bg-secondary-container active:scale-90 transition-all text-primary flex items-center justify-center"
+          id="camBtn_${doc.slot}" title="تصوير">
+          <span class="material-symbols-outlined text-lg" style="font-variation-settings:'FILL' 1">photo_camera</span>
+        </button>
+        <label class="w-10 h-10 rounded-xl bg-surface-container hover:bg-surface-container-high active:scale-90 transition-all text-primary flex items-center justify-center cursor-pointer"
+          id="galLabel_${doc.slot}" title="اختيار من المكتبة">
+          <input type="file" accept="image/*" class="hidden" id="galInput_${doc.slot}"
+            onchange="handleGallerySelect(${doc.slot}, this)">
+          <span class="material-symbols-outlined text-lg" style="font-variation-settings:'FILL' 1">image</span>
+        </label>
+      </div>
+      <!-- معلومات -->
+      <div class="flex-1 min-w-0">
+        <div class="flex justify-between items-start gap-2">
+          <h4 class="text-sm font-bold text-on-surface leading-tight">${doc.ar}</h4>
+          <span id="badge_${doc.slot}" class="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 bg-surface-container-high text-on-surface-variant">
+            جاهز
+          </span>
+        </div>
+        <p class="text-[11px] text-on-surface-variant mt-0.5 truncate">${doc.en}</p>
+      </div>
+      <!-- أيقونة -->
+      <div class="w-9 h-9 rounded-xl bg-primary-container/10 flex items-center justify-center text-primary shrink-0">
+        <span class="material-symbols-outlined text-lg">${doc.icon}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ─── رفع من الكاميرا (scanner) ─── */
+function uploadSlot(slot, source) {
+  if (source === 'camera') {
+    sessionStorage.setItem('pai_pending_slot', slot);
+    window.location.href = `scanner.html?mode=document`;
   }
 }
 
-function getOwnerKey() {
-  return ownerKeyInput.value.trim();
-}
-
-function getClaimCode() {
-  return claimCodeInput.value.trim();
-}
-
-function setAppMode(mode) {
-  appMode = mode === 'document' ? 'document' : 'passport';
-  localStorage.setItem('pai_mobile_mode', appMode);
-  document.getElementById('passportModeBtn').classList.toggle('active', appMode === 'passport');
-  document.getElementById('documentModeBtn').classList.toggle('active', appMode === 'document');
-  document.getElementById('linkTitle').textContent = appMode === 'document' ? 'ربط المستند' : 'ربط الجلسة';
-  document.getElementById('linkHint').textContent = appMode === 'document'
-    ? 'افتح الكمبيوتر ثم اضغط زر من الجوال عند المرفق المطلوب، وبعدها اكتب نفس معرف المشترك ورمز الربط هنا.'
-    : 'استخدم نفس معرف المشترك الموجود في الكمبيوتر، ثم اكتب رمز الصفحة الذي يظهر بعد الضغط على جلب من الجوال.';
-  document.getElementById('cameraLabel').textContent = 'كاميرا';
-  document.getElementById('cameraSub').textContent = appMode === 'document' ? 'تصوير مستند' : 'ماسح ضوئي';
-  document.getElementById('galleryLabel').textContent = 'استوديو';
-  document.getElementById('gallerySub').textContent = appMode === 'document' ? 'اختيار مرفق' : 'من المكتبة';
-  document.getElementById('sendBtn').textContent = file ? (appMode === 'document' ? '📎 إرسال المستند' : '🚀 إرسال واستخراج') : 'اختر صورة أولاً';
-}
-
-function selectFile(f) {
+/* ─── اختيار من المعرض ─── */
+function handleGallerySelect(slot, input) {
+  const f = input.files[0];
   if (!f) return;
-  file = f;
+  input.value = '';
+  sendDocumentSlot(slot, f);
+}
+
+/* ─── إرسال مستند بـ slot ─── */
+async function sendDocumentSlot(slot, file) {
+  setSlotStatus(slot, 'uploading');
+  showWaitingBanner(slot);
+
+  try {
+    const blob = await processImage(file);
+    const base64 = await blobToBase64(blob);
+
+    const allDocs = [...REQUIRED_DOCS, ...OPTIONAL_DOCS];
+    const doc = allDocs.find(d => d.slot === slot);
+
+    const payload = {
+      _mode:      'attachment',
+      _slot:      slot,
+      _docName:   doc?.ar || '',
+      _source:    'sovereign-mobile',
+      _ts:        Date.now(),
+      fileName:   file.name.replace(/\.[^.]+$/, '') + `-slot${slot}.jpg`,
+      mimeType:   'image/jpeg',
+      contentBase64: base64
+    };
+
+    const res = await fetch(STORE_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    setSlotStatus(slot, 'sent');
+    hideWaitingBanner();
+    addHistory(doc?.ar || `Slot ${slot}`, true);
+
+  } catch(e) {
+    setSlotStatus(slot, 'error');
+    hideWaitingBanner();
+    addHistory(`Slot ${slot}`, false);
+  }
+
+  // reset after 6s
+  setTimeout(() => setSlotStatus(slot, 'idle'), 6000);
+}
+
+/* ─── حالة البطاقة ─── */
+function setSlotStatus(slot, status) {
+  slotStatus[slot] = status;
+  const card  = document.getElementById('card_' + slot);
+  const badge = document.getElementById('badge_' + slot);
+  if (!card || !badge) return;
+
+  card.classList.remove('card-uploading');
+
+  const states = {
+    idle:      { text:'جاهز',       cls:'bg-surface-container-high text-on-surface-variant' },
+    uploading: { text:'جاري الرفع…', cls:'bg-primary-fixed text-primary' },
+    sent:      { text:'✓ تم الإرسال', cls:'bg-green-100 text-green-700' },
+    error:     { text:'✗ فشل',       cls:'bg-error-container text-error' },
+  };
+
+  const s = states[status] || states.idle;
+  badge.textContent = s.text;
+  badge.className = `text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${s.cls}`;
+  if (status === 'uploading') card.classList.add('card-uploading');
+}
+
+/* ─── بانر الانتظار ─── */
+function showWaitingBanner(slot) {
+  const allDocs = [...REQUIRED_DOCS, ...OPTIONAL_DOCS];
+  const doc = allDocs.find(d => d.slot === slot);
+  document.getElementById('waitingSlotName').textContent = doc?.ar || `Slot ${slot}`;
+  document.getElementById('waitingBanner').classList.remove('hidden');
+}
+function hideWaitingBanner() {
+  document.getElementById('waitingBanner').classList.add('hidden');
+}
+function stopAll() {
+  hideWaitingBanner();
+  Object.keys(slotStatus).forEach(s => { if(slotStatus[s]==='uploading') setSlotStatus(Number(s),'idle'); });
+}
+
+/* ─── وضع الجواز ─── */
+function openCamera() {
+  sessionStorage.setItem('pai_pending_slot', 'passport');
+  window.location.href = 'scanner.html?mode=passport';
+}
+
+function selectPassportFile(f) {
+  if (!f) return;
+  passportFile = f;
   const r = new FileReader();
   r.onload = () => {
-    dataUrl = r.result;
-    document.getElementById('previewImg').src = dataUrl;
-    document.getElementById('previewName').textContent = f.name.length > 28 ? f.name.slice(0,28)+'…' : f.name;
-    document.getElementById('previewCard').classList.add('show');
-    document.getElementById('sendBtn').disabled = false;
-    document.getElementById('sendBtn').textContent = '🚀 إرسال واستخراج';
+    passportDataUrl = r.result;
+    document.getElementById('passportImg').src = passportDataUrl;
+    document.getElementById('passportFileName').textContent = f.name.slice(0,30);
+    document.getElementById('passportPreview').classList.remove('hidden');
+    const btn = document.getElementById('passportSendBtn');
+    btn.disabled = false;
+    btn.textContent = '🚀 إرسال واستخراج';
   };
   r.readAsDataURL(f);
 }
 
-function clearFile() {
-  file = null; dataUrl = null;
-  document.getElementById('previewCard').classList.remove('show');
-  document.getElementById('sendBtn').disabled = true;
-  document.getElementById('sendBtn').textContent = 'اختر صورة أولاً';
-  document.getElementById('galleryIn').value = '';
+function clearPassport() {
+  passportFile = null; passportDataUrl = null;
+  document.getElementById('passportPreview').classList.add('hidden');
+  document.getElementById('passportResult').classList.add('hidden');
+  document.getElementById('passportSendBtn').disabled = true;
+  document.getElementById('passportSendBtn').textContent = 'اختر صورة أولاً';
 }
 
-async function send() {
-  if (!file || sending) return;
-  if (!getOwnerKey()) {
-    showStatus('error', '❌ يلزم الربط', 'اكتب معرف المشترك أولاً.', 0);
-    ownerKeyInput.focus();
-    return;
-  }
-  if (!getClaimCode()) {
-    showStatus('error', '❌ يلزم رمز الصفحة', 'اكتب رمز الصفحة الظاهر في الكمبيوتر.', 0);
-    claimCodeInput.focus();
-    return;
-  }
+async function sendPassport() {
+  if (!passportFile || sending) return;
   sending = true;
-  const btn = document.getElementById('sendBtn');
+  const btn = document.getElementById('passportSendBtn');
   btn.disabled = true;
-  btn.innerHTML = 'جاري الإرسال... <span class="spinner"></span>';
-
-  showStatus('loading', '⏳ جاري الإرسال...', 'يتم رفع الصورة ومعالجتها', 20);
+  btn.innerHTML = '<span class="inline-block animate-spin mr-2">⏳</span> جاري الإرسال...';
 
   try {
-    // Process image
-    setProgress(30);
-    setMsg('جاري تجهيز الصورة...');
-    const blob = await processImage(file);
-
-    setProgress(50);
-    setMsg(appMode === 'document' ? 'جاري إرسال المستند لـ n8n...' : 'جاري الإرسال لـ n8n...');
-
-    if (appMode === 'document') {
-      const payload = {
-        _owner: getOwnerKey(),
-        _claim: getClaimCode(),
-        _mode: 'attachment',
-        _source: 'mobile-document-app',
-        _ts: Date.now(),
-        fileName: file.name.replace(/\.[^.]+$/, '') + '-document.jpg',
-        mimeType: 'image/jpeg',
-        contentBase64: await blobToBase64(blob)
-      };
-
-      ensureReachableWebhook(STORE_URL);
-      const res = await fetch(STORE_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const text = await res.text();
-      if (!res.ok) throw new Error('HTTP ' + res.status + ': ' + text.slice(0,100));
-      setProgress(100);
-      showDocumentSuccess();
-      addHistory(file.name, dataUrl, true);
-      return;
-    }
-
+    const blob = await processImage(passportFile);
     const fd = new FormData();
-    fd.append('data', blob, file.name.replace(/\.[^.]+$/, '') + '-enhanced.jpg');
-    fd.append('_sid', SESSION_ID);
-    fd.append('_owner', getOwnerKey());
-    fd.append('_claim', getClaimCode());
-    fd.append('_source', 'mobile-app');
+    fd.append('data', blob, passportFile.name.replace(/\.[^.]+$/, '') + '-enhanced.jpg');
+    fd.append('_source', 'sovereign-mobile');
 
-    ensureReachableWebhook(EXTRACT_URL);
-    const res = await fetch(EXTRACT_URL, { method: 'POST', body: fd });
-    setProgress(80);
-
+    const res = await fetch(EXTRACT_URL, { method:'POST', body:fd });
     const text = await res.text();
     let json = null;
-    try { json = JSON.parse(text); } catch { const m = text.match(/\{[\s\S]*\}/); if(m) try{json=JSON.parse(m[0]);}catch{} }
+    try { json = JSON.parse(text); } catch { const m=text.match(/\{[\s\S]*\}/); if(m) try{json=JSON.parse(m[0]);}catch{} }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    if (Array.isArray(json)) json = json[0]||{};
+    if (json?.data && typeof json.data==='object') json = json.data;
 
-    if (!res.ok) throw new Error('HTTP ' + res.status + ': ' + text.slice(0,100));
-    if (!json || typeof json !== 'object') throw new Error('لم يُرجع n8n بيانات صحيحة');
-    if (Array.isArray(json)) json = json[0] || {};
-    if (json.data && typeof json.data === 'object') json = json.data;
-
-    setProgress(100);
-    showSuccess(json);
-    addHistory(file.name, dataUrl, true);
+    showPassportResult(json);
+    addHistory(passportFile.name, true);
 
   } catch(e) {
-    showStatus('error', '❌ فشل الإرسال', e.message || String(e), 0);
-    addHistory(file.name, dataUrl, false);
+    document.getElementById('passportResult').classList.remove('hidden');
+    document.getElementById('passportFields').innerHTML = `<p class="text-sm text-error">${e.message}</p>`;
+    addHistory(passportFile.name, false);
   }
 
   sending = false;
   btn.disabled = false;
-  btn.textContent = appMode === 'document' ? '📎 إرسال المستند' : '🚀 إرسال واستخراج';
+  btn.textContent = '🚀 إرسال واستخراج';
 }
 
-function showStatus(type, title, msg, prog) {
-  const box = document.getElementById('statusBox');
-  box.className = 'status-box show ' + type;
-  document.getElementById('statusTitle').textContent = title;
-  document.getElementById('statusMsg').textContent = msg;
-  document.getElementById('progressWrap').style.display = type === 'loading' ? 'block' : 'none';
-  setProgress(prog);
-  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-function setProgress(p) { document.getElementById('progressBar').style.width = p + '%'; }
-function setMsg(m) { document.getElementById('statusMsg').textContent = m; }
-
-function showSuccess(d) {
+function showPassportResult(d) {
   const fields = [
-    ['الاسم', d.nameEnglish || d.nameArabic],
-    ['رقم الجواز', d.passportNumber || d.passportNo],
-    ['الجنسية', d.nationalityArabic],
+    ['الاسم',         d.nameEnglish||d.nameArabic],
+    ['رقم الجواز',    d.passportNumber||d.passportNo],
+    ['الجنسية',       d.nationalityArabic],
     ['تاريخ الميلاد', d.dateOfBirth],
-    ['تاريخ الإصدار', d.dateOfIssue],
-    ['تاريخ الانتهاء', d.dateOfExpiry],
+    ['تاريخ الانتهاء',d.dateOfExpiry],
   ].filter(([,v]) => v && v !== 'null');
 
-  const box = document.getElementById('statusBox');
-  box.className = 'status-box show success';
-  document.getElementById('statusTitle').textContent = '✅ تم الاستخراج وإرسال البيانات للكمبيوتر';
-  document.getElementById('statusMsg').innerHTML = fields.map(([l,v]) => `<b>${l}:</b> ${v}`).join(' &nbsp;·&nbsp; ');
-  document.getElementById('progressWrap').style.display = 'none';
+  const el = document.getElementById('passportResult');
+  el.classList.remove('hidden');
+  document.getElementById('passportFields').innerHTML = fields.map(([l,v]) =>
+    `<div class="flex justify-between py-1.5 border-b border-outline-variant/20 last:border-0">
+      <span class="text-xs text-on-surface-variant">${l}</span>
+      <span class="text-xs font-bold text-on-surface">${v}</span>
+    </div>`
+  ).join('') || '<p class="text-sm text-on-surface-variant">لا توجد بيانات</p>';
 }
 
-function showDocumentSuccess() {
-  const box = document.getElementById('statusBox');
-  box.className = 'status-box show success';
-  document.getElementById('statusTitle').textContent = '✅ تم إرسال المستند';
-  document.getElementById('statusMsg').innerHTML = '<b>تم رفع المرفق</b> وسيصل للكمبيوتر تلقائياً إذا كان في وضع الانتظار.';
-  document.getElementById('progressWrap').style.display = 'none';
-}
+/* ─── اتصال (Scanner callback) ─── */
+window.addEventListener('load', () => {
+  const slot = sessionStorage.getItem('pai_pending_slot');
+  const img  = sessionStorage.getItem('pai_scanned_image');
+  const name = sessionStorage.getItem('pai_scanned_name') || 'scanned.jpg';
+  if (slot && img) {
+    sessionStorage.removeItem('pai_pending_slot');
+    sessionStorage.removeItem('pai_scanned_image');
+    sessionStorage.removeItem('pai_scanned_name');
+    fetch(img).then(r=>r.blob()).then(blob => {
+      const file = new File([blob], name, {type:'image/jpeg'});
+      if (slot === 'passport') selectPassportFile(file);
+      else sendDocumentSlot(Number(slot), file);
+    });
+  }
+});
 
-async function blobToBase64(blob) {
-  return await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = String(reader.result || '');
-      resolve(dataUrl.split('base64,')[1] || '');
-    };
-    reader.onerror = () => reject(new Error('file read failed'));
-    reader.readAsDataURL(blob);
-  });
-}
-
+/* ─── معالجة الصورة ─── */
 async function processImage(f) {
-  return new Promise((res, rej) => {
+  return new Promise((res,rej) => {
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
       img.onload = () => {
-        const s = Math.min(1, 2200 / Math.max(img.width, img.height));
-        const w = Math.round(img.width * s), h = Math.round(img.height * s);
-        const c = document.createElement('canvas'); c.width = w; c.height = h;
-        const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
-        const d = ctx.getImageData(0,0,w,h);
+        const s = Math.min(1, 2200/Math.max(img.width,img.height));
+        const w=Math.round(img.width*s), h=Math.round(img.height*s);
+        const c=document.createElement('canvas'); c.width=w; c.height=h;
+        const ctx=c.getContext('2d'); ctx.drawImage(img,0,0,w,h);
+        const d=ctx.getImageData(0,0,w,h);
         for(let i=0;i<d.data.length;i+=4){
           d.data[i]=Math.min(255,Math.max(0,((d.data[i]-128)*1.12)+130));
           d.data[i+1]=Math.min(255,Math.max(0,((d.data[i+1]-128)*1.12)+130));
           d.data[i+2]=Math.min(255,Math.max(0,((d.data[i+2]-128)*1.12)+130));
         }
         ctx.putImageData(d,0,0);
-        c.toBlob(b => b ? res(b) : rej(new Error('blob failed')), 'image/jpeg', 0.95);
+        c.toBlob(b=>b?res(b):rej(new Error('blob')),'image/jpeg',0.92);
       };
-      img.onerror = () => rej(new Error('image load failed'));
-      img.src = reader.result;
+      img.onerror=()=>rej(new Error('img load'));
+      img.src=reader.result;
     };
-    reader.onerror = () => rej(new Error('file read failed'));
+    reader.onerror=()=>rej(new Error('file read'));
     reader.readAsDataURL(f);
   });
 }
 
-function addHistory(name, thumb, ok) {
-  history.unshift({ name, thumb, ok, ts: Date.now() });
-  if (history.length > 15) history = history.slice(0, 15);
+async function blobToBase64(blob) {
+  return new Promise((res,rej) => {
+    const r=new FileReader();
+    r.onload=()=>res(String(r.result||'').split('base64,')[1]||'');
+    r.onerror=()=>rej(new Error('read'));
+    r.readAsDataURL(blob);
+  });
+}
+
+/* ─── Connection badge ─── */
+(async function checkConn() {
+  const dot   = document.getElementById('connDot');
+  const label = document.getElementById('connLabel');
+  try {
+    const r = await fetch(API_BASE + '/health', {method:'HEAD', cache:'no-store', signal:AbortSignal.timeout(3000)});
+    if (r.ok || r.status < 500) {
+      dot.className   = 'w-2 h-2 rounded-full bg-green-500 inline-block';
+      label.textContent = 'متصل';
+      document.getElementById('connectionBadge').className = 'flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-50 text-xs font-bold text-green-700';
+    } else { throw new Error(); }
+  } catch {
+    dot.className   = 'w-2 h-2 rounded-full bg-on-surface-variant inline-block opacity-40';
+    label.textContent = 'غير متصل';
+  }
+})();
+
+/* ─── History ─── */
+function addHistory(name, ok) {
+  history.unshift({name, ok, ts:Date.now()});
+  if(history.length>20) history=history.slice(0,20);
   localStorage.setItem('pai_hist', JSON.stringify(history));
   renderHistory();
 }
-
-function renderHistory() {
-  const el = document.getElementById('historyList');
-  if (!history.length) { el.innerHTML = '<div class="empty-hist">لا يوجد سجل</div>'; return; }
-  el.innerHTML = history.map(h => {
-    const d = new Date(h.ts).toLocaleString('ar', { hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit' });
-    const t = h.thumb ? `<img class="history-thumb" src="${h.thumb}" alt="">` : '<div class="history-thumb" style="background:#1a1a2e"></div>';
-    return `<div class="history-item">${t}<div><div class="history-name">${(h.name||'').slice(0,22)}</div><div class="history-date">${d}</div></div><span class="history-badge ${h.ok?'badge-ok':'badge-fail'}">${h.ok?'✓ نجح':'✗ فشل'}</span></div>`;
-  }).join('');
-}
-
 function clearHistory() {
-  history = [];
+  history=[];
   localStorage.removeItem('pai_hist');
   renderHistory();
+}
+function renderHistory() {
+  const el = document.getElementById('historyList');
+  if(!history.length){ el.innerHTML='<p class="text-sm text-on-surface-variant text-center py-4">لا يوجد سجل</p>'; return; }
+  el.innerHTML = history.map(h => {
+    const d = new Date(h.ts).toLocaleString('ar',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'});
+    return `<div class="bg-surface-container-lowest rounded-xl px-4 py-2.5 flex items-center gap-3 editorial-shadow">
+      <div class="flex-1">
+        <p class="text-xs font-bold text-on-surface truncate">${(h.name||'').slice(0,30)}</p>
+        <p class="text-[11px] text-on-surface-variant">${d}</p>
+      </div>
+      <span class="text-[11px] font-bold px-2 py-0.5 rounded-full ${h.ok?'bg-green-100 text-green-700':'bg-error-container text-error'}">${h.ok?'✓ نجح':'✗ فشل'}</span>
+    </div>`;
+  }).join('');
 }
 </script>
 </body>
