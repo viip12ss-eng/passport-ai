@@ -310,6 +310,7 @@ function initVisaSelect() {
 }
 function changeVisaType(type) {
   currentVisaType = type;
+  sessionStorage.setItem('sov_visa_type', type);
   REQUIRED_DOCS = VISA_TYPES[type]?.docs || [];
   slotStatus = {};
   renderDocumentList(REQUIRED_DOCS, 'requiredList');
@@ -555,17 +556,29 @@ function showPassportResult(d) {
 }
 
 window.addEventListener('load', () => {
-  // إذا إعادة تحميل يدوية → امسح السجل
   const navType = performance.getEntriesByType?.('navigation')?.[0]?.type;
+
   if (navType === 'reload') {
+    // تحميل يدوي — امسح كل شيء (التأشيرة + المكتمل)
     sessionStorage.removeItem('pai_done_slots_session');
+    sessionStorage.removeItem('sov_visa_type');
+  } else {
+    // رجوع من السكانر — استرجع نوع التأشيرة
+    const savedType = sessionStorage.getItem('sov_visa_type');
+    if (savedType && VISA_TYPES[savedType]) {
+      currentVisaType = savedType;
+      REQUIRED_DOCS = VISA_TYPES[savedType].docs;
+      renderDocumentList(REQUIRED_DOCS, 'requiredList');
+      const sel = document.getElementById('visaTypeSelect');
+      if (sel) sel.value = savedType;
+    }
   }
 
-  // استرجع المستندات المكتملة من sessionStorage
+  // استرجع المستندات المكتملة
   const sessionDone = JSON.parse(sessionStorage.getItem('pai_done_slots_session') || '[]');
   sessionDone.forEach(slot => setSlotStatus(slot, 'sent'));
 
-  // رجوع من السكانر
+  // رجوع من السكانر بـ ?done=
   const urlDone = Number(new URLSearchParams(location.search).get('done') || 0);
   if (urlDone) {
     if (!sessionDone.includes(urlDone)) {
