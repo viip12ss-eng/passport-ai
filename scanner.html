@@ -918,12 +918,16 @@ function showSuccess(d) {
         <span class="result-label">حالة الإرسال</span>
         <span class="result-val">تم الرفع إلى الكمبيوتر</span>
       </div>
-      <div class="result-row">
-        <span class="result-label">رمز الربط</span>
-        <span class="result-val">${getClaimCode() || '---'}</span>
-      </div>
+
     `;
     document.getElementById('successView').style.display = 'flex';
+    // حفظ الـ slot كمكتمل والعودة للرئيسية تلقائياً
+    const doneSlot = Number(sessionStorage.getItem('pai_pending_slot') || new URLSearchParams(location.search).get('slot') || 0);
+    if (doneSlot) {
+      const done = JSON.parse(localStorage.getItem('pai_done_slots') || '[]');
+      if (!done.includes(doneSlot)) { done.push(doneSlot); localStorage.setItem('pai_done_slots', JSON.stringify(done)); }
+    }
+    setTimeout(() => { window.location.href = 'index.html?done=' + doneSlot; }, 1500);
     return;
   }
 
