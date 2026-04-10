@@ -847,7 +847,11 @@ async function sendImage() {
         _slot: Number(sessionStorage.getItem('pai_pending_slot') || 0),
         _source: 'mobile-document-scanner',
         _ts: Date.now(),
-        fileName: `document-scan-${Date.now()}.jpg`,
+        fileName: (()=>{
+          const slotNames={1:'عقد العمل',2:'صورة جواز السفر لصاحب الطلب',3:'صورة جواز السفر للملتحق به',4:'صورة شخصية لصاحب الطلب',5:'اثبات صلة قرابة',6:'صورة بطاقة الإقامة للملتحق به',7:'رسالة صاحب العمل (تعهد)'};
+          const s=Number(sessionStorage.getItem('pai_pending_slot')||0);
+          return (slotNames[s]||`مستند-${s}`) + '.jpg';
+        })(),
         mimeType: 'image/jpeg',
         contentBase64: await blobToBase64(processedBlob)
       };
