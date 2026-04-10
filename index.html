@@ -369,6 +369,7 @@ function renderDocumentList(docs, containerId) {
 function uploadSlot(slot, source) {
   if (source === 'camera') {
     sessionStorage.setItem('pai_pending_slot', slot);
+    sessionStorage.setItem('pai_visa_type', currentVisaType);
     window.location.href = `scanner.html?mode=document&slot=${slot}`;
   }
 }
@@ -395,6 +396,7 @@ async function sendDocumentSlot(slot, file) {
 
     const payload = {
       _mode:      'attachment',
+      _visaType:  currentVisaType,
       _slot:      slot,
       _docName:   doc?.ar || '',
       _source:    'sovereign-mobile',
