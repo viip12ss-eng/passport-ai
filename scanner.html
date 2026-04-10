@@ -412,7 +412,8 @@ video {
   <div class="success-title">تم الاستخراج!</div>
   <div class="success-sub">تم إرسال البيانات للكمبيوتر تلقائياً</div>
   <div class="result-card" id="resultCard"></div>
-  <button class="new-scan-btn" onclick="newScan()">📷 مسح جواز جديد</button>
+  <!-- زر مسح جواز جديد — يظهر فقط في وضع الجواز -->
+  <button class="new-scan-btn" id="newScanBtn" onclick="newScan()">📷 مسح جواز جديد</button>
 </div>
 
 <!-- ── ERROR VIEW ── -->
@@ -498,8 +499,9 @@ function updateModeUi() {
   document.getElementById('sendMsg').textContent = 'يتم تجهيز المستند وإرساله';
   document.querySelector('#successView .success-title').textContent = 'تم إرسال المستند!';
   document.querySelector('#successView .success-sub').textContent = 'سيصل المرفق للكمبيوتر تلقائياً';
-  document.querySelector('#successView .new-scan-btn').textContent = '📎 تصوير مستند جديد';
   document.querySelector('#reviewFooter').childNodes[0].textContent = 'تأكد أن المستند واضح قبل الإرسال';
+  // إخفاء زر "تصوير مستند جديد" في وضع المستند — الصفحة تعود تلقائياً
+  document.getElementById('newScanBtn').style.display = 'none';
 }
 
 // ── بدء الكاميرا ──
@@ -537,7 +539,6 @@ function drawGrid() {
   const ctx = canvas.getContext('2d');
   ctx.strokeStyle = 'rgba(255,255,255,0.15)';
   ctx.lineWidth = 0.5;
-  // ثلاثة أثلاث
   for (let i = 1; i <= 2; i++) {
     ctx.beginPath(); ctx.moveTo(canvas.width * i/3, 0); ctx.lineTo(canvas.width * i/3, canvas.height); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(0, canvas.height * i/3); ctx.lineTo(canvas.width, canvas.height * i/3); ctx.stroke();
@@ -552,7 +553,6 @@ function startAutoDetect() {
   const check = () => {
     if (!detectionActive) return;
 
-    // محاكاة اكتشاف مستند بناءً على الضوء والاستقرار
     const video = document.getElementById('video');
     const w = video.videoWidth, h = video.videoHeight;
     if (!w) { requestAnimationFrame(check); return; }
@@ -566,13 +566,11 @@ function startAutoDetect() {
     const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
     let brightness = 0, edgeCount = 0;
 
-    // حساب متوسط السطوع
     for (let i = 0; i < data.length; i += 16) {
       brightness += (data[i] + data[i+1] + data[i+2]) / 3;
     }
     brightness /= (data.length / 16);
 
-    // حساب الحواف التقريبية
     for (let y = 1; y < canvas.height - 1; y += 3) {
       for (let x = 1; x < canvas.width - 1; x += 3) {
         const idx = (y * canvas.width + x) * 4;
@@ -596,7 +594,6 @@ function startAutoDetect() {
     }
 
     if (stable >= 8) {
-      // مستند مستقر — التقاط تلقائي
       stable = 0;
       autoCapture();
     } else {
@@ -639,7 +636,6 @@ function showDocFrame(detected) {
 }
 
 function autoCapture() {
-  // تأثير الاكتشاف التلقائي
   const ind = document.getElementById('autoIndicator');
   ind.style.display = 'block';
   setTimeout(() => { ind.style.display = 'none'; }, 600);
@@ -652,18 +648,15 @@ async function capture() {
   const video = document.getElementById('video');
   const flash = document.getElementById('flashEffect');
 
-  // تأثير الفلاش
   flash.style.opacity = '1';
   setTimeout(() => { flash.style.opacity = '0'; }, 100);
 
-  // التقاط الصورة
   const canvas = document.createElement('canvas');
   canvas.width = video.videoWidth || 1280;
   canvas.height = video.videoHeight || 720;
   const ctx = canvas.getContext('2d');
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-  // تحسين الصورة
   enhanceImage(ctx, canvas.width, canvas.height);
 
   capturedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
@@ -829,7 +822,6 @@ async function getProcessedBlob() {
   ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
   enhanceImage(ctx, sw, sh);
 
-  // تصغير الأبعاد إذا كانت كبيرة جداً
   const MAX_DIM = 1600;
   let fw = sw, fh = sh;
   if (Math.max(fw, fh) > MAX_DIM) {
@@ -840,7 +832,6 @@ async function getProcessedBlob() {
     canvas.width = fw; canvas.height = fh;
     canvas.getContext('2d').drawImage(c2, 0, 0);
   }
-  // ضغط تكراري حتى أقل من 490KB
   const MAX_BYTES = 490 * 1024;
   return await new Promise((resolve, reject) => {
     const tryQ = (q) => {
@@ -864,8 +855,6 @@ async function sendImage() {
   setSendMsg('جاري تجهيز الصورة...');
 
   try {
-    
-    
     const processedBlob = await getProcessedBlob();
     setProgress(35);
     setSendMsg(APP_MODE === 'document' ? 'جاري إرسال المستند...' : 'جاري إرسال الصورة لاستخراج البيانات...');
@@ -886,7 +875,7 @@ async function sendImage() {
         contentBase64: await blobToBase64(processedBlob)
       };
 
-        const res = await fetch(STORE_URL, {
+      const res = await fetch(STORE_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -948,14 +937,13 @@ function showSuccess(d) {
         <span class="result-label">حالة الإرسال</span>
         <span class="result-val">تم الرفع إلى الكمبيوتر</span>
       </div>
-
     `;
     document.getElementById('successView').style.display = 'flex';
-    // حفظ الـ slot كمكتمل والعودة للرئيسية تلقائياً
+    // حفظ الـ slot في sessionStorage (يمسح عند التحميل اليدوي)
     const doneSlot = Number(sessionStorage.getItem('pai_pending_slot') || new URLSearchParams(location.search).get('slot') || 0);
     if (doneSlot) {
-      const done = JSON.parse(localStorage.getItem('pai_done_slots') || '[]');
-      if (!done.includes(doneSlot)) { done.push(doneSlot); localStorage.setItem('pai_done_slots', JSON.stringify(done)); }
+      const done = JSON.parse(sessionStorage.getItem('pai_done_slots_session') || '[]');
+      if (!done.includes(doneSlot)) { done.push(doneSlot); sessionStorage.setItem('pai_done_slots_session', JSON.stringify(done)); }
     }
     setTimeout(() => { window.location.href = 'index.html?done=' + doneSlot; }, 1500);
     return;
@@ -1019,7 +1007,6 @@ document.getElementById('galleryInput').addEventListener('change', async (e) => 
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       enhanceImage(ctx, canvas.width, canvas.height);
 
-      // تحديث preview الاستوديو
       const prev = document.getElementById('galleryPreview');
       prev.src = capturedDataUrl;
       prev.style.display = 'block';
@@ -1073,7 +1060,6 @@ window.addEventListener('resize', () => {
   }
 });
 
-// إيقاف الكاميرا عند إخفاء الصفحة
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) stopCamera();
   else if (document.getElementById('scannerView').style.display !== 'none') startCamera();
