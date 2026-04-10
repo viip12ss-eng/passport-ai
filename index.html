@@ -320,7 +320,7 @@ function renderDocumentList(docs, containerId) {
 function uploadSlot(slot, source) {
   if (source === 'camera') {
     sessionStorage.setItem('pai_pending_slot', slot);
-    window.location.href = `scanner.html?mode=document`;
+    window.location.href = `scanner.html?mode=document&slot=${slot}`;
   }
 }
 
