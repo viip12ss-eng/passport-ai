@@ -820,8 +820,28 @@ async function getProcessedBlob() {
   ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
   enhanceImage(ctx, sw, sh);
 
+  // تصغير الأبعاد إذا كانت كبيرة جداً
+  const MAX_DIM = 1600;
+  let fw = sw, fh = sh;
+  if (Math.max(fw, fh) > MAX_DIM) {
+    const sc = MAX_DIM / Math.max(fw, fh);
+    fw = Math.round(fw * sc); fh = Math.round(fh * sc);
+    const c2 = document.createElement('canvas'); c2.width = fw; c2.height = fh;
+    c2.getContext('2d').drawImage(canvas, 0, 0, fw, fh);
+    canvas.width = fw; canvas.height = fh;
+    canvas.getContext('2d').drawImage(c2, 0, 0);
+  }
+  // ضغط تكراري حتى أقل من 490KB
+  const MAX_BYTES = 490 * 1024;
   return await new Promise((resolve, reject) => {
-    canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('تعذر قص الصورة')), 'image/jpeg', 0.95);
+    const tryQ = (q) => {
+      canvas.toBlob(b => {
+        if (!b) { reject(new Error('blob failed')); return; }
+        if (b.size <= MAX_BYTES || q <= 0.4) resolve(b);
+        else tryQ(Math.round((q - 0.08) * 100) / 100);
+      }, 'image/jpeg', q);
+    };
+    tryQ(0.85);
   });
 }
 
