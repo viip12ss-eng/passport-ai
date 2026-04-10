@@ -271,10 +271,8 @@ const VISA_TYPES = {
     ]
   },
 };
-let currentVisaType = localStorage.getItem('pai_visa_type') || '14A';
-// migrate old '14' key to '14A'
-if (currentVisaType === '14') { currentVisaType = '14A'; localStorage.setItem('pai_visa_type', '14A'); }
-let REQUIRED_DOCS = VISA_TYPES[currentVisaType]?.docs || VISA_TYPES['14A'].docs;
+let currentVisaType = '';
+let REQUIRED_DOCS = [];
 
 const OPTIONAL_DOCS = [
   { slot:101, ar:'مستندات اختيارية 1', en:'Optional Document 1', icon:'attach_file' },
@@ -294,6 +292,14 @@ let history = JSON.parse(localStorage.getItem('pai_hist') || '[]');
 /* ─── Init ─── */
 function initVisaSelect() {
   const sel = document.getElementById('visaTypeSelect');
+  // خيار افتراضي
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = '— اختر نوع التأشيرة —';
+  placeholder.disabled = true;
+  placeholder.selected = !currentVisaType;
+  sel.appendChild(placeholder);
+
   Object.entries(VISA_TYPES).forEach(([key, val]) => {
     const opt = document.createElement('option');
     opt.value = key;
@@ -304,8 +310,7 @@ function initVisaSelect() {
 }
 function changeVisaType(type) {
   currentVisaType = type;
-  localStorage.setItem('pai_visa_type', type);
-  REQUIRED_DOCS = VISA_TYPES[type]?.docs || VISA_TYPES['14A'].docs;
+  REQUIRED_DOCS = VISA_TYPES[type]?.docs || [];
   slotStatus = {};
   renderDocumentList(REQUIRED_DOCS, 'requiredList');
 }
@@ -413,6 +418,9 @@ async function sendDocumentSlot(slot, file) {
     if (!res.ok) throw new Error('HTTP ' + res.status);
 
     setSlotStatus(slot, 'sent');
+    // حفظ في sessionStorage
+    const sd = JSON.parse(sessionStorage.getItem('pai_done_slots_session') || '[]');
+    if (!sd.includes(slot)) { sd.push(slot); sessionStorage.setItem('pai_done_slots_session', JSON.stringify(sd)); }
     hideWaitingBanner();
     addHistory(doc?.ar || `Slot ${slot}`, true);
 
@@ -547,9 +555,23 @@ function showPassportResult(d) {
 }
 
 window.addEventListener('load', () => {
-  // لا يوجد حفظ - تختفي "تم" عند إعادة التحميل تلقائياً
+  // إذا إعادة تحميل يدوية → امسح السجل
+  const navType = performance.getEntriesByType?.('navigation')?.[0]?.type;
+  if (navType === 'reload') {
+    sessionStorage.removeItem('pai_done_slots_session');
+  }
+
+  // استرجع المستندات المكتملة من sessionStorage
+  const sessionDone = JSON.parse(sessionStorage.getItem('pai_done_slots_session') || '[]');
+  sessionDone.forEach(slot => setSlotStatus(slot, 'sent'));
+
+  // رجوع من السكانر
   const urlDone = Number(new URLSearchParams(location.search).get('done') || 0);
   if (urlDone) {
+    if (!sessionDone.includes(urlDone)) {
+      sessionDone.push(urlDone);
+      sessionStorage.setItem('pai_done_slots_session', JSON.stringify(sessionDone));
+    }
     setSlotStatus(urlDone, 'sent');
     history.replaceState({}, '', location.pathname);
   }
