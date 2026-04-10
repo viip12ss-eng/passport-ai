@@ -350,7 +350,7 @@ async function sendDocumentSlot(slot, file) {
       _docName:   doc?.ar || '',
       _source:    'sovereign-mobile',
       _ts:        Date.now(),
-      fileName:   file.name.replace(/\.[^.]+$/, '') + `-slot${slot}.jpg`,
+      fileName:   (doc?.ar || `slot${slot}`) + '.jpg',
       mimeType:   'image/jpeg',
       contentBase64: base64
     };
