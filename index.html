@@ -308,7 +308,6 @@ function changeVisaType(type) {
   REQUIRED_DOCS = VISA_TYPES[type]?.docs || VISA_TYPES['14A'].docs;
   slotStatus = {};
   renderDocumentList(REQUIRED_DOCS, 'requiredList');
-  renderDoneSlots();
 }
 initVisaSelect();
 renderDocumentList(REQUIRED_DOCS, 'requiredList');
@@ -423,8 +422,7 @@ async function sendDocumentSlot(slot, file) {
     addHistory(`Slot ${slot}`, false);
   }
 
-  // reset after 6s
-  setTimeout(() => setSlotStatus(slot, 'idle'), 6000);
+  // لا reset - تبقى "تم" حتى إعادة التحميل
 }
 
 /* ─── حالة البطاقة ─── */
@@ -548,19 +546,10 @@ function showPassportResult(d) {
   ).join('') || '<p class="text-sm text-on-surface-variant">لا توجد بيانات</p>';
 }
 
-/* ─── Done slots rendering ─── */
-function renderDoneSlots() {
-  const done = JSON.parse(localStorage.getItem('pai_done_slots') || '[]');
-  done.forEach(slot => setSlotStatus(slot, 'sent'));
-}
-
-
 window.addEventListener('load', () => {
-  renderDoneSlots();
+  // لا يوجد حفظ - تختفي "تم" عند إعادة التحميل تلقائياً
   const urlDone = Number(new URLSearchParams(location.search).get('done') || 0);
   if (urlDone) {
-    const done = JSON.parse(localStorage.getItem('pai_done_slots') || '[]');
-    if (!done.includes(urlDone)) { done.push(urlDone); localStorage.setItem('pai_done_slots', JSON.stringify(done)); }
     setSlotStatus(urlDone, 'sent');
     history.replaceState({}, '', location.pathname);
   }
