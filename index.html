@@ -90,17 +90,6 @@ tailwind.config = {
 <!-- Main -->
 <main class="px-5 pt-24">
 
-  <!-- الوضع: جواز / مستندات -->
-  <div class="flex gap-2 mb-6">
-    <button onclick="setMode('docs')" id="btnDocs"
-      class="flex-1 py-3 rounded-3xl font-headline font-bold text-sm transition-all active:scale-95 bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-lg">
-      المستندات
-    </button>
-    <button onclick="setMode('passport')" id="btnPassport"
-      class="flex-1 py-3 rounded-3xl font-headline font-bold text-sm transition-all active:scale-95 bg-surface-container text-on-surface-variant">
-      الجواز
-    </button>
-  </div>
 
   <!-- ═══ وضع المستندات ═══ -->
   <div id="docsView">
@@ -116,6 +105,18 @@ tailwind.config = {
         <button onclick="stopAll()" class="mr-auto w-8 h-8 rounded-full bg-white/20 flex items-center justify-center active:scale-90">
           <span class="material-symbols-outlined text-sm">close</span>
         </button>
+      </div>
+    </div>
+
+    <!-- اختيار نوع التأشيرة -->
+    <div class="mb-5">
+      <p class="text-xs font-bold text-on-surface-variant mb-2">نوع التأشيرة</p>
+      <div class="relative">
+        <select id="visaTypeSelect"
+          onchange="changeVisaType(this.value)"
+          class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-2xl px-4 py-3 text-sm font-bold text-on-surface appearance-none editorial-shadow focus:outline-none focus:border-primary/40 cursor-pointer">
+        </select>
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-lg">expand_more</span>
       </div>
     </div>
 
@@ -206,13 +207,13 @@ tailwind.config = {
 <!-- Bottom Nav -->
 <nav class="fixed bottom-0 left-0 w-full z-50 glass-panel flex justify-around items-center px-4 pb-safe pt-3 rounded-t-3xl safe-bottom"
      style="box-shadow:0 -8px 24px rgba(0,64,161,0.12);">
-  <button onclick="setMode('docs')" id="navDocs" class="flex flex-col items-center gap-1 px-4 py-2 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary">
-    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">description</span>
-    <span class="text-[11px] font-bold">المستندات</span>
+  <button onclick="setMode('passport')" id="navPassport" class="flex flex-col items-center gap-1 px-4 py-2 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary">
+    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">menu_book</span>
+    <span class="text-[11px] font-bold">الجواز</span>
   </button>
-  <button onclick="setMode('passport')" id="navPassport" class="flex flex-col items-center gap-1 px-4 py-2 text-on-surface-variant">
-    <span class="material-symbols-outlined">menu_book</span>
-    <span class="text-[11px] font-medium">الجواز</span>
+  <button onclick="setMode('docs')" id="navDocs" class="flex flex-col items-center gap-1 px-4 py-2 text-on-surface-variant">
+    <span class="material-symbols-outlined">description</span>
+    <span class="text-[11px] font-medium">المستندات</span>
   </button>
 </nav>
 
@@ -222,21 +223,56 @@ tailwind.config = {
 <script>
 'use strict';
 
+function sanitizeFileName(name) {
+  return name
+    .replace(/[()\[\]{}'"،,؛;:!@#$%^&*+=|\\/<>?]/g, '')
+    .replace(/[-–—]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+
 /* ─── Config ─── */
 const API_BASE  = localStorage.getItem('pai_api_base')  || 'https://phd-considering-aaa-despite.trycloudflare.com';
 const STORE_URL = localStorage.getItem('pai_store_url') || `${API_BASE}/webhook/passport-store`;
 const EXTRACT_URL = localStorage.getItem('pai_extract_url') || `${API_BASE}/webhook/passport-extract1`;
 
-/* ─── المستندات المطلوبة (مطابقة لترتيب الكمبيوتر) ─── */
-const REQUIRED_DOCS = [
-  { slot:1, ar:'عقد العمل',                       en:'Employment Contract',        icon:'work'          },
-  { slot:2, ar:'صورة جواز السفر لصاحب الطلب',     en:'Passport Copy (Applicant)',  icon:'credit_card'   },
-  { slot:3, ar:'صورة جواز السفر للمتلحق به',       en:'Passport Copy (Dependent)',  icon:'credit_card'   },
-  { slot:4, ar:'صورة شخصية لصاحب الطلب',          en:'Personal Photo (Applicant)', icon:'account_circle'},
-  { slot:5, ar:'إثبات صلة قرابة',                  en:'Proof of Relationship',      icon:'family_history'},
-  { slot:6, ar:'صورة بطاقة الإقامة للمتلحق به',    en:'Residence Card (Dependent)', icon:'badge'         },
-  { slot:7, ar:'رسالة صاحب العمل (تعهد)',           en:'Employer\'s Letter',         icon:'business'      },
-];
+/* ─── أنواع التأشيرات ─── */
+const VISA_TYPES = {
+  '14': {
+    label: 'تأشيرة الالتحاق بالأقارب - 14',
+    docs: [
+      { slot:1, ar:'عقد العمل',                          en:'Employment Contract',        icon:'work'          },
+      { slot:2, ar:'صورة جواز السفر لصاحب الطلب',        en:'Passport Copy (Applicant)',  icon:'credit_card'   },
+      { slot:3, ar:'صورة جواز السفر للملتحق به',          en:'Passport Copy (Dependent)',  icon:'credit_card'   },
+      { slot:4, ar:'صورة شخصية لصاحب الطلب',             en:'Personal Photo (Applicant)', icon:'account_circle'},
+      { slot:5, ar:'اثبات صلة قرابة',                     en:'Proof of Relationship',      icon:'family_history'},
+      { slot:6, ar:'صورة بطاقة الإقامة للملتحق به',       en:'Residence Card (Dependent)', icon:'badge'         },
+      { slot:7, ar:'رسالة صاحب العمل تعهد',               en:'Employer Letter',            icon:'business'      },
+    ]
+  },
+  '25E': {
+    label: 'تأشيرة متعددة الرحلات - 25E',
+    docs: [
+      { slot:1, ar:'صورة جواز السفر لصاحب الطلب',        en:'Passport Copy (Applicant)',  icon:'credit_card'   },
+      { slot:2, ar:'صورة شخصية لصاحب الطلب',             en:'Personal Photo (Applicant)', icon:'account_circle'},
+      { slot:3, ar:'رسالة صاحب العمل الغرض',              en:'Employer Letter (Purpose)',  icon:'business'      },
+    ]
+  },
+  '4B': {
+    label: 'تأشيرة زيارة عائلية - 4B',
+    docs: [
+      { slot:1, ar:'صورة جواز السفر لصاحب الطلب',        en:'Passport Copy (Applicant)',  icon:'credit_card'   },
+      { slot:2, ar:'صورة جواز السفر للملتحق به',          en:'Passport Copy (Dependent)',  icon:'credit_card'   },
+      { slot:3, ar:'صورة شخصية لصاحب الطلب',             en:'Personal Photo (Applicant)', icon:'account_circle'},
+      { slot:4, ar:'اثبات صلة قرابة',                     en:'Proof of Relationship',      icon:'family_history'},
+      { slot:5, ar:'صورة بطاقة الإقامة للملتحق به',       en:'Residence Card (Dependent)', icon:'badge'         },
+      { slot:6, ar:'رسالة صاحب العمل تعهد',               en:'Employer Letter',            icon:'business'      },
+    ]
+  },
+};
+let currentVisaType = localStorage.getItem('pai_visa_type') || '14';
+let REQUIRED_DOCS = VISA_TYPES[currentVisaType]?.docs || VISA_TYPES['14'].docs;
 
 const OPTIONAL_DOCS = [
   { slot:101, ar:'مستندات اختيارية 1', en:'Optional Document 1', icon:'attach_file' },
@@ -248,12 +284,31 @@ const OPTIONAL_DOCS = [
 ];
 
 /* ─── State ─── */
-let appMode = localStorage.getItem('pai_mode') || 'docs';
+let appMode = localStorage.getItem('pai_mode') || 'passport';
 let slotStatus = {}; // slot -> 'idle'|'uploading'|'sent'|'error'
 let passportFile = null, passportDataUrl = null, sending = false;
 let history = JSON.parse(localStorage.getItem('pai_hist') || '[]');
 
 /* ─── Init ─── */
+function initVisaSelect() {
+  const sel = document.getElementById('visaTypeSelect');
+  Object.entries(VISA_TYPES).forEach(([key, val]) => {
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = val.label;
+    if (key === currentVisaType) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+function changeVisaType(type) {
+  currentVisaType = type;
+  localStorage.setItem('pai_visa_type', type);
+  REQUIRED_DOCS = VISA_TYPES[type]?.docs || VISA_TYPES['14'].docs;
+  slotStatus = {};
+  renderDocumentList(REQUIRED_DOCS, 'requiredList');
+  renderDoneSlots();
+}
+initVisaSelect();
 renderDocumentList(REQUIRED_DOCS, 'requiredList');
 renderDocumentList(OPTIONAL_DOCS, 'optionalList');
 setMode(appMode);
@@ -267,12 +322,10 @@ function setMode(mode) {
   document.getElementById('docsView').classList.toggle('hidden', mode !== 'docs');
   document.getElementById('passportView').classList.toggle('hidden', mode !== 'passport');
   // top btns
-  document.getElementById('btnDocs').className    = 'flex-1 py-3 rounded-3xl font-headline font-bold text-sm transition-all active:scale-95 ' + (mode==='docs' ? 'bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-lg' : 'bg-surface-container text-on-surface-variant');
-  document.getElementById('btnPassport').className = 'flex-1 py-3 rounded-3xl font-headline font-bold text-sm transition-all active:scale-95 ' + (mode==='passport' ? 'bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-lg' : 'bg-surface-container text-on-surface-variant');
   // nav
   const navBase = 'flex flex-col items-center gap-1 px-4 py-2 ';
-  document.getElementById('navDocs').className    = navBase + (mode==='docs'     ? 'rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary' : 'text-on-surface-variant');
   document.getElementById('navPassport').className = navBase + (mode==='passport' ? 'rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary' : 'text-on-surface-variant');
+  document.getElementById('navDocs').className    = navBase + (mode==='docs'     ? 'rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary' : 'text-on-surface-variant');
 }
 
 /* ─── بناء قائمة المستندات ─── */
@@ -346,7 +399,7 @@ async function sendDocumentSlot(slot, file) {
       _docName:   doc?.ar || '',
       _source:    'sovereign-mobile',
       _ts:        Date.now(),
-      fileName:   (doc?.ar || `slot${slot}`) + '.jpg',
+      fileName:   sanitizeFileName(doc?.ar || `slot${slot}`) + '.jpg',
       mimeType:   'image/jpeg',
       contentBase64: base64
     };
@@ -498,6 +551,13 @@ function showPassportResult(d) {
 function renderDoneSlots() {
   const done = JSON.parse(localStorage.getItem('pai_done_slots') || '[]');
   done.forEach(slot => setSlotStatus(slot, 'sent'));
+}
+
+/* ─── طلب إذن الكاميرا مسبقاً ─── */
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    .then(s => { s.getTracks().forEach(t => t.stop()); }) // نوقف مباشرة، فقط للحصول على الإذن
+    .catch(() => {}); // تجاهل لو رفض المستخدم
 }
 
 window.addEventListener('load', () => {
