@@ -426,6 +426,15 @@ video {
 <script>
 'use strict';
 
+function sanitizeFileName(name) {
+  return name
+    .replace(/[()\[\]{}'"،,؛;:!@#$%^&*+=|\\/<>?]/g, '')
+    .replace(/[-–—]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+
 // ── الإعدادات ──
 const SEARCH = new URLSearchParams(location.search);
 const APP_MODE = SEARCH.get('mode') === 'document' || localStorage.getItem('pai_mobile_mode') === 'document' ? 'document' : 'passport';
@@ -870,7 +879,7 @@ async function sendImage() {
         fileName: (()=>{
           const slotNames={1:'عقد العمل',2:'صورة جواز السفر لصاحب الطلب',3:'صورة جواز السفر للملتحق به',4:'صورة شخصية لصاحب الطلب',5:'اثبات صلة قرابة',6:'صورة بطاقة الإقامة للملتحق به',7:'رسالة صاحب العمل (تعهد)'};
           const s=Number(sessionStorage.getItem('pai_pending_slot')||new URLSearchParams(location.search).get('slot')||0);
-          return (slotNames[s]||`مستند-${s}`) + '.jpg';
+          return sanitizeFileName(slotNames[s]||`مستند ${s}`) + '.jpg';
         })(),
         mimeType: 'image/jpeg',
         contentBase64: await blobToBase64(processedBlob)
