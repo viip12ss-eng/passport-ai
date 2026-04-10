@@ -429,7 +429,7 @@ video {
 // ── الإعدادات ──
 const SEARCH = new URLSearchParams(location.search);
 const APP_MODE = SEARCH.get('mode') === 'document' || localStorage.getItem('pai_mobile_mode') === 'document' ? 'document' : 'passport';
-const API_BASE = localStorage.getItem('pai_api_base') || 'https://phd-considering-aaa-despite.trycloudflare.com';
+const API_BASE = localStorage.getItem('pai_api_base') || 'http://76.13.180.201:5678';
 const STORE_URL = localStorage.getItem('pai_store_url') || `${API_BASE}/webhook/passport-store`;
 const EXTRACT_URL = localStorage.getItem('pai_extract_url')
   || localStorage.getItem('pai_webhook')
@@ -835,17 +835,16 @@ async function sendImage() {
   setSendMsg('جاري تجهيز الصورة...');
 
   try {
-    if (!getOwnerKey()) throw new Error('معرف المشترك غير مضبوط في التطبيق.');
-    if (!getClaimCode()) throw new Error('رمز الصفحة غير مضبوط في التطبيق.');
+    
+    
     const processedBlob = await getProcessedBlob();
     setProgress(35);
     setSendMsg(APP_MODE === 'document' ? 'جاري إرسال المستند...' : 'جاري إرسال الصورة لاستخراج البيانات...');
 
     if (APP_MODE === 'document') {
       const payload = {
-        _owner: getOwnerKey(),
-        _claim: getClaimCode(),
         _mode: 'attachment',
+        _slot: Number(sessionStorage.getItem('pai_pending_slot') || 0),
         _source: 'mobile-document-scanner',
         _ts: Date.now(),
         fileName: `document-scan-${Date.now()}.jpg`,
@@ -870,8 +869,6 @@ async function sendImage() {
     const fd = new FormData();
     fd.append('data', processedBlob, 'passport-scan.jpg');
     fd.append('_sid', SID);
-    fd.append('_owner', getOwnerKey());
-    fd.append('_claim', getClaimCode());
     fd.append('_source', 'mobile-scanner');
 
     ensureReachableWebhook(EXTRACT_URL);
