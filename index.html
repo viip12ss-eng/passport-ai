@@ -529,28 +529,38 @@ window.addEventListener('load', () => {
 
 /* ─── معالجة الصورة ─── */
 async function processImage(f) {
-  return new Promise((res,rej) => {
+  return new Promise((res, rej) => {
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
       img.onload = () => {
-        const s = Math.min(1, 2200/Math.max(img.width,img.height));
-        const w=Math.round(img.width*s), h=Math.round(img.height*s);
-        const c=document.createElement('canvas'); c.width=w; c.height=h;
-        const ctx=c.getContext('2d'); ctx.drawImage(img,0,0,w,h);
-        const d=ctx.getImageData(0,0,w,h);
+        // ابدأ بـ 1600px max بدل 2200
+        const s = Math.min(1, 1600 / Math.max(img.width, img.height));
+        const w = Math.round(img.width * s), h = Math.round(img.height * s);
+        const c = document.createElement('canvas'); c.width = w; c.height = h;
+        const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
+        const d = ctx.getImageData(0,0,w,h);
         for(let i=0;i<d.data.length;i+=4){
-          d.data[i]=Math.min(255,Math.max(0,((d.data[i]-128)*1.12)+130));
-          d.data[i+1]=Math.min(255,Math.max(0,((d.data[i+1]-128)*1.12)+130));
-          d.data[i+2]=Math.min(255,Math.max(0,((d.data[i+2]-128)*1.12)+130));
+          d.data[i]=Math.min(255,Math.max(0,((d.data[i]-128)*1.1)+130));
+          d.data[i+1]=Math.min(255,Math.max(0,((d.data[i+1]-128)*1.1)+130));
+          d.data[i+2]=Math.min(255,Math.max(0,((d.data[i+2]-128)*1.1)+130));
         }
         ctx.putImageData(d,0,0);
-        c.toBlob(b=>b?res(b):rej(new Error('blob')),'image/jpeg',0.92);
+        // ضغط تكراري: نبدأ بـ 0.85 وننزل حتى أقل من 490KB
+        const MAX_BYTES = 490 * 1024;
+        const tryQuality = (q) => {
+          c.toBlob(b => {
+            if (!b) { rej(new Error('blob failed')); return; }
+            if (b.size <= MAX_BYTES || q <= 0.4) { res(b); }
+            else { tryQuality(Math.round((q - 0.08) * 100) / 100); }
+          }, 'image/jpeg', q);
+        };
+        tryQuality(0.85);
       };
-      img.onerror=()=>rej(new Error('img load'));
-      img.src=reader.result;
+      img.onerror = () => rej(new Error('image load failed'));
+      img.src = reader.result;
     };
-    reader.onerror=()=>rej(new Error('file read'));
+    reader.onerror = () => rej(new Error('file read failed'));
     reader.readAsDataURL(f);
   });
 }
