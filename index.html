@@ -84,11 +84,7 @@ tailwind.config = {
     </div>
     <span class="font-headline font-extrabold text-lg text-on-surface tracking-tight">Sovereign</span>
   </div>
-  <!-- حالة الاتصال -->
-  <div id="connectionBadge" class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-xs font-bold text-on-surface-variant">
-    <span class="w-2 h-2 rounded-full bg-surface-container-highest inline-block" id="connDot"></span>
-    <span id="connLabel">غير متصل</span>
-  </div>
+  
 </header>
 
 <!-- Main -->
@@ -388,7 +384,7 @@ function setSlotStatus(slot, status) {
   const states = {
     idle:      { text:'جاهز',       cls:'bg-surface-container-high text-on-surface-variant' },
     uploading: { text:'جاري الرفع…', cls:'bg-primary-fixed text-primary' },
-    sent:      { text:'✓ تم الإرسال', cls:'bg-green-100 text-green-700' },
+    sent:      { text:'✓ تم', cls:'bg-green-100 text-green-700' },
     error:     { text:'✗ فشل',       cls:'bg-error-container text-error' },
   };
 
@@ -498,7 +494,24 @@ function showPassportResult(d) {
 }
 
 /* ─── اتصال (Scanner callback) ─── */
+/* ─── Done slots rendering ─── */
+function renderDoneSlots() {
+  const done = JSON.parse(localStorage.getItem('pai_done_slots') || '[]');
+  done.forEach(slot => setSlotStatus(slot, 'sent'));
+}
+
 window.addEventListener('load', () => {
+  // Mark done slots on load
+  renderDoneSlots();
+  // Handle redirect back from scanner with ?done=slot
+  const urlDone = Number(new URLSearchParams(location.search).get('done') || 0);
+  if (urlDone) {
+    const done = JSON.parse(localStorage.getItem('pai_done_slots') || '[]');
+    if (!done.includes(urlDone)) { done.push(urlDone); localStorage.setItem('pai_done_slots', JSON.stringify(done)); }
+    setSlotStatus(urlDone, 'sent');
+    // Clean URL
+    history.replaceState({}, '', location.pathname);
+  }
   const slot = sessionStorage.getItem('pai_pending_slot');
   const img  = sessionStorage.getItem('pai_scanned_image');
   const name = sessionStorage.getItem('pai_scanned_name') || 'scanned.jpg';
@@ -551,22 +564,7 @@ async function blobToBase64(blob) {
   });
 }
 
-/* ─── Connection badge ─── */
-(async function checkConn() {
-  const dot   = document.getElementById('connDot');
-  const label = document.getElementById('connLabel');
-  try {
-    const r = await fetch(API_BASE + '/healthz', {method:'HEAD', cache:'no-store', signal:AbortSignal.timeout(3000)});
-    if (r.ok || r.status < 500) {
-      dot.className   = 'w-2 h-2 rounded-full bg-green-500 inline-block';
-      label.textContent = 'متصل';
-      document.getElementById('connectionBadge').className = 'flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-50 text-xs font-bold text-green-700';
-    } else { throw new Error(); }
-  } catch {
-    dot.className   = 'w-2 h-2 rounded-full bg-on-surface-variant inline-block opacity-40';
-    label.textContent = 'غير متصل';
-  }
-})();
+
 
 /* ─── History ─── */
 function addHistory(name, ok) {
