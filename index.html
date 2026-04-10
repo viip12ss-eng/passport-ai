@@ -239,8 +239,8 @@ const EXTRACT_URL = localStorage.getItem('pai_extract_url') || `${API_BASE}/webh
 
 /* ─── أنواع التأشيرات ─── */
 const VISA_TYPES = {
-  '14': {
-    label: 'تأشيرة الالتحاق بالأقارب - 14',
+  '14A': {
+    label: 'تأشيرة الالتحاق بالأقارب - 14A',
     docs: [
       { slot:1, ar:'عقد العمل',                          en:'Employment Contract',        icon:'work'          },
       { slot:2, ar:'صورة جواز السفر لصاحب الطلب',        en:'Passport Copy (Applicant)',  icon:'credit_card'   },
@@ -271,8 +271,10 @@ const VISA_TYPES = {
     ]
   },
 };
-let currentVisaType = localStorage.getItem('pai_visa_type') || '14';
-let REQUIRED_DOCS = VISA_TYPES[currentVisaType]?.docs || VISA_TYPES['14'].docs;
+let currentVisaType = localStorage.getItem('pai_visa_type') || '14A';
+// migrate old '14' key to '14A'
+if (currentVisaType === '14') { currentVisaType = '14A'; localStorage.setItem('pai_visa_type', '14A'); }
+let REQUIRED_DOCS = VISA_TYPES[currentVisaType]?.docs || VISA_TYPES['14A'].docs;
 
 const OPTIONAL_DOCS = [
   { slot:101, ar:'مستندات اختيارية 1', en:'Optional Document 1', icon:'attach_file' },
@@ -303,7 +305,7 @@ function initVisaSelect() {
 function changeVisaType(type) {
   currentVisaType = type;
   localStorage.setItem('pai_visa_type', type);
-  REQUIRED_DOCS = VISA_TYPES[type]?.docs || VISA_TYPES['14'].docs;
+  REQUIRED_DOCS = VISA_TYPES[type]?.docs || VISA_TYPES['14A'].docs;
   slotStatus = {};
   renderDocumentList(REQUIRED_DOCS, 'requiredList');
   renderDoneSlots();
@@ -321,8 +323,6 @@ function setMode(mode) {
   localStorage.setItem('pai_mode', mode);
   document.getElementById('docsView').classList.toggle('hidden', mode !== 'docs');
   document.getElementById('passportView').classList.toggle('hidden', mode !== 'passport');
-  // top btns
-  // nav
   const navBase = 'flex flex-col items-center gap-1 px-4 py-2 ';
   document.getElementById('navPassport').className = navBase + (mode==='passport' ? 'rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary' : 'text-on-surface-variant');
   document.getElementById('navDocs').className    = navBase + (mode==='docs'     ? 'rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary' : 'text-on-surface-variant');
@@ -548,7 +548,6 @@ function showPassportResult(d) {
   ).join('') || '<p class="text-sm text-on-surface-variant">لا توجد بيانات</p>';
 }
 
-/* ─── اتصال (Scanner callback) ─── */
 /* ─── Done slots rendering ─── */
 function renderDoneSlots() {
   const done = JSON.parse(localStorage.getItem('pai_done_slots') || '[]');
@@ -557,15 +556,12 @@ function renderDoneSlots() {
 
 
 window.addEventListener('load', () => {
-  // Mark done slots on load
   renderDoneSlots();
-  // Handle redirect back from scanner with ?done=slot
   const urlDone = Number(new URLSearchParams(location.search).get('done') || 0);
   if (urlDone) {
     const done = JSON.parse(localStorage.getItem('pai_done_slots') || '[]');
     if (!done.includes(urlDone)) { done.push(urlDone); localStorage.setItem('pai_done_slots', JSON.stringify(done)); }
     setSlotStatus(urlDone, 'sent');
-    // Clean URL
     history.replaceState({}, '', location.pathname);
   }
   const slot = sessionStorage.getItem('pai_pending_slot');
@@ -590,7 +586,6 @@ async function processImage(f) {
     reader.onload = () => {
       const img = new Image();
       img.onload = () => {
-        // ابدأ بـ 1600px max بدل 2200
         const s = Math.min(1, 1600 / Math.max(img.width, img.height));
         const w = Math.round(img.width * s), h = Math.round(img.height * s);
         const c = document.createElement('canvas'); c.width = w; c.height = h;
@@ -602,7 +597,6 @@ async function processImage(f) {
           d.data[i+2]=Math.min(255,Math.max(0,((d.data[i+2]-128)*1.1)+130));
         }
         ctx.putImageData(d,0,0);
-        // ضغط تكراري: نبدأ بـ 0.85 وننزل حتى أقل من 490KB
         const MAX_BYTES = 490 * 1024;
         const tryQuality = (q) => {
           c.toBlob(b => {
@@ -630,8 +624,6 @@ async function blobToBase64(blob) {
   });
 }
 
-
-
 /* ─── History ─── */
 function addHistory(name, ok) {
   history.unshift({name, ok, ts:Date.now()});
@@ -658,10 +650,6 @@ function renderHistory() {
     </div>`;
   }).join('');
 }
-
-
 </script>
-
-
 </body>
 </html>
