@@ -873,6 +873,7 @@ async function sendImage() {
     if (APP_MODE === 'document') {
       const payload = {
         _mode: 'attachment',
+        _visaType: sessionStorage.getItem('pai_visa_type') || '',
         _slot: Number(sessionStorage.getItem('pai_pending_slot') || 0),
         _source: 'mobile-document-scanner',
         _ts: Date.now(),
