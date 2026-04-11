@@ -414,7 +414,7 @@ async function sendDocumentSlot(slot, file) {
       _docName:   doc?.ar || '',
       _source:    'sovereign-mobile',
       _ts:        Date.now(),
-      fileName:   sanitizeFileName(doc?.ar || `slot${slot}`) + '.jpg',
+      fileName:   (doc?.ar || `مستند ${slot}`) + '.jpg',
       mimeType:   'image/jpeg',
       contentBase64: base64
     };
