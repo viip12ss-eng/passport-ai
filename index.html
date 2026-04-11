@@ -132,7 +132,7 @@ tailwind.config = {
     </section>
 
     <!-- قائمة المستندات الاختيارية -->
-    <section class="mb-8">
+    <section class="mb-8 hidden" id="optionalSection">
       <div class="mb-4">
         <h3 class="text-lg font-headline font-bold text-on-surface">المستندات الاختيارية</h3>
         <p class="text-[11px] text-on-surface-variant mt-0.5">Optional Documents</p>
@@ -322,10 +322,12 @@ function changeVisaType(type) {
   REQUIRED_DOCS = VISA_TYPES[type]?.docs || [];
   slotStatus = {};
   renderDocumentList(REQUIRED_DOCS, 'requiredList');
+  // إظهار المستندات الاختيارية بعد اختيار نوع التأشيرة
+  renderDocumentList(OPTIONAL_DOCS, 'optionalList');
+  document.getElementById('optionalSection').classList.remove('hidden');
 }
 initVisaSelect();
 renderDocumentList(REQUIRED_DOCS, 'requiredList');
-renderDocumentList(OPTIONAL_DOCS, 'optionalList');
 setMode(appMode);
 renderHistory();
 document.getElementById('passportGallery').onchange = e => selectPassportFile(e.target.files[0]);
@@ -577,6 +579,8 @@ window.addEventListener('load', () => {
       currentVisaType = savedType;
       REQUIRED_DOCS = VISA_TYPES[savedType].docs;
       renderDocumentList(REQUIRED_DOCS, 'requiredList');
+      renderDocumentList(OPTIONAL_DOCS, 'optionalList');
+      document.getElementById('optionalSection').classList.remove('hidden');
       const sel = document.getElementById('visaTypeSelect');
       if (sel) sel.value = savedType;
     }
