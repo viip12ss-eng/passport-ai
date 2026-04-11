@@ -239,6 +239,14 @@ const EXTRACT_URL = localStorage.getItem('pai_extract_url') || `${API_BASE}/webh
 
 /* ─── أنواع التأشيرات ─── */
 const VISA_TYPES = {
+  '8A': {
+    label: 'تأشيرة سريعة - 8A',
+    docs: [
+      { slot:1, ar:'صورة جواز السفر لصاحب الطلب',        en:'Passport Copy (Applicant)',  icon:'credit_card'   },
+      { slot:2, ar:'صورة شخصية لصاحب الطلب',             en:'Personal Photo (Applicant)', icon:'account_circle'},
+      { slot:3, ar:'رسالة صاحب العمل (الغرض)',              en:'Employer Letter (Purpose)',  icon:'business'      },
+    ]
+  },
   '14A': {
     label: 'تأشيرة الالتحاق بالأقارب - 14A',
     docs: [
