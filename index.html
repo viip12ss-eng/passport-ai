@@ -180,8 +180,15 @@ tailwind.config = {
     </div>
 
     <button id="passportSendBtn" disabled onclick="sendPassport()"
-      class="w-full py-4 rounded-3xl font-headline font-bold text-base bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-lg disabled:opacity-40 disabled:shadow-none active:scale-98 transition-all">
+      class="w-full py-4 rounded-3xl font-headline font-bold text-base bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-lg disabled:opacity-40 disabled:shadow-none active:scale-98 transition-all mb-3">
       اختر صورة أولاً
+    </button>
+
+    <!-- إرسال للكمبيوتر -->
+    <button id="passportPCBtn" disabled onclick="sendPassportToPC()"
+      class="w-full py-4 rounded-3xl font-headline font-bold text-base text-on-primary shadow-lg disabled:opacity-40 disabled:shadow-none active:scale-98 transition-all"
+      style="background:#16794d;">
+      📤 إرسال للكمبيوتر
     </button>
 
     <!-- نتيجة الاستخراج -->
@@ -518,6 +525,8 @@ function selectPassportFile(f) {
     const btn = document.getElementById('passportSendBtn');
     btn.disabled = false;
     btn.textContent = '🚀 إرسال واستخراج';
+    const pcBtn = document.getElementById('passportPCBtn');
+    if (pcBtn) { pcBtn.disabled = false; }
   };
   r.readAsDataURL(f);
 }
@@ -528,6 +537,8 @@ function clearPassport() {
   document.getElementById('passportResult').classList.add('hidden');
   document.getElementById('passportSendBtn').disabled = true;
   document.getElementById('passportSendBtn').textContent = 'اختر صورة أولاً';
+  const pcBtn = document.getElementById('passportPCBtn');
+  if (pcBtn) { pcBtn.disabled = true; }
 }
 
 async function sendPassport() {
@@ -668,6 +679,45 @@ async function processImage(f) {
     reader.onerror = () => rej(new Error('file read failed'));
     reader.readAsDataURL(f);
   });
+}
+
+/* ─── إرسال صورة الجواز للكمبيوتر عبر STORE_URL ─── */
+async function sendPassportToPC() {
+  if (!passportFile) return;
+  const btn = document.getElementById('passportPCBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ جاري الإرسال...';
+  try {
+    const blob = await processImage(passportFile);
+    const base64 = await blobToBase64(blob);
+    const payload = {
+      _mode:        'attachment',
+      _slot:        'passport',
+      _source:      'sovereign-mobile',
+      _ts:          Date.now(),
+      fileName:     'passport.jpg',
+      mimeType:     'image/jpeg',
+      contentBase64: base64
+    };
+    const res = await fetch(STORE_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    btn.textContent = '✅ تم الإرسال للكمبيوتر';
+    btn.style.background = '#0056d2';
+    addHistory('passport → PC', true);
+  } catch(e) {
+    btn.textContent = '❌ فشل الإرسال';
+    btn.style.background = '#ba1a1a';
+    addHistory('passport → PC', false);
+  }
+  setTimeout(() => {
+    btn.disabled = !passportFile;
+    btn.textContent = '📤 إرسال للكمبيوتر';
+    btn.style.background = '#16794d';
+  }, 3000);
 }
 
 async function blobToBase64(blob) {
