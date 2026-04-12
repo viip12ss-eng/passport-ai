@@ -180,49 +180,33 @@ tailwind.config = {
         </div>
       </div>
 
-      <!-- تحديث وتجديد -->
+      <!-- تحديث وتجديد + استعلام -->
       <div class="bg-surface-container-lowest rounded-2xl editorial-shadow border border-outline-variant/20 overflow-hidden">
         <div class="p-4 flex items-center gap-4">
           <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style="background:rgba(22,121,77,0.12)">
-            <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1;color:#16794d">autorenew</span>
+            <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1;color:#16794d">manage_search</span>
           </div>
           <div class="flex-1">
-            <p class="font-headline font-bold text-sm text-on-surface">تحديث وتجديد</p>
-            <p class="text-[11px] text-on-surface-variant mt-0.5">تجديد تأشيرة أو تحديث بيانات وثيقة السفر</p>
+            <p class="font-headline font-bold text-sm text-on-surface">تحديث وتجديد / استعلام</p>
+            <p class="text-[11px] text-on-surface-variant mt-0.5">تجديد تأشيرة أو الاستعلام برقم وثيقة السفر</p>
           </div>
         </div>
+        <div class="flex gap-2 px-4 pb-3">
+          <button id="tabRenew" onclick="setPassportTab('renew')" class="flex-1 py-1.5 rounded-lg text-[11px] font-bold" style="background:#16794d;color:#fff;">تحديث وتجديد</button>
+          <button id="tabSearch" onclick="setPassportTab('search')" class="flex-1 py-1.5 rounded-lg text-[11px] font-bold bg-surface-container text-on-surface-variant">استعلام</button>
+        </div>
         <div class="grid grid-cols-2 gap-2 px-4 pb-4">
-          <button onclick="launchScanner('renew','camera')" class="py-2.5 rounded-xl text-white text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all" style="background:#16794d">
+          <button id="btnRS" onclick="launchScanner(_activeRenewSearchTab,'camera')" class="py-2.5 rounded-xl text-white text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all" style="background:#16794d">
             <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1">photo_camera</span> كاميرا
           </button>
           <label class="py-2.5 rounded-xl bg-surface-container text-on-surface text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer">
-            <input type="file" accept="image/*" class="hidden" id="galleryRenew">
+            <input type="file" accept="image/*" class="hidden" id="galleryRS">
             <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1">image</span> مكتبة
           </label>
         </div>
       </div>
-
-      <!-- استعلام -->
-      <div class="bg-surface-container-lowest rounded-2xl editorial-shadow border border-outline-variant/20 overflow-hidden">
-        <div class="p-4 flex items-center gap-4">
-          <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style="background:rgba(0,86,210,0.1)">
-            <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1;color:#0056d2">search</span>
-          </div>
-          <div class="flex-1">
-            <p class="font-headline font-bold text-sm text-on-surface">استعلام عن تأشيرة</p>
-            <p class="text-[11px] text-on-surface-variant mt-0.5">تعبئة رقم وثيقة السفر في خانة البحث</p>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-2 px-4 pb-4">
-          <button onclick="launchScanner('search','camera')" class="py-2.5 rounded-xl text-white text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all" style="background:#0056d2">
-            <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1">photo_camera</span> كاميرا
-          </button>
-          <label class="py-2.5 rounded-xl bg-surface-container text-on-surface text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer">
-            <input type="file" accept="image/*" class="hidden" id="gallerySearch">
-            <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1">image</span> مكتبة
-          </label>
-        </div>
-      </div>
+      <input type="file" accept="image/*" class="hidden" id="galleryRenew">
+      <input type="file" accept="image/*" class="hidden" id="gallerySearch">
 
     </div>
 
@@ -412,6 +396,12 @@ renderDocumentList(REQUIRED_DOCS, 'requiredList');
 setMode(appMode);
 renderHistory();
 document.getElementById('passportGallery').onchange = e => selectPassportFile(e.target.files[0]);
+document.getElementById('galleryRS').addEventListener('change', function(e) {
+  const file = e.target.files[0]; if (!file) return;
+  _passportContext = _activeRenewSearchTab;
+  sessionStorage.setItem('pai_passport_context', _activeRenewSearchTab);
+  selectPassportFile(file); e.target.value = '';
+});
 
 /* ─── Mode switch ─── */
 function setMode(mode) {
@@ -759,6 +749,18 @@ function launchScanner(context, source) {
 }
 
 /* ─── معالجة اختيار من المكتبة لكل وضع ─── */
+let _activeRenewSearchTab = 'renew';
+function setPassportTab(tab) {
+  _activeRenewSearchTab = tab;
+  const tr = document.getElementById('tabRenew'), ts = document.getElementById('tabSearch'), cam = document.getElementById('btnRS');
+  const color = tab === 'renew' ? '#16794d' : '#0056d2';
+  tr.style.background = tab === 'renew' ? '#16794d' : ''; tr.style.color = tab === 'renew' ? '#fff' : '';
+  ts.style.background = tab === 'search' ? '#0056d2' : ''; ts.style.color = tab === 'search' ? '#fff' : '';
+  if (tr) tr.className = 'flex-1 py-1.5 rounded-lg text-[11px] font-bold' + (tab === 'renew' ? '' : ' bg-surface-container text-on-surface-variant');
+  if (ts) ts.className = 'flex-1 py-1.5 rounded-lg text-[11px] font-bold' + (tab === 'search' ? '' : ' bg-surface-container text-on-surface-variant');
+  if (cam) cam.style.background = color;
+}
+
 ['galleryNew','galleryRenew','gallerySearch'].forEach((id, i) => {
   const contexts = ['new','renew','search'];
   document.getElementById(id).addEventListener('change', function(e) {
