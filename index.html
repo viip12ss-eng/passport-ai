@@ -1,863 +1,870 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Sovereign">
-<meta name="theme-color" content="#f7f9fb">
-<title>Sovereign</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@700;800&family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script id="tailwind-config">
-tailwind.config = {
-  theme: {
-    extend: {
-      colors: {
-        "primary-fixed-dim":"#b2c5ff","secondary-container":"#b3c5fd",
-        "on-primary-container":"#ccd8ff","inverse-surface":"#2d3133",
-        "on-secondary":"#ffffff","on-secondary-container":"#3e5181",
-        "surface-bright":"#f7f9fb","surface-variant":"#e0e3e5",
-        "on-primary-fixed":"#001847","secondary-fixed-dim":"#b3c5fd",
-        "primary-fixed":"#dae2ff","on-tertiary":"#ffffff",
-        "surface":"#f7f9fb","on-primary":"#ffffff",
-        "inverse-on-surface":"#eff1f3","secondary-fixed":"#dae2ff",
-        "tertiary-container":"#a93802","surface-container-lowest":"#ffffff",
-        "outline-variant":"#c3c6d6","background":"#f7f9fb",
-        "inverse-primary":"#b2c5ff","on-surface":"#191c1e",
-        "surface-container-high":"#e6e8ea","surface-container-low":"#f2f4f6",
-        "on-surface-variant":"#424654","primary":"#0040a1",
-        "on-primary-fixed-variant":"#0040a1","outline":"#737785",
-        "surface-dim":"#d8dadc","secondary":"#4a5d8e",
-        "tertiary":"#822800","on-error":"#ffffff",
-        "on-background":"#191c1e","surface-tint":"#0056d2",
-        "error":"#ba1a1a","surface-container":"#eceef0",
-        "on-tertiary-container":"#ffcebd","surface-container-highest":"#e0e3e5",
-        "tertiary-fixed":"#ffdbcf","error-container":"#ffdad6",
-        "primary-container":"#0056d2"
-      },
-      borderRadius: {
-        "DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem",
-        "2xl":"1rem","3xl":"1.5rem","full":"9999px"
-      },
-      fontFamily: {
-        "headline":["Noto Sans Arabic","Manrope"],
-        "body":["Noto Sans Arabic","Inter"],
-        "label":["Noto Sans Arabic","Inter"]
-      }
-    }
-  }
-}
-</script>
-<style>
-.material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-  display:inline-block; line-height:1; text-transform:none;
-  letter-spacing:normal; word-wrap:normal; white-space:nowrap; direction:ltr;
-}
-.editorial-shadow { box-shadow: 0 8px 24px rgba(0,64,161,0.08); }
-.glass-panel {
-  background: rgba(247,249,251,0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-}
-.card-uploading { animation: pulse-border 1.4s ease-in-out infinite; }
-@keyframes pulse-border {
-  0%,100% { box-shadow: 0 8px 24px rgba(0,64,161,0.08); }
-  50% { box-shadow: 0 8px 24px rgba(0,86,210,0.3); }
-}
-.safe-top    { padding-top:    env(safe-area-inset-top,    44px); }
-.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 34px); }
-</style>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2575.7">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px 'Geeza Pro'}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px 'Geeza Pro'; min-height: 17.0px}
+  </style>
 </head>
-<body class="bg-surface font-body text-on-surface antialiased min-h-screen" style="padding-bottom:100px">
-
-<!-- TopAppBar -->
-<header class="fixed top-0 left-0 w-full z-50 glass-panel flex justify-between items-center px-6 py-3 safe-top">
-  <div class="flex items-center gap-2">
-    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-container flex items-center justify-center">
-      <span class="material-symbols-outlined text-white text-sm" style="font-variation-settings:'FILL' 1">menu_book</span>
-    </div>
-    <span class="font-headline font-extrabold text-lg text-on-surface tracking-tight">Sovereign</span>
-  </div>
-  
-</header>
-
-<!-- Main -->
-<main class="px-5 pt-24">
-
-
-  <!-- ═══ وضع المستندات ═══ -->
-  <div id="docsView">
-
-    <!-- بانر الانتظار -->
-    <div id="waitingBanner" class="hidden mb-5 p-4 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary">
-      <div class="flex items-center gap-3">
-        <span class="material-symbols-outlined text-2xl animate-spin" style="animation-duration:2s">sync</span>
-        <div>
-          <p class="font-bold text-sm" id="waitingTitle">في انتظار المستند...</p>
-          <p class="text-xs opacity-80 mt-0.5" id="waitingSlotName">—</p>
-        </div>
-        <button onclick="stopAll()" class="mr-auto w-8 h-8 rounded-full bg-white/20 flex items-center justify-center active:scale-90">
-          <span class="material-symbols-outlined text-sm">close</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- اختيار نوع التأشيرة -->
-    <div class="mb-5">
-      <p class="text-xs font-bold text-on-surface-variant mb-2">نوع التأشيرة</p>
-      <div class="relative">
-        <select id="visaTypeSelect"
-          onchange="changeVisaType(this.value)"
-          class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-2xl px-4 py-3 text-sm font-bold text-on-surface appearance-none editorial-shadow focus:outline-none focus:border-primary/40 cursor-pointer">
-        </select>
-        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-lg">expand_more</span>
-      </div>
-    </div>
-
-    <!-- قائمة المستندات المطلوبة -->
-    <section class="mb-8">
-      <div class="flex justify-between items-end mb-4">
-        <div>
-          <h3 class="text-lg font-headline font-bold text-on-surface">المستندات المطلوبة</h3>
-          <p class="text-[11px] text-on-surface-variant mt-0.5">Required Documents</p>
-        </div>
-      </div>
-      <div class="space-y-3" id="requiredList"></div>
-    </section>
-
-    <!-- قائمة المستندات الاختيارية -->
-    <section class="mb-8 hidden" id="optionalSection">
-      <div class="mb-4">
-        <h3 class="text-lg font-headline font-bold text-on-surface">المستندات الاختيارية</h3>
-        <p class="text-[11px] text-on-surface-variant mt-0.5">Optional Documents</p>
-      </div>
-      <div class="space-y-3" id="optionalList"></div>
-    </section>
-
-  </div>
-
-  <!-- ═══ وضع الجواز ═══ -->
-  <div id="passportView" class="hidden">
-
-    <!-- هيدر -->
-    <div class="bg-gradient-to-br from-primary to-primary-container p-6 rounded-3xl text-on-primary mb-6 relative overflow-hidden editorial-shadow">
-      <div class="relative z-10">
-        <span class="text-xs font-bold uppercase tracking-widest opacity-80">تعبئة تلقائية</span>
-        <h2 class="text-2xl font-headline font-bold mt-1">مسح الجواز</h2>
-        <p class="text-sm opacity-80 mt-2">اختر نوع العملية ثم صوّر الجواز</p>
-      </div>
-      <div class="absolute -left-8 -bottom-8 w-36 h-36 bg-white/10 rounded-full blur-3xl"></div>
-    </div>
-
-    <!-- ثلاثة خيارات -->
-    <div class="space-y-3 mb-6">
-
-      <!-- تأشيرة جديدة -->
-      <div class="bg-surface-container-lowest rounded-2xl editorial-shadow border border-outline-variant/20 overflow-hidden">
-        <div class="p-4 flex items-center gap-4">
-          <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-            <span class="material-symbols-outlined text-2xl text-primary" style="font-variation-settings:'FILL' 1">add_card</span>
-          </div>
-          <div class="flex-1">
-            <p class="font-headline font-bold text-sm text-on-surface">تأشيرة جديدة</p>
-            <p class="text-[11px] text-on-surface-variant mt-0.5">تعبئة بيانات وثيقة السفر للطلب الجديد</p>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-2 px-4 pb-4">
-          <button onclick="launchScanner('new','camera')" class="py-2.5 rounded-xl bg-primary text-on-primary text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all">
-            <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1">photo_camera</span> كاميرا
-          </button>
-          <label class="py-2.5 rounded-xl bg-surface-container text-on-surface text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer">
-            <input type="file" accept="image/*" class="hidden" id="galleryNew">
-            <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1">image</span> مكتبة
-          </label>
-        </div>
-      </div>
-
-      <!-- تحديث وتجديد + استعلام -->
-      <div class="bg-surface-container-lowest rounded-2xl editorial-shadow border border-outline-variant/20 overflow-hidden">
-        <div class="p-4 flex items-center gap-4">
-          <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style="background:rgba(22,121,77,0.12)">
-            <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1;color:#16794d">manage_search</span>
-          </div>
-          <div class="flex-1">
-            <p class="font-headline font-bold text-sm text-on-surface">تحديث وتجديد / استعلام</p>
-            <p class="text-[11px] text-on-surface-variant mt-0.5">تجديد تأشيرة أو الاستعلام برقم وثيقة السفر</p>
-          </div>
-        </div>
-        <div class="flex gap-2 px-4 pb-3">
-          <button id="tabRenew" onclick="setPassportTab('renew')" class="flex-1 py-1.5 rounded-lg text-[11px] font-bold" style="background:#16794d;color:#fff;">تحديث وتجديد</button>
-          <button id="tabSearch" onclick="setPassportTab('search')" class="flex-1 py-1.5 rounded-lg text-[11px] font-bold bg-surface-container text-on-surface-variant">استعلام</button>
-        </div>
-        <div class="grid grid-cols-2 gap-2 px-4 pb-4">
-          <button id="btnRS" onclick="launchScanner(_activeRenewSearchTab,'camera')" class="py-2.5 rounded-xl text-white text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all" style="background:#16794d">
-            <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1">photo_camera</span> كاميرا
-          </button>
-          <label class="py-2.5 rounded-xl bg-surface-container text-on-surface text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer">
-            <input type="file" accept="image/*" class="hidden" id="galleryRS">
-            <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1">image</span> مكتبة
-          </label>
-        </div>
-      </div>
-      <input type="file" accept="image/*" class="hidden" id="galleryRenew">
-      <input type="file" accept="image/*" class="hidden" id="gallerySearch">
-
-    </div>
-
-    <!-- معاينة مؤقتة للمكتبة -->
-    <div id="passportPreview" class="hidden bg-surface-container-lowest rounded-3xl overflow-hidden editorial-shadow mb-3">
-      <img id="passportImg" class="w-full max-h-56 object-contain bg-black block" src="" alt="">
-      <div class="p-4 flex justify-between items-center">
-        <span class="text-xs text-on-surface-variant" id="passportFileName">—</span>
-        <button onclick="clearPassport()" class="text-xs text-error font-bold">إزالة</button>
-      </div>
-    </div>
-
-    <button id="passportPCBtn" disabled onclick="sendPassportToPC()"
-      class="w-full py-4 rounded-3xl font-headline font-bold text-base text-on-primary shadow-lg disabled:opacity-40 disabled:shadow-none active:scale-98 transition-all hidden"
-      style="background:#16794d;">
-      📤 إرسال للكمبيوتر
-    </button>
-
-    <!-- نتيجة الاستخراج -->
-    <div id="passportResult" class="hidden mt-5 bg-surface-container-lowest rounded-3xl p-5 editorial-shadow">
-      <p class="font-headline font-bold text-sm mb-3 text-on-surface">البيانات المستخرجة</p>
-      <div id="passportFields" class="space-y-2"></div>
-    </div>
-
-    <!-- input مخفي لـ passportGallery (للتوافق مع الكود القديم) -->
-    <input type="file" accept="image/*" id="passportGallery" class="hidden">
-    <!-- btn مخفي للتوافق -->
-    <button id="passportSendBtn" disabled onclick="sendPassport()" class="hidden"></button>
-  </div>
-
-  <!-- سجل الإرسال -->
-  <section class="mt-4">
-    <div class="flex justify-between items-center mb-3">
-      <h3 class="text-base font-headline font-bold text-on-surface">السجل</h3>
-      <button onclick="clearHistory()" class="text-xs text-error font-bold">مسح</button>
-    </div>
-    <div id="historyList" class="space-y-2">
-      <p class="text-sm text-on-surface-variant text-center py-4">لا يوجد سجل</p>
-    </div>
-  </section>
-
-</main>
-
-<!-- Bottom Nav -->
-<nav class="fixed bottom-0 left-0 w-full z-50 glass-panel flex justify-around items-center px-4 pb-safe pt-3 rounded-t-3xl safe-bottom"
-     style="box-shadow:0 -8px 24px rgba(0,64,161,0.12);">
-  <button onclick="setMode('passport')" id="navPassport" class="flex flex-col items-center gap-1 px-4 py-2 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary">
-    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">menu_book</span>
-    <span class="text-[11px] font-bold">الجواز</span>
-  </button>
-  <button onclick="setMode('docs')" id="navDocs" class="flex flex-col items-center gap-1 px-4 py-2 text-on-surface-variant">
-    <span class="material-symbols-outlined">description</span>
-    <span class="text-[11px] font-medium">المستندات</span>
-  </button>
-</nav>
-
-<!-- Hidden file inputs for document slots -->
-<div id="hiddenInputs" class="hidden"></div>
-
-<script>
-'use strict';
-
-function sanitizeFileName(name) {
-  return name
-    .replace(/[()\[\]{}'"،,؛;:!@#$%^&*+=|\\/<>?]/g, '')
-    .replace(/[-–—]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-
-/* ─── Config ─── */
-const API_BASE  = localStorage.getItem('pai_api_base')  || 'https://phd-considering-aaa-despite.trycloudflare.com';
-const STORE_URL = localStorage.getItem('pai_store_url') || `${API_BASE}/webhook/passport-store`;
-const EXTRACT_URL = localStorage.getItem('pai_extract_url') || `${API_BASE}/webhook/passport-extract1`;
-
-/* ─── أنواع التأشيرات ─── */
-const VISA_TYPES = {
-  '8A': {
-    label: 'تأشيرة سريعة 8A',
-    docs: [
-      { slot:1, ar:'صورة جواز السفر لصاحب الطلب',        en:'Passport Copy Applicant',  icon:'credit_card'   },
-      { slot:2, ar:'صورة شخصية لصاحب الطلب',             en:'Personal Photo Applicant', icon:'account_circle'},
-      { slot:3, ar:'رسالة صاحب العمل الغرض',             en:'Employer Letter Purpose',  icon:'business'      },
-    ]
-  },
-  '14A': {
-    label: 'تأشيرة الالتحاق بالأقارب 14A',
-    docs: [
-      { slot:1, ar:'عقد العمل',                          en:'Employment Contract',       icon:'work'          },
-      { slot:2, ar:'صورة جواز السفر لصاحب الطلب',        en:'Passport Copy Applicant',  icon:'credit_card'   },
-      { slot:3, ar:'صورة جواز السفر للملتحق به',          en:'Passport Copy Dependent',  icon:'credit_card'   },
-      { slot:4, ar:'صورة شخصية لصاحب الطلب',             en:'Personal Photo Applicant', icon:'account_circle'},
-      { slot:5, ar:'اثبات صلة قرابة',                     en:'Proof of Relationship',     icon:'family_history'},
-      { slot:6, ar:'صورة بطاقة الإقامة للملتحق به',       en:'Residence Card Dependent', icon:'badge'         },
-      { slot:7, ar:'رسالة صاحب العمل تعهد',               en:'Employer Letter',           icon:'business'      },
-    ]
-  },
-  '25E': {
-    label: 'تأشيرة متعددة الرحلات 25E',
-    docs: [
-      { slot:1, ar:'صورة جواز السفر لصاحب الطلب',        en:'Passport Copy Applicant',  icon:'credit_card'   },
-      { slot:2, ar:'صورة شخصية لصاحب الطلب',             en:'Personal Photo Applicant', icon:'account_circle'},
-      { slot:3, ar:'رسالة صاحب العمل الغرض',              en:'Employer Letter Purpose',  icon:'business'      },
-    ]
-  },
-  '4B': {
-    label: 'تأشيرة زيارة عائلية 4B',
-    docs: [
-      { slot:1, ar:'صورة جواز السفر لصاحب الطلب',        en:'Passport Copy Applicant',  icon:'credit_card'   },
-      { slot:2, ar:'صورة جواز السفر للملتحق به',          en:'Passport Copy Dependent',  icon:'credit_card'   },
-      { slot:3, ar:'صورة شخصية لصاحب الطلب',             en:'Personal Photo Applicant', icon:'account_circle'},
-      { slot:4, ar:'اثبات صلة قرابة',                     en:'Proof of Relationship',     icon:'family_history'},
-      { slot:5, ar:'صورة بطاقة الإقامة للملتحق به',       en:'Residence Card Dependent', icon:'badge'         },
-      { slot:6, ar:'رسالة صاحب العمل تعهد',               en:'Employer Letter',           icon:'business'      },
-    ]
-  },
-  'NK': {
-    label: 'نقل كفالة NK',
-    docs: [
-      { slot:1, ar:'صورة شخصية لصاحب الطلب',             en:'Personal Photo Applicant',  icon:'account_circle'    },
-      { slot:2, ar:'صورة جواز السفر لصاحب الطلب',        en:'Passport Copy Applicant',   icon:'credit_card'       },
-      { slot:3, ar:'تصريح العمل',                         en:'Work Permit',               icon:'work'              },
-      { slot:4, ar:'استمارة نقل خدمات',                   en:'Transfer Services Form',    icon:'swap_horiz'        },
-    ]
-  },
-  '6': {
-    label: 'تجديد اقامة 6',
-    docs: [
-      { slot:1, ar:'تصريح العمل',                         en:'Work Permit',               icon:'work'              },
-      { slot:2, ar:'صورة جواز السفر لصاحب الطلب',        en:'Passport Copy Applicant',   icon:'credit_card'       },
-      { slot:3, ar:'صورة شخصية لصاحب الطلب',             en:'Personal Photo Applicant',  icon:'account_circle'    },
-      { slot:4, ar:'شهادة طبية',                          en:'Medical Certificate',        icon:'health_and_safety' },
-    ]
-  },
-  '1A': {
-    label: 'تحديث وتجديد تأشيرة عمل 1A',
-    docs: [
-      { slot:1, ar:'صورة شخصية لصاحب الطلب',             en:'Personal Photo Applicant',  icon:'account_circle'    },
-      { slot:2, ar:'صورة جواز السفر لصاحب الطلب',        en:'Passport Copy Applicant',   icon:'credit_card'       },
-      { slot:3, ar:'تصريح العمل',                         en:'Work Permit',               icon:'work'              },
-      { slot:4, ar:'شهادة طبية',                          en:'Medical Certificate',        icon:'health_and_safety' },
-      { slot:5, ar:'نسخة من جواز السفر القديم',           en:'Copy of Old Passport',       icon:'history'           },
-    ]
-  },
-};
-let currentVisaType = '';
-let REQUIRED_DOCS = [];
-
-const OPTIONAL_DOCS = [
-  { slot:101, ar:'مستندات اختيارية 1', en:'Optional Document 1', icon:'attach_file' },
-  { slot:102, ar:'مستندات اختيارية 2', en:'Optional Document 2', icon:'attach_file' },
-  { slot:103, ar:'مستندات اختيارية 3', en:'Optional Document 3', icon:'attach_file' },
-  { slot:104, ar:'مستندات اختيارية 4', en:'Optional Document 4', icon:'attach_file' },
-  { slot:105, ar:'مستندات اختيارية 5', en:'Optional Document 5', icon:'attach_file' },
-  { slot:106, ar:'مستندات اختيارية 6', en:'Optional Document 6', icon:'attach_file' },
-];
-
-/* ─── State ─── */
-let appMode = localStorage.getItem('pai_mode') || 'passport';
-let slotStatus = {}; // slot -> 'idle'|'uploading'|'sent'|'error'
-let passportFile = null, passportDataUrl = null, sending = false;
-let history = JSON.parse(localStorage.getItem('pai_hist') || '[]');
-
-/* ─── Init ─── */
-function initVisaSelect() {
-  const sel = document.getElementById('visaTypeSelect');
-  // خيار افتراضي
-  const placeholder = document.createElement('option');
-  placeholder.value = '';
-  placeholder.textContent = '— اختر نوع التأشيرة —';
-  placeholder.disabled = true;
-  placeholder.selected = !currentVisaType;
-  sel.appendChild(placeholder);
-
-  Object.entries(VISA_TYPES).forEach(([key, val]) => {
-    const opt = document.createElement('option');
-    opt.value = key;
-    opt.textContent = val.label;
-    if (key === currentVisaType) opt.selected = true;
-    sel.appendChild(opt);
-  });
-}
-function changeVisaType(type) {
-  currentVisaType = type;
-  sessionStorage.setItem('sov_visa_type', type);
-  REQUIRED_DOCS = VISA_TYPES[type]?.docs || [];
-  slotStatus = {};
-  renderDocumentList(REQUIRED_DOCS, 'requiredList');
-  // إظهار المستندات الاختيارية بعد اختيار نوع التأشيرة
-  renderDocumentList(OPTIONAL_DOCS, 'optionalList');
-  document.getElementById('optionalSection').classList.remove('hidden');
-}
-initVisaSelect();
-renderDocumentList(REQUIRED_DOCS, 'requiredList');
-setMode(appMode);
-renderHistory();
-document.getElementById('passportGallery').onchange = e => selectPassportFile(e.target.files[0]);
-document.getElementById('galleryRS').addEventListener('change', function(e) {
-  const file = e.target.files[0]; if (!file) return;
-  _passportContext = _activeRenewSearchTab;
-  sessionStorage.setItem('pai_passport_context', _activeRenewSearchTab);
-  selectPassportFile(file); e.target.value = '';
-});
-
-/* ─── Mode switch ─── */
-function setMode(mode) {
-  appMode = mode;
-  localStorage.setItem('pai_mode', mode);
-  document.getElementById('docsView').classList.toggle('hidden', mode !== 'docs');
-  document.getElementById('passportView').classList.toggle('hidden', mode !== 'passport');
-  const navBase = 'flex flex-col items-center gap-1 px-4 py-2 ';
-  document.getElementById('navPassport').className = navBase + (mode==='passport' ? 'rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary' : 'text-on-surface-variant');
-  document.getElementById('navDocs').className    = navBase + (mode==='docs'     ? 'rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary' : 'text-on-surface-variant');
-}
-
-/* ─── بناء قائمة المستندات ─── */
-function renderDocumentList(docs, containerId) {
-  const container = document.getElementById(containerId);
-  container.innerHTML = docs.map(doc => `
-    <div class="bg-surface-container-lowest p-4 rounded-2xl editorial-shadow border border-outline-variant/20 flex items-center gap-3" id="card_${doc.slot}">
-      <!-- أزرار الرفع -->
-      <div class="flex flex-col gap-1.5 shrink-0">
-        <button onclick="uploadSlot(${doc.slot},'camera')"
-          class="w-10 h-10 rounded-xl bg-surface-container hover:bg-secondary-container active:scale-90 transition-all text-primary flex items-center justify-center"
-          id="camBtn_${doc.slot}" title="تصوير">
-          <span class="material-symbols-outlined text-lg" style="font-variation-settings:'FILL' 1">photo_camera</span>
-        </button>
-        <label class="w-10 h-10 rounded-xl bg-surface-container hover:bg-surface-container-high active:scale-90 transition-all text-primary flex items-center justify-center cursor-pointer"
-          id="galLabel_${doc.slot}" title="اختيار من المكتبة">
-          <input type="file" accept="image/*" class="hidden" id="galInput_${doc.slot}"
-            onchange="handleGallerySelect(${doc.slot}, this)">
-          <span class="material-symbols-outlined text-lg" style="font-variation-settings:'FILL' 1">image</span>
-        </label>
-      </div>
-      <!-- معلومات -->
-      <div class="flex-1 min-w-0">
-        <div class="flex justify-between items-start gap-2">
-          <h4 class="text-sm font-bold text-on-surface leading-tight">${doc.ar}</h4>
-          <span id="badge_${doc.slot}" class="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 bg-surface-container-high text-on-surface-variant">
-            جاهز
-          </span>
-        </div>
-        <p class="text-[11px] text-on-surface-variant mt-0.5 truncate">${doc.en}</p>
-      </div>
-      <!-- أيقونة -->
-      <div class="w-9 h-9 rounded-xl bg-primary-container/10 flex items-center justify-center text-primary shrink-0">
-        <span class="material-symbols-outlined text-lg">${doc.icon}</span>
-      </div>
-    </div>
-  `).join('');
-}
-
-/* ─── رفع من الكاميرا (scanner) ─── */
-function uploadSlot(slot, source) {
-  if (source === 'camera') {
-    sessionStorage.setItem('pai_pending_slot', slot);
-    sessionStorage.setItem('pai_visa_type', currentVisaType);
-    window.location.href = `scanner.html?mode=document&slot=${slot}`;
-  }
-}
-
-/* ─── اختيار من المعرض ─── */
-function handleGallerySelect(slot, input) {
-  const f = input.files[0];
-  if (!f) return;
-  input.value = '';
-  sendDocumentSlot(slot, f);
-}
-
-/* ─── إرسال مستند بـ slot ─── */
-async function sendDocumentSlot(slot, file) {
-  setSlotStatus(slot, 'uploading');
-  showWaitingBanner(slot);
-
-  try {
-    const blob = await processImage(file);
-    const base64 = await blobToBase64(blob);
-
-    const allDocs = [...REQUIRED_DOCS, ...OPTIONAL_DOCS];
-    const doc = allDocs.find(d => d.slot === slot);
-
-    const payload = {
-      _mode:      'attachment',
-      _visaType:  currentVisaType,
-      _slot:      slot,
-      _docName:   doc?.ar || '',
-      _source:    'sovereign-mobile',
-      _ts:        Date.now(),
-      fileName:   (doc?.ar || `مستند ${slot}`) + '.jpg',
-      mimeType:   'image/jpeg',
-      contentBase64: base64
-    };
-
-    const res = await fetch(STORE_URL, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(payload)
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-
-    setSlotStatus(slot, 'sent');
-    // حفظ في sessionStorage
-    const sd = JSON.parse(sessionStorage.getItem('pai_done_slots_session') || '[]');
-    if (!sd.includes(slot)) { sd.push(slot); sessionStorage.setItem('pai_done_slots_session', JSON.stringify(sd)); }
-    hideWaitingBanner();
-    addHistory(doc?.ar || `Slot ${slot}`, true);
-
-  } catch(e) {
-    setSlotStatus(slot, 'error');
-    hideWaitingBanner();
-    addHistory(`Slot ${slot}`, false);
-  }
-
-  // لا reset - تبقى "تم" حتى إعادة التحميل
-}
-
-/* ─── حالة البطاقة ─── */
-function setSlotStatus(slot, status) {
-  slotStatus[slot] = status;
-  const card  = document.getElementById('card_' + slot);
-  const badge = document.getElementById('badge_' + slot);
-  if (!card || !badge) return;
-
-  card.classList.remove('card-uploading');
-
-  const states = {
-    idle:      { text:'جاهز',       cls:'bg-surface-container-high text-on-surface-variant' },
-    uploading: { text:'جاري الرفع…', cls:'bg-primary-fixed text-primary' },
-    sent:      { text:'✓ تم', cls:'bg-green-100 text-green-700' },
-    error:     { text:'✗ فشل',       cls:'bg-error-container text-error' },
-  };
-
-  const s = states[status] || states.idle;
-  badge.textContent = s.text;
-  badge.className = `text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${s.cls}`;
-  if (status === 'uploading') card.classList.add('card-uploading');
-}
-
-/* ─── بانر الانتظار ─── */
-function showWaitingBanner(slot) {
-  const allDocs = [...REQUIRED_DOCS, ...OPTIONAL_DOCS];
-  const doc = allDocs.find(d => d.slot === slot);
-  document.getElementById('waitingSlotName').textContent = doc?.ar || `Slot ${slot}`;
-  document.getElementById('waitingBanner').classList.remove('hidden');
-}
-function hideWaitingBanner() {
-  document.getElementById('waitingBanner').classList.add('hidden');
-}
-function stopAll() {
-  hideWaitingBanner();
-  Object.keys(slotStatus).forEach(s => { if(slotStatus[s]==='uploading') setSlotStatus(Number(s),'idle'); });
-}
-
-/* ─── وضع الجواز ─── */
-function openCamera() {
-  sessionStorage.setItem('pai_pending_slot', 'passport');
-  window.location.href = 'scanner.html?mode=passport';
-}
-
-function selectPassportFile(f) {
-  if (!f) return;
-  passportFile = f;
-  const r = new FileReader();
-  r.onload = () => {
-    passportDataUrl = r.result;
-    document.getElementById('passportImg').src = passportDataUrl;
-    document.getElementById('passportFileName').textContent = f.name.slice(0,30);
-    document.getElementById('passportPreview').classList.remove('hidden');
-    const btn = document.getElementById('passportSendBtn');
-    if (btn) { btn.disabled = false; btn.textContent = '🚀 إرسال واستخراج'; }
-    const pcBtn = document.getElementById('passportPCBtn');
-    if (pcBtn) {
-      pcBtn.disabled = false;
-      pcBtn.classList.remove('hidden');
-      const ctx = _passportContext || sessionStorage.getItem('pai_passport_context') || 'new';
-      pcBtn.textContent = '📤 إرسال للكمبيوتر — ' + (CONTEXT_LABELS[ctx] || ctx);
-    }
-  };
-  r.readAsDataURL(f);
-}
-
-function clearPassport() {
-  passportFile = null; passportDataUrl = null;
-  document.getElementById('passportPreview').classList.add('hidden');
-  document.getElementById('passportResult').classList.add('hidden');
-  document.getElementById('passportSendBtn').disabled = true;
-  document.getElementById('passportSendBtn').textContent = 'اختر صورة أولاً';
-  const pcBtn = document.getElementById('passportPCBtn');
-  if (pcBtn) { pcBtn.disabled = true; }
-}
-
-async function sendPassport() {
-  if (!passportFile || sending) return;
-  sending = true;
-  const btn = document.getElementById('passportSendBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="inline-block animate-spin mr-2">⏳</span> جاري الإرسال...';
-
-  try {
-    const blob = await processImage(passportFile);
-    const fd = new FormData();
-    fd.append('data', blob, passportFile.name.replace(/\.[^.]+$/, '') + '-enhanced.jpg');
-    fd.append('_source', 'sovereign-mobile');
-
-    const res = await fetch(EXTRACT_URL, { method:'POST', body:fd });
-    const text = await res.text();
-    let json = null;
-    try { json = JSON.parse(text); } catch { const m=text.match(/\{[\s\S]*\}/); if(m) try{json=JSON.parse(m[0]);}catch{} }
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    if (Array.isArray(json)) json = json[0]||{};
-    if (json?.data && typeof json.data==='object') json = json.data;
-
-    showPassportResult(json);
-    addHistory(passportFile.name, true);
-
-  } catch(e) {
-    document.getElementById('passportResult').classList.remove('hidden');
-    document.getElementById('passportFields').innerHTML = `<p class="text-sm text-error">${e.message}</p>`;
-    addHistory(passportFile.name, false);
-  }
-
-  sending = false;
-  btn.disabled = false;
-  btn.textContent = '🚀 إرسال واستخراج';
-}
-
-function showPassportResult(d) {
-  const fields = [
-    ['الاسم',         d.nameEnglish||d.nameArabic],
-    ['رقم الجواز',    d.passportNumber||d.passportNo],
-    ['الجنسية',       d.nationalityArabic],
-    ['تاريخ الميلاد', d.dateOfBirth],
-    ['تاريخ الانتهاء',d.dateOfExpiry],
-  ].filter(([,v]) => v && v !== 'null');
-
-  const el = document.getElementById('passportResult');
-  el.classList.remove('hidden');
-  document.getElementById('passportFields').innerHTML = fields.map(([l,v]) =>
-    `<div class="flex justify-between py-1.5 border-b border-outline-variant/20 last:border-0">
-      <span class="text-xs text-on-surface-variant">${l}</span>
-      <span class="text-xs font-bold text-on-surface">${v}</span>
-    </div>`
-  ).join('') || '<p class="text-sm text-on-surface-variant">لا توجد بيانات</p>';
-}
-
-window.addEventListener('load', () => {
-  const navType = performance.getEntriesByType?.('navigation')?.[0]?.type;
-
-  if (navType === 'reload') {
-    // تحميل يدوي — امسح كل شيء (التأشيرة + المكتمل)
-    sessionStorage.removeItem('pai_done_slots_session');
-    sessionStorage.removeItem('sov_visa_type');
-  } else {
-    // رجوع من السكانر — استرجع نوع التأشيرة
-    const savedType = sessionStorage.getItem('sov_visa_type');
-    if (savedType && VISA_TYPES[savedType]) {
-      currentVisaType = savedType;
-      REQUIRED_DOCS = VISA_TYPES[savedType].docs;
-      renderDocumentList(REQUIRED_DOCS, 'requiredList');
-      renderDocumentList(OPTIONAL_DOCS, 'optionalList');
-      document.getElementById('optionalSection').classList.remove('hidden');
-      const sel = document.getElementById('visaTypeSelect');
-      if (sel) sel.value = savedType;
-    }
-  }
-
-  // استرجع المستندات المكتملة
-  const sessionDone = JSON.parse(sessionStorage.getItem('pai_done_slots_session') || '[]');
-  sessionDone.forEach(slot => setSlotStatus(slot, 'sent'));
-
-  // رجوع من السكانر بـ ?done=
-  const urlDone = Number(new URLSearchParams(location.search).get('done') || 0);
-  if (urlDone) {
-    if (!sessionDone.includes(urlDone)) {
-      sessionDone.push(urlDone);
-      sessionStorage.setItem('pai_done_slots_session', JSON.stringify(sessionDone));
-    }
-    setSlotStatus(urlDone, 'sent');
-    history.replaceState({}, '', location.pathname);
-  }
-  const slot = sessionStorage.getItem('pai_pending_slot');
-  const img  = sessionStorage.getItem('pai_scanned_image');
-  const name = sessionStorage.getItem('pai_scanned_name') || 'scanned.jpg';
-  if (slot && img) {
-    sessionStorage.removeItem('pai_pending_slot');
-    sessionStorage.removeItem('pai_scanned_image');
-    sessionStorage.removeItem('pai_scanned_name');
-    fetch(img).then(r=>r.blob()).then(blob => {
-      const file = new File([blob], name, {type:'image/jpeg'});
-      if (slot === 'passport') selectPassportFile(file);
-      else sendDocumentSlot(Number(slot), file);
-    });
-  }
-});
-
-/* ─── معالجة الصورة ─── */
-async function processImage(f) {
-  return new Promise((res, rej) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        const s = Math.min(1, 1600 / Math.max(img.width, img.height));
-        const w = Math.round(img.width * s), h = Math.round(img.height * s);
-        const c = document.createElement('canvas'); c.width = w; c.height = h;
-        const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
-        const d = ctx.getImageData(0,0,w,h);
-        for(let i=0;i<d.data.length;i+=4){
-          d.data[i]=Math.min(255,Math.max(0,((d.data[i]-128)*1.1)+130));
-          d.data[i+1]=Math.min(255,Math.max(0,((d.data[i+1]-128)*1.1)+130));
-          d.data[i+2]=Math.min(255,Math.max(0,((d.data[i+2]-128)*1.1)+130));
-        }
-        ctx.putImageData(d,0,0);
-        const MAX_BYTES = 490 * 1024;
-        const tryQuality = (q) => {
-          c.toBlob(b => {
-            if (!b) { rej(new Error('blob failed')); return; }
-            if (b.size <= MAX_BYTES || q <= 0.4) { res(b); }
-            else { tryQuality(Math.round((q - 0.08) * 100) / 100); }
-          }, 'image/jpeg', q);
-        };
-        tryQuality(0.85);
-      };
-      img.onerror = () => rej(new Error('image load failed'));
-      img.src = reader.result;
-    };
-    reader.onerror = () => rej(new Error('file read failed'));
-    reader.readAsDataURL(f);
-  });
-}
-
-/* ─── وضع الجواز الحالي ─── */
-let _passportContext = 'new'; // 'new' | 'renew' | 'search'
-
-const CONTEXT_LABELS = {
-  new:    'تأشيرة جديدة',
-  renew:  'تحديث وتجديد',
-  search: 'استعلام عن تأشيرة',
-};
-
-function launchScanner(context, source) {
-  _passportContext = context;
-  sessionStorage.setItem('pai_passport_context', context);
-  if (source === 'camera') {
-    sessionStorage.setItem('pai_pending_slot', 'passport');
-    window.location.href = `scanner.html?mode=pc-passport&context=${context}`;
-  }
-}
-
-/* ─── معالجة اختيار من المكتبة لكل وضع ─── */
-let _activeRenewSearchTab = 'renew';
-function setPassportTab(tab) {
-  _activeRenewSearchTab = tab;
-  const tr = document.getElementById('tabRenew'), ts = document.getElementById('tabSearch'), cam = document.getElementById('btnRS');
-  const color = tab === 'renew' ? '#16794d' : '#0056d2';
-  tr.style.background = tab === 'renew' ? '#16794d' : ''; tr.style.color = tab === 'renew' ? '#fff' : '';
-  ts.style.background = tab === 'search' ? '#0056d2' : ''; ts.style.color = tab === 'search' ? '#fff' : '';
-  if (tr) tr.className = 'flex-1 py-1.5 rounded-lg text-[11px] font-bold' + (tab === 'renew' ? '' : ' bg-surface-container text-on-surface-variant');
-  if (ts) ts.className = 'flex-1 py-1.5 rounded-lg text-[11px] font-bold' + (tab === 'search' ? '' : ' bg-surface-container text-on-surface-variant');
-  if (cam) cam.style.background = color;
-}
-
-['galleryNew','galleryRenew','gallerySearch'].forEach((id, i) => {
-  const contexts = ['new','renew','search'];
-  document.getElementById(id).addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    _passportContext = contexts[i];
-    sessionStorage.setItem('pai_passport_context', contexts[i]);
-    selectPassportFile(file);
-    e.target.value = '';
-  });
-});
-
-/* ─── إرسال صورة الجواز للكمبيوتر عبر STORE_URL ─── */
-async function sendPassportToPC() {
-  if (!passportFile) return;
-  const btn = document.getElementById('passportPCBtn');
-  btn.disabled = true;
-  btn.textContent = '⏳ جاري الإرسال...';
-  try {
-    const blob = await processImage(passportFile);
-    const base64 = await blobToBase64(blob);
-    const ctx = _passportContext || sessionStorage.getItem('pai_passport_context') || 'new';
-    const payload = {
-      _mode:        'attachment',
-      _slot:        'passport',
-      _context:     ctx,
-      _source:      'sovereign-mobile',
-      _ts:          Date.now(),
-      fileName:     'passport.jpg',
-      mimeType:     'image/jpeg',
-      contentBase64: base64
-    };
-    const res = await fetch(STORE_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload)
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    btn.textContent = '✅ تم الإرسال للكمبيوتر';
-    btn.style.background = '#0056d2';
-    addHistory('passport → PC', true);
-  } catch(e) {
-    btn.textContent = '❌ فشل الإرسال';
-    btn.style.background = '#ba1a1a';
-    addHistory('passport → PC', false);
-  }
-  setTimeout(() => {
-    btn.disabled = !passportFile;
-    btn.textContent = '📤 إرسال للكمبيوتر';
-    btn.style.background = '#16794d';
-  }, 3000);
-}
-
-async function blobToBase64(blob) {
-  return new Promise((res,rej) => {
-    const r=new FileReader();
-    r.onload=()=>res(String(r.result||'').split('base64,')[1]||'');
-    r.onerror=()=>rej(new Error('read'));
-    r.readAsDataURL(blob);
-  });
-}
-
-/* ─── History ─── */
-function addHistory(name, ok) {
-  history.unshift({name, ok, ts:Date.now()});
-  if(history.length>20) history=history.slice(0,20);
-  localStorage.setItem('pai_hist', JSON.stringify(history));
-  renderHistory();
-}
-function clearHistory() {
-  history=[];
-  localStorage.removeItem('pai_hist');
-  renderHistory();
-}
-function renderHistory() {
-  const el = document.getElementById('historyList');
-  if(!history.length){ el.innerHTML='<p class="text-sm text-on-surface-variant text-center py-4">لا يوجد سجل</p>'; return; }
-  el.innerHTML = history.map(h => {
-    const d = new Date(h.ts).toLocaleString('ar',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'});
-    return `<div class="bg-surface-container-lowest rounded-xl px-4 py-2.5 flex items-center gap-3 editorial-shadow">
-      <div class="flex-1">
-        <p class="text-xs font-bold text-on-surface truncate">${(h.name||'').slice(0,30)}</p>
-        <p class="text-[11px] text-on-surface-variant">${d}</p>
-      </div>
-      <span class="text-[11px] font-bold px-2 py-0.5 rounded-full ${h.ok?'bg-green-100 text-green-700':'bg-error-container text-error'}">${h.ok?'✓ نجح':'✗ فشل'}</span>
-    </div>`;
-  }).join('');
-}
-</script>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="ar" dir="rtl"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1">&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1">&lt;meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"&gt;</p>
+<p class="p1">&lt;meta name="apple-mobile-web-app-capable" content="yes"&gt;</p>
+<p class="p1">&lt;meta name="apple-mobile-web-app-status-bar-style" content="default"&gt;</p>
+<p class="p1">&lt;meta name="apple-mobile-web-app-title" content="Sovereign"&gt;</p>
+<p class="p1">&lt;meta name="theme-color" content="#f7f9fb"&gt;</p>
+<p class="p1">&lt;title&gt;Sovereign&lt;/title&gt;</p>
+<p class="p1">&lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;</p>
+<p class="p1">&lt;link rel="preconnect" href="https://fonts.gstatic.com" crossorigin&gt;</p>
+<p class="p1">&lt;link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@700;800&amp;family=Noto+Sans+Arabic:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"&gt;</p>
+<p class="p1">&lt;link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"&gt;</p>
+<p class="p1">&lt;script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"&gt;&lt;/script&gt;</p>
+<p class="p1">&lt;script id="tailwind-config"&gt;</p>
+<p class="p1">tailwind.config = {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>theme: {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>extend: {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>colors: {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"primary-fixed-dim":"#b2c5ff","secondary-container":"#b3c5fd",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"on-primary-container":"#ccd8ff","inverse-surface":"#2d3133",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"on-secondary":"#ffffff","on-secondary-container":"#3e5181",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"surface-bright":"#f7f9fb","surface-variant":"#e0e3e5",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"on-primary-fixed":"#001847","secondary-fixed-dim":"#b3c5fd",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"primary-fixed":"#dae2ff","on-tertiary":"#ffffff",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"surface":"#f7f9fb","on-primary":"#ffffff",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"inverse-on-surface":"#eff1f3","secondary-fixed":"#dae2ff",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"tertiary-container":"#a93802","surface-container-lowest":"#ffffff",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"outline-variant":"#c3c6d6","background":"#f7f9fb",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"inverse-primary":"#b2c5ff","on-surface":"#191c1e",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"surface-container-high":"#e6e8ea","surface-container-low":"#f2f4f6",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"on-surface-variant":"#424654","primary":"#0040a1",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"on-primary-fixed-variant":"#0040a1","outline":"#737785",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"surface-dim":"#d8dadc","secondary":"#4a5d8e",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"tertiary":"#822800","on-error":"#ffffff",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"on-background":"#191c1e","surface-tint":"#0056d2",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"error":"#ba1a1a","surface-container":"#eceef0",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"on-tertiary-container":"#ffcebd","surface-container-highest":"#e0e3e5",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"tertiary-fixed":"#ffdbcf","error-container":"#ffdad6",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"primary-container":"#0056d2"</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>borderRadius: {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"2xl":"1rem","3xl":"1.5rem","full":"9999px"</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>fontFamily: {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"headline":["Noto Sans Arabic","Manrope"],</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"body":["Noto Sans Arabic","Inter"],</p>
+<p class="p1"><span class="Apple-converted-space">        </span>"label":["Noto Sans Arabic","Inter"]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1">}</p>
+<p class="p1">&lt;/script&gt;</p>
+<p class="p1">&lt;style&gt;</p>
+<p class="p1">.material-symbols-outlined {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>display:inline-block; line-height:1; text-transform:none;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>letter-spacing:normal; word-wrap:normal; white-space:nowrap; direction:ltr;</p>
+<p class="p1">}</p>
+<p class="p1">.editorial-shadow { box-shadow: 0 8px 24px rgba(0,64,161,0.08); }</p>
+<p class="p1">.glass-panel {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>background: rgba(247,249,251,0.85);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>backdrop-filter: blur(20px);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>-webkit-backdrop-filter: blur(20px);</p>
+<p class="p1">}</p>
+<p class="p1">.card-uploading { animation: pulse-border 1.4s ease-in-out infinite; }</p>
+<p class="p1">@keyframes pulse-border {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>0%,100% { box-shadow: 0 8px 24px rgba(0,64,161,0.08); }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>50% { box-shadow: 0 8px 24px rgba(0,86,210,0.3); }</p>
+<p class="p1">}</p>
+<p class="p1">.safe-top<span class="Apple-converted-space">    </span>{ padding-top:<span class="Apple-converted-space">    </span>env(safe-area-inset-top,<span class="Apple-converted-space">    </span>44px); }</p>
+<p class="p1">.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 34px); }</p>
+<p class="p1">&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body class="bg-surface font-body text-on-surface antialiased min-h-screen" style="padding-bottom:100px"&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;!-- TopAppBar --&gt;</p>
+<p class="p1">&lt;header class="fixed top-0 left-0 w-full z-50 glass-panel flex justify-between items-center px-6 py-3 safe-top"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="flex items-center gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-container flex items-center justify-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;span class="material-symbols-outlined text-white text-sm" style="font-variation-settings:'FILL' 1"&gt;menu_book&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;span class="font-headline font-extrabold text-lg text-on-surface tracking-tight"&gt;Sovereign&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1">&lt;/header&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;!-- Main --&gt;</p>
+<p class="p1">&lt;main class="px-5 pt-24"&gt;</p>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">  </span>&lt;!-- ═══ وضع المستندات ═══ --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="docsView"&gt;</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">    </span>&lt;!-- بانر الانتظار --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="waitingBanner" class="hidden mb-5 p-4 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="flex items-center gap-3"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;span class="material-symbols-outlined text-2xl animate-spin" style="animation-duration:2s"&gt;sync&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;p class="font-bold text-sm" id="waitingTitle"&gt;في انتظار المستند...&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;p class="text-xs opacity-80 mt-0.5" id="waitingSlotName"&gt;—&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button onclick="stopAll()" class="mr-auto w-8 h-8 rounded-full bg-white/20 flex items-center justify-center active:scale-90"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;span class="material-symbols-outlined text-sm"&gt;close&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">    </span>&lt;!-- اختيار نوع التأشيرة --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="mb-5"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;p class="text-xs font-bold text-on-surface-variant mb-2"&gt;نوع التأشيرة&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="relative"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;select id="visaTypeSelect"</p>
+<p class="p1"><span class="Apple-converted-space">          </span>onchange="changeVisaType(this.value)"</p>
+<p class="p1"><span class="Apple-converted-space">          </span>class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-2xl px-4 py-3 text-sm font-bold text-on-surface appearance-none editorial-shadow focus:outline-none focus:border-primary/40 cursor-pointer"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/select&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-lg"&gt;expand_more&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">    </span>&lt;!-- قائمة المستندات المطلوبة --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;section class="mb-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="flex justify-between items-end mb-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;h3 class="text-lg font-headline font-bold text-on-surface"&gt;المستندات المطلوبة&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;p class="text-[11px] text-on-surface-variant mt-0.5"&gt;Required Documents&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="space-y-3" id="requiredList"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/section&gt;</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">    </span>&lt;!-- قائمة المستندات الاختيارية --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;section class="mb-8 hidden" id="optionalSection"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="mb-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;h3 class="text-lg font-headline font-bold text-on-surface"&gt;المستندات الاختيارية&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;p class="text-[11px] text-on-surface-variant mt-0.5"&gt;Optional Documents&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="space-y-3" id="optionalList"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/section&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">  </span>&lt;!-- ═══ وضع الجواز ═══ --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="passportView" class="hidden"&gt;</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">    </span>&lt;!-- هيدر --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="bg-gradient-to-br from-primary to-primary-container p-6 rounded-3xl text-on-primary mb-6 relative overflow-hidden editorial-shadow"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="relative z-10"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;span class="text-xs font-bold uppercase tracking-widest opacity-80"&gt;تعبئة تلقائية&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;h2 class="text-2xl font-headline font-bold mt-1"&gt;مسح الجواز&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;p class="text-sm opacity-80 mt-2"&gt;اختر نوع العملية ثم صوّر الجواز&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="absolute -left-8 -bottom-8 w-36 h-36 bg-white/10 rounded-full blur-3xl"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">    </span>&lt;!-- ثلاثة خيارات --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="space-y-3 mb-6"&gt;</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">      </span>&lt;!-- تأشيرة جديدة --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="bg-surface-container-lowest rounded-2xl editorial-shadow border border-outline-variant/20 overflow-hidden"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="p-4 flex items-center gap-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;span class="material-symbols-outlined text-2xl text-primary" style="font-variation-settings:'FILL' 1"&gt;add_card&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div class="flex-1"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;p class="font-headline font-bold text-sm text-on-surface"&gt;تأشيرة جديدة&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;p class="text-[11px] text-on-surface-variant mt-0.5"&gt;تعبئة بيانات وثيقة السفر للطلب الجديد&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="grid grid-cols-2 gap-2 px-4 pb-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button onclick="launchScanner('new','camera')" class="py-2.5 rounded-xl bg-primary text-on-primary text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1"&gt;photo_camera&lt;/span&gt; كاميرا</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;label class="py-2.5 rounded-xl bg-surface-container text-on-surface text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;input type="file" accept="image/*" class="hidden" id="galleryNew"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1"&gt;image&lt;/span&gt; مكتبة</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">      </span>&lt;!-- تحديث وتجديد + استعلام --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="bg-surface-container-lowest rounded-2xl editorial-shadow border border-outline-variant/20 overflow-hidden"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="p-4 flex items-center gap-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style="background:rgba(22,121,77,0.12)"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1;color:#16794d"&gt;manage_search&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div class="flex-1"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;p class="font-headline font-bold text-sm text-on-surface"&gt;تحديث وتجديد / استعلام&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;p class="text-[11px] text-on-surface-variant mt-0.5"&gt;تجديد تأشيرة أو الاستعلام برقم وثيقة السفر&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="flex gap-2 px-4 pb-3"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button id="tabRenew" onclick="setPassportTab('renew')" class="flex-1 py-1.5 rounded-lg text-[11px] font-bold" style="background:#16794d;color:#fff;"&gt;تحديث وتجديد&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button id="tabSearch" onclick="setPassportTab('search')" class="flex-1 py-1.5 rounded-lg text-[11px] font-bold bg-surface-container text-on-surface-variant"&gt;استعلام&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="grid grid-cols-2 gap-2 px-4 pb-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button id="btnRS" onclick="launchScanner(_activeRenewSearchTab,'camera')" class="py-2.5 rounded-xl text-white text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all" style="background:#16794d"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1"&gt;photo_camera&lt;/span&gt; كاميرا</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;label class="py-2.5 rounded-xl bg-surface-container text-on-surface text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;input type="file" accept="image/*" class="hidden" id="galleryRS"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1"&gt;image&lt;/span&gt; مكتبة</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;input type="file" accept="image/*" class="hidden" id="galleryRenew"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;input type="file" accept="image/*" class="hidden" id="gallerySearch"&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">    </span>&lt;!-- معاينة مؤقتة للمكتبة --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="passportPreview" class="hidden bg-surface-container-lowest rounded-3xl overflow-hidden editorial-shadow mb-3"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;img id="passportImg" class="w-full max-h-56 object-contain bg-black block" src="" alt=""&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="p-4 flex justify-between items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;span class="text-xs text-on-surface-variant" id="passportFileName"&gt;—&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button onclick="clearPassport()" class="text-xs text-error font-bold"&gt;إزالة&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;button id="passportPCBtn" disabled onclick="sendPassportToPC()"</p>
+<p class="p1"><span class="Apple-converted-space">      </span>class="w-full py-4 rounded-3xl font-headline font-bold text-base text-on-primary shadow-lg disabled:opacity-40 disabled:shadow-none active:scale-98 transition-all hidden"</p>
+<p class="p1"><span class="Apple-converted-space">      </span>style="background:#16794d;"&gt;</p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">      </span>📤 إرسال للكمبيوتر</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/button&gt;</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">    </span>&lt;!-- نتيجة الاستخراج --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="passportResult" class="hidden mt-5 bg-surface-container-lowest rounded-3xl p-5 editorial-shadow"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;p class="font-headline font-bold text-sm mb-3 text-on-surface"&gt;البيانات المستخرجة&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div id="passportFields" class="space-y-2"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- input مخفي لـ passportGallery (للتوافق مع الكود القديم) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;input type="file" accept="image/*" id="passportGallery" class="hidden"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- btn مخفي للتوافق --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;button id="passportSendBtn" disabled onclick="sendPassport()" class="hidden"&gt;&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">  </span>&lt;!-- سجل الإرسال --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;section class="mt-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="flex justify-between items-center mb-3"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;h3 class="text-base font-headline font-bold text-on-surface"&gt;السجل&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;button onclick="clearHistory()" class="text-xs text-error font-bold"&gt;مسح&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="historyList" class="space-y-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;p class="text-sm text-on-surface-variant text-center py-4"&gt;لا يوجد سجل&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/section&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;/main&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;!-- Bottom Nav --&gt;</p>
+<p class="p1">&lt;nav class="fixed bottom-0 left-0 w-full z-50 glass-panel flex justify-around items-center px-4 pb-safe pt-3 rounded-t-3xl safe-bottom"</p>
+<p class="p1"><span class="Apple-converted-space">     </span>style="box-shadow:0 -8px 24px rgba(0,64,161,0.12);"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;button onclick="setMode('passport')" id="navPassport" class="flex flex-col items-center gap-1 px-4 py-2 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1"&gt;menu_book&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;span class="text-[11px] font-bold"&gt;الجواز&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;button onclick="setMode('docs')" id="navDocs" class="flex flex-col items-center gap-1 px-4 py-2 text-on-surface-variant"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;span class="material-symbols-outlined"&gt;description&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;span class="text-[11px] font-medium"&gt;المستندات&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/button&gt;</p>
+<p class="p1">&lt;/nav&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;!-- Hidden file inputs for document slots --&gt;</p>
+<p class="p1">&lt;div id="hiddenInputs" class="hidden"&gt;&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;script&gt;</p>
+<p class="p1">'use strict';</p>
+<p class="p2"><br></p>
+<p class="p1">function sanitizeFileName(name) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>return name</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.replace(/[()\[\]{}'"،,؛;:!@#$%^&amp;*+=|\\/&lt;&gt;?]/g, '')</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.replace(/[-–—]/g, ' ')</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.replace(/\s+/g, ' ')</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.trim();</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<p class="p1">/* ─── Config ─── */</p>
+<p class="p1">const API_BASE<span class="Apple-converted-space">  </span>= localStorage.getItem('pai_api_base')<span class="Apple-converted-space">  </span>|| 'https://phd-considering-aaa-despite.trycloudflare.com';</p>
+<p class="p1">const STORE_URL = localStorage.getItem('pai_store_url') || `${API_BASE}/webhook/passport-store`;</p>
+<p class="p1">const EXTRACT_URL = localStorage.getItem('pai_extract_url') || `${API_BASE}/webhook/passport-extract1`;</p>
+<p class="p1">const SID = (() =&gt; { const q = new URLSearchParams(location.search).get('sid'); if (q) { localStorage.setItem('pai_sid', q); return q; } let id = localStorage.getItem('pai_sid'); if (!id) { id = 'u' + Math.random().toString(36).slice(2,9); localStorage.setItem('pai_sid', id); } return id; })();</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1">/* ─── أنواع التأشيرات ─── */</p>
+<p class="p1">const VISA_TYPES = {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>'8A': {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>label: 'تأشيرة سريعة 8A',</p>
+<p class="p1"><span class="Apple-converted-space">    </span>docs: [</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:1, ar:'صورة جواز السفر لصاحب الطلب',<span class="Apple-converted-space">        </span>en:'Passport Copy Applicant',<span class="Apple-converted-space">  </span>icon:'credit_card' <span class="Apple-converted-space">  </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:2, ar:'صورة شخصية لصاحب الطلب', <span class="Apple-converted-space">            </span>en:'Personal Photo Applicant', icon:'account_circle'},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:3, ar:'رسالة صاحب العمل الغرض', <span class="Apple-converted-space">            </span>en:'Employer Letter Purpose',<span class="Apple-converted-space">  </span>icon:'business'<span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>]</p>
+<p class="p1"><span class="Apple-converted-space">  </span>},</p>
+<p class="p1"><span class="Apple-converted-space">  </span>'14A': {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>label: 'تأشيرة الالتحاق بالأقارب 14A',</p>
+<p class="p1"><span class="Apple-converted-space">    </span>docs: [</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:1, ar:'عقد العمل',<span class="Apple-converted-space">                          </span>en:'Employment Contract', <span class="Apple-converted-space">      </span>icon:'work'<span class="Apple-converted-space">          </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:2, ar:'صورة جواز السفر لصاحب الطلب',<span class="Apple-converted-space">        </span>en:'Passport Copy Applicant',<span class="Apple-converted-space">  </span>icon:'credit_card' <span class="Apple-converted-space">  </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:3, ar:'صورة جواز السفر للملتحق به',<span class="Apple-converted-space">          </span>en:'Passport Copy Dependent',<span class="Apple-converted-space">  </span>icon:'credit_card' <span class="Apple-converted-space">  </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:4, ar:'صورة شخصية لصاحب الطلب', <span class="Apple-converted-space">            </span>en:'Personal Photo Applicant', icon:'account_circle'},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:5, ar:'اثبات صلة قرابة', <span class="Apple-converted-space">                    </span>en:'Proof of Relationship', <span class="Apple-converted-space">    </span>icon:'family_history'},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:6, ar:'صورة بطاقة الإقامة للملتحق به', <span class="Apple-converted-space">      </span>en:'Residence Card Dependent', icon:'badge' <span class="Apple-converted-space">        </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:7, ar:'رسالة صاحب العمل تعهد', <span class="Apple-converted-space">              </span>en:'Employer Letter', <span class="Apple-converted-space">          </span>icon:'business'<span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>]</p>
+<p class="p1"><span class="Apple-converted-space">  </span>},</p>
+<p class="p1"><span class="Apple-converted-space">  </span>'25E': {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>label: 'تأشيرة متعددة الرحلات 25E',</p>
+<p class="p1"><span class="Apple-converted-space">    </span>docs: [</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:1, ar:'صورة جواز السفر لصاحب الطلب',<span class="Apple-converted-space">        </span>en:'Passport Copy Applicant',<span class="Apple-converted-space">  </span>icon:'credit_card' <span class="Apple-converted-space">  </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:2, ar:'صورة شخصية لصاحب الطلب', <span class="Apple-converted-space">            </span>en:'Personal Photo Applicant', icon:'account_circle'},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:3, ar:'رسالة صاحب العمل الغرض',<span class="Apple-converted-space">              </span>en:'Employer Letter Purpose',<span class="Apple-converted-space">  </span>icon:'business'<span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>]</p>
+<p class="p1"><span class="Apple-converted-space">  </span>},</p>
+<p class="p1"><span class="Apple-converted-space">  </span>'4B': {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>label: 'تأشيرة زيارة عائلية 4B',</p>
+<p class="p1"><span class="Apple-converted-space">    </span>docs: [</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:1, ar:'صورة جواز السفر لصاحب الطلب',<span class="Apple-converted-space">        </span>en:'Passport Copy Applicant',<span class="Apple-converted-space">  </span>icon:'credit_card' <span class="Apple-converted-space">  </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:2, ar:'صورة جواز السفر للملتحق به',<span class="Apple-converted-space">          </span>en:'Passport Copy Dependent',<span class="Apple-converted-space">  </span>icon:'credit_card' <span class="Apple-converted-space">  </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:3, ar:'صورة شخصية لصاحب الطلب', <span class="Apple-converted-space">            </span>en:'Personal Photo Applicant', icon:'account_circle'},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:4, ar:'اثبات صلة قرابة', <span class="Apple-converted-space">                    </span>en:'Proof of Relationship', <span class="Apple-converted-space">    </span>icon:'family_history'},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:5, ar:'صورة بطاقة الإقامة للملتحق به', <span class="Apple-converted-space">      </span>en:'Residence Card Dependent', icon:'badge' <span class="Apple-converted-space">        </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:6, ar:'رسالة صاحب العمل تعهد', <span class="Apple-converted-space">              </span>en:'Employer Letter', <span class="Apple-converted-space">          </span>icon:'business'<span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>]</p>
+<p class="p1"><span class="Apple-converted-space">  </span>},</p>
+<p class="p1"><span class="Apple-converted-space">  </span>'NK': {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>label: 'نقل كفالة NK',</p>
+<p class="p1"><span class="Apple-converted-space">    </span>docs: [</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:1, ar:'صورة شخصية لصاحب الطلب', <span class="Apple-converted-space">            </span>en:'Personal Photo Applicant',<span class="Apple-converted-space">  </span>icon:'account_circle'<span class="Apple-converted-space">    </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:2, ar:'صورة جواز السفر لصاحب الطلب',<span class="Apple-converted-space">        </span>en:'Passport Copy Applicant', <span class="Apple-converted-space">  </span>icon:'credit_card' <span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:3, ar:'تصريح العمل', <span class="Apple-converted-space">                        </span>en:'Work Permit', <span class="Apple-converted-space">              </span>icon:'work'<span class="Apple-converted-space">              </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:4, ar:'استمارة نقل خدمات', <span class="Apple-converted-space">                  </span>en:'Transfer Services Form',<span class="Apple-converted-space">    </span>icon:'swap_horiz'<span class="Apple-converted-space">        </span>},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>]</p>
+<p class="p1"><span class="Apple-converted-space">  </span>},</p>
+<p class="p1"><span class="Apple-converted-space">  </span>'6': {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>label: 'تجديد اقامة 6',</p>
+<p class="p1"><span class="Apple-converted-space">    </span>docs: [</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:1, ar:'تصريح العمل', <span class="Apple-converted-space">                        </span>en:'Work Permit', <span class="Apple-converted-space">              </span>icon:'work'<span class="Apple-converted-space">              </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:2, ar:'صورة جواز السفر لصاحب الطلب',<span class="Apple-converted-space">        </span>en:'Passport Copy Applicant', <span class="Apple-converted-space">  </span>icon:'credit_card' <span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:3, ar:'صورة شخصية لصاحب الطلب', <span class="Apple-converted-space">            </span>en:'Personal Photo Applicant',<span class="Apple-converted-space">  </span>icon:'account_circle'<span class="Apple-converted-space">    </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:4, ar:'شهادة طبية',<span class="Apple-converted-space">                          </span>en:'Medical Certificate',<span class="Apple-converted-space">        </span>icon:'health_and_safety' },</p>
+<p class="p1"><span class="Apple-converted-space">    </span>]</p>
+<p class="p1"><span class="Apple-converted-space">  </span>},</p>
+<p class="p1"><span class="Apple-converted-space">  </span>'1A': {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>label: 'تحديث وتجديد تأشيرة عمل 1A',</p>
+<p class="p1"><span class="Apple-converted-space">    </span>docs: [</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:1, ar:'صورة شخصية لصاحب الطلب', <span class="Apple-converted-space">            </span>en:'Personal Photo Applicant',<span class="Apple-converted-space">  </span>icon:'account_circle'<span class="Apple-converted-space">    </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:2, ar:'صورة جواز السفر لصاحب الطلب',<span class="Apple-converted-space">        </span>en:'Passport Copy Applicant', <span class="Apple-converted-space">  </span>icon:'credit_card' <span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:3, ar:'تصريح العمل', <span class="Apple-converted-space">                        </span>en:'Work Permit', <span class="Apple-converted-space">              </span>icon:'work'<span class="Apple-converted-space">              </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:4, ar:'شهادة طبية',<span class="Apple-converted-space">                          </span>en:'Medical Certificate',<span class="Apple-converted-space">        </span>icon:'health_and_safety' },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ slot:5, ar:'نسخة من جواز السفر القديم', <span class="Apple-converted-space">          </span>en:'Copy of Old Passport', <span class="Apple-converted-space">      </span>icon:'history' <span class="Apple-converted-space">          </span>},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>]</p>
+<p class="p1"><span class="Apple-converted-space">  </span>},</p>
+<p class="p1">};</p>
+<p class="p1">let currentVisaType = '';</p>
+<p class="p1">let REQUIRED_DOCS = [];</p>
+<p class="p2"><br></p>
+<p class="p1">const OPTIONAL_DOCS = [</p>
+<p class="p1"><span class="Apple-converted-space">  </span>{ slot:101, ar:'مستندات اختيارية 1', en:'Optional Document 1', icon:'attach_file' },</p>
+<p class="p1"><span class="Apple-converted-space">  </span>{ slot:102, ar:'مستندات اختيارية 2', en:'Optional Document 2', icon:'attach_file' },</p>
+<p class="p1"><span class="Apple-converted-space">  </span>{ slot:103, ar:'مستندات اختيارية 3', en:'Optional Document 3', icon:'attach_file' },</p>
+<p class="p1"><span class="Apple-converted-space">  </span>{ slot:104, ar:'مستندات اختيارية 4', en:'Optional Document 4', icon:'attach_file' },</p>
+<p class="p1"><span class="Apple-converted-space">  </span>{ slot:105, ar:'مستندات اختيارية 5', en:'Optional Document 5', icon:'attach_file' },</p>
+<p class="p1"><span class="Apple-converted-space">  </span>{ slot:106, ar:'مستندات اختيارية 6', en:'Optional Document 6', icon:'attach_file' },</p>
+<p class="p1">];</p>
+<p class="p2"><br></p>
+<p class="p1">/* ─── State ─── */</p>
+<p class="p1">let appMode = localStorage.getItem('pai_mode') || 'passport';</p>
+<p class="p1">let slotStatus = {}; // slot -&gt; 'idle'|'uploading'|'sent'|'error'</p>
+<p class="p1">let passportFile = null, passportDataUrl = null, sending = false;</p>
+<p class="p1">let history = JSON.parse(localStorage.getItem('pai_hist') || '[]');</p>
+<p class="p2"><br></p>
+<p class="p1">/* ─── Init ─── */</p>
+<p class="p1">function initVisaSelect() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const sel = document.getElementById('visaTypeSelect');</p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">  </span>// خيار افتراضي</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const placeholder = document.createElement('option');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>placeholder.value = '';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>placeholder.textContent = '— اختر نوع التأشيرة —';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>placeholder.disabled = true;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>placeholder.selected = !currentVisaType;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>sel.appendChild(placeholder);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>Object.entries(VISA_TYPES).forEach(([key, val]) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const opt = document.createElement('option');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>opt.value = key;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>opt.textContent = val.label;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (key === currentVisaType) opt.selected = true;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>sel.appendChild(opt);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p1">}</p>
+<p class="p1">function changeVisaType(type) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>currentVisaType = type;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>sessionStorage.setItem('sov_visa_type', type);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>REQUIRED_DOCS = VISA_TYPES[type]?.docs || [];</p>
+<p class="p1"><span class="Apple-converted-space">  </span>slotStatus = {};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>renderDocumentList(REQUIRED_DOCS, 'requiredList');</p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">  </span>// إظهار المستندات الاختيارية بعد اختيار نوع التأشيرة</p>
+<p class="p1"><span class="Apple-converted-space">  </span>renderDocumentList(OPTIONAL_DOCS, 'optionalList');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('optionalSection').classList.remove('hidden');</p>
+<p class="p1">}</p>
+<p class="p1">initVisaSelect();</p>
+<p class="p1">renderDocumentList(REQUIRED_DOCS, 'requiredList');</p>
+<p class="p1">setMode(appMode);</p>
+<p class="p1">renderHistory();</p>
+<p class="p1">document.getElementById('passportGallery').onchange = e =&gt; selectPassportFile(e.target.files[0]);</p>
+<p class="p1">document.getElementById('galleryRS').addEventListener('change', function(e) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const file = e.target.files[0]; if (!file) return;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>_passportContext = _activeRenewSearchTab;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>sessionStorage.setItem('pai_passport_context', _activeRenewSearchTab);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>selectPassportFile(file); e.target.value = '';</p>
+<p class="p1">});</p>
+<p class="p2"><br></p>
+<p class="p1">/* ─── Mode switch ─── */</p>
+<p class="p1">function setMode(mode) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>appMode = mode;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>localStorage.setItem('pai_mode', mode);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('docsView').classList.toggle('hidden', mode !== 'docs');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('passportView').classList.toggle('hidden', mode !== 'passport');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const navBase = 'flex flex-col items-center gap-1 px-4 py-2 ';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('navPassport').className = navBase + (mode==='passport' ? 'rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary' : 'text-on-surface-variant');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('navDocs').className<span class="Apple-converted-space">    </span>= navBase + (mode==='docs' <span class="Apple-converted-space">    </span>? 'rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary' : 'text-on-surface-variant');</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1">/* ─── بناء قائمة المستندات ─── */</p>
+<p class="p1">function renderDocumentList(docs, containerId) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const container = document.getElementById(containerId);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>container.innerHTML = docs.map(doc =&gt; `</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="bg-surface-container-lowest p-4 rounded-2xl editorial-shadow border border-outline-variant/20 flex items-center gap-3" id="card_${doc.slot}"&gt;</p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">      </span>&lt;!-- أزرار الرفع --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="flex flex-col gap-1.5 shrink-0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button onclick="uploadSlot(${doc.slot},'camera')"</p>
+<p class="p1"><span class="Apple-converted-space">          </span>class="w-10 h-10 rounded-xl bg-surface-container hover:bg-secondary-container active:scale-90 transition-all text-primary flex items-center justify-center"</p>
+<p class="p1"><span class="Apple-converted-space">          </span>id="camBtn_${doc.slot}" title="تصوير"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;span class="material-symbols-outlined text-lg" style="font-variation-settings:'FILL' 1"&gt;photo_camera&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;label class="w-10 h-10 rounded-xl bg-surface-container hover:bg-surface-container-high active:scale-90 transition-all text-primary flex items-center justify-center cursor-pointer"</p>
+<p class="p1"><span class="Apple-converted-space">          </span>id="galLabel_${doc.slot}" title="اختيار من المكتبة"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;input type="file" accept="image/*" class="hidden" id="galInput_${doc.slot}"</p>
+<p class="p1"><span class="Apple-converted-space">            </span>onchange="handleGallerySelect(${doc.slot}, this)"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;span class="material-symbols-outlined text-lg" style="font-variation-settings:'FILL' 1"&gt;image&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">      </span>&lt;!-- معلومات --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="flex-1 min-w-0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="flex justify-between items-start gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;h4 class="text-sm font-bold text-on-surface leading-tight"&gt;${doc.ar}&lt;/h4&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;span id="badge_${doc.slot}" class="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 bg-surface-container-high text-on-surface-variant"&gt;</p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">            </span>جاهز</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;p class="text-[11px] text-on-surface-variant mt-0.5 truncate"&gt;${doc.en}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">      </span>&lt;!-- أيقونة --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="w-9 h-9 rounded-xl bg-primary-container/10 flex items-center justify-center text-primary shrink-0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;span class="material-symbols-outlined text-lg"&gt;${doc.icon}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>`).join('');</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1">/* ─── رفع من الكاميرا (scanner) ─── */</p>
+<p class="p1">function uploadSlot(slot, source) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (source === 'camera') {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>sessionStorage.setItem('pai_pending_slot', slot);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>sessionStorage.setItem('pai_visa_type', currentVisaType);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>window.location.href = `scanner.html?mode=document&amp;slot=${slot}`;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1">/* ─── اختيار من المعرض ─── */</p>
+<p class="p1">function handleGallerySelect(slot, input) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const f = input.files[0];</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (!f) return;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>input.value = '';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>sendDocumentSlot(slot, f);</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1">/* ─── إرسال مستند بـ slot ─── */</p>
+<p class="p1">async function sendDocumentSlot(slot, file) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>setSlotStatus(slot, 'uploading');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>showWaitingBanner(slot);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const blob = await processImage(file);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const base64 = await blobToBase64(blob);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const allDocs = [...REQUIRED_DOCS, ...OPTIONAL_DOCS];</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const doc = allDocs.find(d =&gt; d.slot === slot);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const payload = {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>_mode:<span class="Apple-converted-space">      </span>'attachment',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>_visaType:<span class="Apple-converted-space">  </span>currentVisaType,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>_slot:<span class="Apple-converted-space">      </span>slot,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>_docName: <span class="Apple-converted-space">  </span>doc?.ar || '',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>_source:<span class="Apple-converted-space">    </span>'sovereign-mobile',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>_ts:<span class="Apple-converted-space">        </span>Date.now(),</p>
+<p class="p1"><span class="Apple-converted-space">      </span>fileName: <span class="Apple-converted-space">  </span>(doc?.ar || `مستند ${slot}`) + '.jpg',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>mimeType: <span class="Apple-converted-space">  </span>'image/jpeg',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>contentBase64: base64</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const res = await fetch(STORE_URL, {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>method:'POST',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>headers:{'Content-Type':'application/json'},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>body: JSON.stringify(payload)</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (!res.ok) throw new Error('HTTP ' + res.status);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>setSlotStatus(slot, 'sent');</p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">    </span>// حفظ في sessionStorage</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const sd = JSON.parse(sessionStorage.getItem('pai_done_slots_session') || '[]');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (!sd.includes(slot)) { sd.push(slot); sessionStorage.setItem('pai_done_slots_session', JSON.stringify(sd)); }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>hideWaitingBanner();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>addHistory(doc?.ar || `Slot ${slot}`, true);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>} catch(e) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setSlotStatus(slot, 'error');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>hideWaitingBanner();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>addHistory(`Slot ${slot}`, false);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">  </span>// لا reset - تبقى "تم" حتى إعادة التحميل</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1">/* ─── حالة البطاقة ─── */</p>
+<p class="p1">function setSlotStatus(slot, status) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>slotStatus[slot] = status;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const card<span class="Apple-converted-space">  </span>= document.getElementById('card_' + slot);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const badge = document.getElementById('badge_' + slot);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (!card || !badge) return;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>card.classList.remove('card-uploading');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const states = {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>idle:<span class="Apple-converted-space">      </span>{ text:'جاهز', <span class="Apple-converted-space">      </span>cls:'bg-surface-container-high text-on-surface-variant' },</p>
+<p class="p1"><span class="Apple-converted-space">    </span>uploading: { text:'جاري الرفع…', cls:'bg-primary-fixed text-primary' },</p>
+<p class="p1"><span class="Apple-converted-space">    </span>sent:<span class="Apple-converted-space">      </span>{ text:'✓ تم', cls:'bg-green-100 text-green-700' },</p>
+<p class="p1"><span class="Apple-converted-space">    </span>error: <span class="Apple-converted-space">    </span>{ text:'✗ فشل', <span class="Apple-converted-space">      </span>cls:'bg-error-container text-error' },</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const s = states[status] || states.idle;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>badge.textContent = s.text;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>badge.className = `text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${s.cls}`;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (status === 'uploading') card.classList.add('card-uploading');</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1">/* ─── بانر الانتظار ─── */</p>
+<p class="p1">function showWaitingBanner(slot) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const allDocs = [...REQUIRED_DOCS, ...OPTIONAL_DOCS];</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const doc = allDocs.find(d =&gt; d.slot === slot);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('waitingSlotName').textContent = doc?.ar || `Slot ${slot}`;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('waitingBanner').classList.remove('hidden');</p>
+<p class="p1">}</p>
+<p class="p1">function hideWaitingBanner() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('waitingBanner').classList.add('hidden');</p>
+<p class="p1">}</p>
+<p class="p1">function stopAll() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>hideWaitingBanner();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>Object.keys(slotStatus).forEach(s =&gt; { if(slotStatus[s]==='uploading') setSlotStatus(Number(s),'idle'); });</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1">/* ─── وضع الجواز ─── */</p>
+<p class="p1">function openCamera() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>sessionStorage.setItem('pai_pending_slot', 'passport');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>window.location.href = 'scanner.html?mode=passport';</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function selectPassportFile(f) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (!f) return;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>passportFile = f;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const r = new FileReader();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>r.onload = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>passportDataUrl = r.result;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('passportImg').src = passportDataUrl;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('passportFileName').textContent = f.name.slice(0,30);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('passportPreview').classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const btn = document.getElementById('passportSendBtn');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (btn) { btn.disabled = false; btn.textContent = '🚀 إرسال واستخراج'; }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const pcBtn = document.getElementById('passportPCBtn');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (pcBtn) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>pcBtn.disabled = false;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>pcBtn.classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const ctx = _passportContext || sessionStorage.getItem('pai_passport_context') || 'new';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>pcBtn.textContent = '📤 إرسال للكمبيوتر — ' + (CONTEXT_LABELS[ctx] || ctx);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>r.readAsDataURL(f);</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function clearPassport() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>passportFile = null; passportDataUrl = null;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('passportPreview').classList.add('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('passportResult').classList.add('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('passportSendBtn').disabled = true;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('passportSendBtn').textContent = 'اختر صورة أولاً';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const pcBtn = document.getElementById('passportPCBtn');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (pcBtn) { pcBtn.disabled = true; }</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">async function sendPassport() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (!passportFile || sending) return;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>sending = true;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const btn = document.getElementById('passportSendBtn');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>btn.disabled = true;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>btn.innerHTML = '&lt;span class="inline-block animate-spin mr-2"&gt;⏳&lt;/span&gt; جاري الإرسال...';</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const blob = await processImage(passportFile);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const fd = new FormData();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>fd.append('data', blob, passportFile.name.replace(/\.[^.]+$/, '') + '-enhanced.jpg');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>fd.append('_source', 'sovereign-mobile');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>fd.append('_sid', SID);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const res = await fetch(EXTRACT_URL, { method:'POST', body:fd });</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const text = await res.text();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let json = null;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>try { json = JSON.parse(text); } catch { const m=text.match(/\{[\s\S]*\}/); if(m) try{json=JSON.parse(m[0]);}catch{} }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (!res.ok) throw new Error('HTTP ' + res.status);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (Array.isArray(json)) json = json[0]||{};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (json?.data &amp;&amp; typeof json.data==='object') json = json.data;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>showPassportResult(json);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>addHistory(passportFile.name, true);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>} catch(e) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('passportResult').classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('passportFields').innerHTML = `&lt;p class="text-sm text-error"&gt;${e.message}&lt;/p&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>addHistory(passportFile.name, false);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>sending = false;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>btn.disabled = false;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>btn.textContent = '🚀 إرسال واستخراج';</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function showPassportResult(d) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const fields = [</p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">    </span>['الاسم', <span class="Apple-converted-space">        </span>d.nameEnglish||d.nameArabic],</p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">    </span>['رقم الجواز',<span class="Apple-converted-space">    </span>d.passportNumber||d.passportNo],</p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">    </span>['الجنسية', <span class="Apple-converted-space">      </span>d.nationalityArabic],</p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">    </span>['تاريخ الميلاد', d.dateOfBirth],</p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">    </span>['تاريخ الانتهاء',d.dateOfExpiry],</p>
+<p class="p1"><span class="Apple-converted-space">  </span>].filter(([,v]) =&gt; v &amp;&amp; v !== 'null');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const el = document.getElementById('passportResult');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>el.classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('passportFields').innerHTML = fields.map(([l,v]) =&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>`&lt;div class="flex justify-between py-1.5 border-b border-outline-variant/20 last:border-0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;span class="text-xs text-on-surface-variant"&gt;${l}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;span class="text-xs font-bold text-on-surface"&gt;${v}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;`</p>
+<p class="p1"><span class="Apple-converted-space">  </span>).join('') || '&lt;p class="text-sm text-on-surface-variant"&gt;لا توجد بيانات&lt;/p&gt;';</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">window.addEventListener('load', () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const navType = performance.getEntriesByType?.('navigation')?.[0]?.type;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (navType === 'reload') {</p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">    </span>// تحميل يدوي — امسح كل شيء (التأشيرة + المكتمل)</p>
+<p class="p1"><span class="Apple-converted-space">    </span>sessionStorage.removeItem('pai_done_slots_session');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>sessionStorage.removeItem('sov_visa_type');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>} else {</p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">    </span>// رجوع من السكانر — استرجع نوع التأشيرة</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const savedType = sessionStorage.getItem('sov_visa_type');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (savedType &amp;&amp; VISA_TYPES[savedType]) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>currentVisaType = savedType;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>REQUIRED_DOCS = VISA_TYPES[savedType].docs;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>renderDocumentList(REQUIRED_DOCS, 'requiredList');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>renderDocumentList(OPTIONAL_DOCS, 'optionalList');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById('optionalSection').classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const sel = document.getElementById('visaTypeSelect');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (sel) sel.value = savedType;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">  </span>// استرجع المستندات المكتملة</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const sessionDone = JSON.parse(sessionStorage.getItem('pai_done_slots_session') || '[]');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>sessionDone.forEach(slot =&gt; setSlotStatus(slot, 'sent'));</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1"><span class="Apple-converted-space">  </span>// رجوع من السكانر بـ ?done=</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const urlDone = Number(new URLSearchParams(location.search).get('done') || 0);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (urlDone) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (!sessionDone.includes(urlDone)) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>sessionDone.push(urlDone);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>sessionStorage.setItem('pai_done_slots_session', JSON.stringify(sessionDone));</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setSlotStatus(urlDone, 'sent');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>history.replaceState({}, '', location.pathname);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const slot = sessionStorage.getItem('pai_pending_slot');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const img<span class="Apple-converted-space">  </span>= sessionStorage.getItem('pai_scanned_image');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const name = sessionStorage.getItem('pai_scanned_name') || 'scanned.jpg';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (slot &amp;&amp; img) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>sessionStorage.removeItem('pai_pending_slot');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>sessionStorage.removeItem('pai_scanned_image');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>sessionStorage.removeItem('pai_scanned_name');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>fetch(img).then(r=&gt;r.blob()).then(blob =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const file = new File([blob], name, {type:'image/jpeg'});</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (slot === 'passport') selectPassportFile(file);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>else sendDocumentSlot(Number(slot), file);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1">});</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1">/* ─── معالجة الصورة ─── */</p>
+<p class="p1">async function processImage(f) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>return new Promise((res, rej) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const reader = new FileReader();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>reader.onload = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const img = new Image();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>img.onload = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const s = Math.min(1, 1600 / Math.max(img.width, img.height));</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const w = Math.round(img.width * s), h = Math.round(img.height * s);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const c = document.createElement('canvas'); c.width = w; c.height = h;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const d = ctx.getImageData(0,0,w,h);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>for(let i=0;i&lt;d.data.length;i+=4){</p>
+<p class="p1"><span class="Apple-converted-space">          </span>d.data[i]=Math.min(255,Math.max(0,((d.data[i]-128)*1.1)+130));</p>
+<p class="p1"><span class="Apple-converted-space">          </span>d.data[i+1]=Math.min(255,Math.max(0,((d.data[i+1]-128)*1.1)+130));</p>
+<p class="p1"><span class="Apple-converted-space">          </span>d.data[i+2]=Math.min(255,Math.max(0,((d.data[i+2]-128)*1.1)+130));</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>ctx.putImageData(d,0,0);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const MAX_BYTES = 490 * 1024;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const tryQuality = (q) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>c.toBlob(b =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!b) { rej(new Error('blob failed')); return; }</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (b.size &lt;= MAX_BYTES || q &lt;= 0.4) { res(b); }</p>
+<p class="p1"><span class="Apple-converted-space">            </span>else { tryQuality(Math.round((q - 0.08) * 100) / 100); }</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}, 'image/jpeg', q);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>};</p>
+<p class="p1"><span class="Apple-converted-space">        </span>tryQuality(0.85);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>};</p>
+<p class="p1"><span class="Apple-converted-space">      </span>img.onerror = () =&gt; rej(new Error('image load failed'));</p>
+<p class="p1"><span class="Apple-converted-space">      </span>img.src = reader.result;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>reader.onerror = () =&gt; rej(new Error('file read failed'));</p>
+<p class="p1"><span class="Apple-converted-space">    </span>reader.readAsDataURL(f);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1">/* ─── وضع الجواز الحالي ─── */</p>
+<p class="p1">let _passportContext = 'new'; // 'new' | 'renew' | 'search'</p>
+<p class="p2"><br></p>
+<p class="p1">const CONTEXT_LABELS = {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>new:<span class="Apple-converted-space">    </span>'تأشيرة جديدة',</p>
+<p class="p1"><span class="Apple-converted-space">  </span>renew:<span class="Apple-converted-space">  </span>'تحديث وتجديد',</p>
+<p class="p1"><span class="Apple-converted-space">  </span>search: 'استعلام عن تأشيرة',</p>
+<p class="p1">};</p>
+<p class="p2"><br></p>
+<p class="p1">function launchScanner(context, source) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>_passportContext = context;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>sessionStorage.setItem('pai_passport_context', context);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (source === 'camera') {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>sessionStorage.setItem('pai_pending_slot', 'passport');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>window.location.href = `scanner.html?mode=pc-passport&amp;context=${context}`;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1">/* ─── معالجة اختيار من المكتبة لكل وضع ─── */</p>
+<p class="p1">let _activeRenewSearchTab = 'renew';</p>
+<p class="p1">function setPassportTab(tab) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>_activeRenewSearchTab = tab;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const tr = document.getElementById('tabRenew'), ts = document.getElementById('tabSearch'), cam = document.getElementById('btnRS');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const color = tab === 'renew' ? '#16794d' : '#0056d2';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>tr.style.background = tab === 'renew' ? '#16794d' : ''; tr.style.color = tab === 'renew' ? '#fff' : '';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>ts.style.background = tab === 'search' ? '#0056d2' : ''; ts.style.color = tab === 'search' ? '#fff' : '';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (tr) tr.className = 'flex-1 py-1.5 rounded-lg text-[11px] font-bold' + (tab === 'renew' ? '' : ' bg-surface-container text-on-surface-variant');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (ts) ts.className = 'flex-1 py-1.5 rounded-lg text-[11px] font-bold' + (tab === 'search' ? '' : ' bg-surface-container text-on-surface-variant');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (cam) cam.style.background = color;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">['galleryNew','galleryRenew','gallerySearch'].forEach((id, i) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const contexts = ['new','renew','search'];</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById(id).addEventListener('change', function(e) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const file = e.target.files[0];</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (!file) return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>_passportContext = contexts[i];</p>
+<p class="p1"><span class="Apple-converted-space">    </span>sessionStorage.setItem('pai_passport_context', contexts[i]);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>selectPassportFile(file);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>e.target.value = '';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p1">});</p>
+<p class="p2"><br></p>
+<p dir="rtl" class="p1">/* ─── إرسال صورة الجواز للكمبيوتر عبر EXTRACT_URL ─── */</p>
+<p class="p1">async function sendPassportToPC() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (!passportFile) return;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const btn = document.getElementById('passportPCBtn');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>btn.disabled = true;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>btn.textContent = '⏳ جاري الاستخراج والإرسال...';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const blob = await processImage(passportFile);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const fd = new FormData();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>fd.append('data', blob, 'passport-mobile.jpg');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>fd.append('_sid', SID);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>fd.append('_source', 'sovereign-mobile-pc');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>fd.append('_context', _passportContext || sessionStorage.getItem('pai_passport_context') || 'new');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const res = await fetch(EXTRACT_URL, { method: 'POST', body: fd });</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (!res.ok) throw new Error('HTTP ' + res.status);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>btn.textContent = '✅ تم الإرسال للكمبيوتر';</p>
+<p class="p1"><span class="Apple-converted-space">    </span>btn.style.background = '#0056d2';</p>
+<p class="p1"><span class="Apple-converted-space">    </span>addHistory('passport → PC', true);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>} catch(e) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>btn.textContent = '❌ فشل الإرسال';</p>
+<p class="p1"><span class="Apple-converted-space">    </span>btn.style.background = '#ba1a1a';</p>
+<p class="p1"><span class="Apple-converted-space">    </span>addHistory('passport → PC', false);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>setTimeout(() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>btn.disabled = !passportFile;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>btn.textContent = '📤 إرسال للكمبيوتر';</p>
+<p class="p1"><span class="Apple-converted-space">    </span>btn.style.background = '#16794d';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}, 3000);</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">async function blobToBase64(blob) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>return new Promise((res,rej) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const r=new FileReader();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>r.onload=()=&gt;res(String(r.result||'').split('base64,')[1]||'');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>r.onerror=()=&gt;rej(new Error('read'));</p>
+<p class="p1"><span class="Apple-converted-space">    </span>r.readAsDataURL(blob);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">/* ─── History ─── */</p>
+<p class="p1">function addHistory(name, ok) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>history.unshift({name, ok, ts:Date.now()});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if(history.length&gt;20) history=history.slice(0,20);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>localStorage.setItem('pai_hist', JSON.stringify(history));</p>
+<p class="p1"><span class="Apple-converted-space">  </span>renderHistory();</p>
+<p class="p1">}</p>
+<p class="p1">function clearHistory() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>history=[];</p>
+<p class="p1"><span class="Apple-converted-space">  </span>localStorage.removeItem('pai_hist');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>renderHistory();</p>
+<p class="p1">}</p>
+<p class="p1">function renderHistory() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const el = document.getElementById('historyList');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if(!history.length){ el.innerHTML='&lt;p class="text-sm text-on-surface-variant text-center py-4"&gt;لا يوجد سجل&lt;/p&gt;'; return; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>el.innerHTML = history.map(h =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const d = new Date(h.ts).toLocaleString('ar',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'});</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return `&lt;div class="bg-surface-container-lowest rounded-xl px-4 py-2.5 flex items-center gap-3 editorial-shadow"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="flex-1"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;p class="text-xs font-bold text-on-surface truncate"&gt;${(h.name||'').slice(0,30)}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;p class="text-[11px] text-on-surface-variant"&gt;${d}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;span class="text-[11px] font-bold px-2 py-0.5 rounded-full ${h.ok?'bg-green-100 text-green-700':'bg-error-container text-error'}"&gt;${h.ok?'✓ نجح':'✗ فشل'}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}).join('');</p>
+<p class="p1">}</p>
+<p class="p1">&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
 </body>
 </html>
