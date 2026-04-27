@@ -282,6 +282,7 @@ function sanitizeFileName(name) {
 const API_BASE  = localStorage.getItem('pai_api_base')  || 'https://phd-considering-aaa-despite.trycloudflare.com';
 const STORE_URL = localStorage.getItem('pai_store_url') || `${API_BASE}/webhook/passport-store`;
 const EXTRACT_URL = localStorage.getItem('pai_extract_url') || `${API_BASE}/webhook/passport-extract1`;
+const SID = (() => { const q = new URLSearchParams(location.search).get('sid'); if (q) { localStorage.setItem('pai_sid', q); return q; } let id = localStorage.getItem('pai_sid'); if (!id) { id = 'u' + Math.random().toString(36).slice(2,9); localStorage.setItem('pai_sid', id); } return id; })();
 
 /* ─── أنواع التأشيرات ─── */
 const VISA_TYPES = {
@@ -611,6 +612,7 @@ async function sendPassport() {
     const fd = new FormData();
     fd.append('data', blob, passportFile.name.replace(/\.[^.]+$/, '') + '-enhanced.jpg');
     fd.append('_source', 'sovereign-mobile');
+    fd.append('_sid', SID);
 
     const res = await fetch(EXTRACT_URL, { method:'POST', body:fd });
     const text = await res.text();
@@ -782,31 +784,20 @@ function setPassportTab(tab) {
   });
 });
 
-/* ─── إرسال صورة الجواز للكمبيوتر عبر STORE_URL ─── */
+/* ─── إرسال صورة الجواز للكمبيوتر عبر EXTRACT_URL ─── */
 async function sendPassportToPC() {
   if (!passportFile) return;
   const btn = document.getElementById('passportPCBtn');
   btn.disabled = true;
-  btn.textContent = '⏳ جاري الإرسال...';
+  btn.textContent = '⏳ جاري الاستخراج والإرسال...';
   try {
     const blob = await processImage(passportFile);
-    const base64 = await blobToBase64(blob);
-    const ctx = _passportContext || sessionStorage.getItem('pai_passport_context') || 'new';
-    const payload = {
-      _mode:        'attachment',
-      _slot:        'passport',
-      _context:     ctx,
-      _source:      'sovereign-mobile',
-      _ts:          Date.now(),
-      fileName:     'passport.jpg',
-      mimeType:     'image/jpeg',
-      contentBase64: base64
-    };
-    const res = await fetch(STORE_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload)
-    });
+    const fd = new FormData();
+    fd.append('data', blob, 'passport-mobile.jpg');
+    fd.append('_sid', SID);
+    fd.append('_source', 'sovereign-mobile-pc');
+    fd.append('_context', _passportContext || sessionStorage.getItem('pai_passport_context') || 'new');
+    const res = await fetch(EXTRACT_URL, { method: 'POST', body: fd });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     btn.textContent = '✅ تم الإرسال للكمبيوتر';
     btn.style.background = '#0056d2';
